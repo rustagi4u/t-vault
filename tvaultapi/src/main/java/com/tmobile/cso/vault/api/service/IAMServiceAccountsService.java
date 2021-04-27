@@ -427,7 +427,7 @@ public class  IAMServiceAccountsService {
 			directoryUser = directoryService.getUserDetailsFromCorp(userName);
 		}
 		if (directoryUser != null) {
-			if(directoryUser.getDisplayName() != null) {
+			if(directoryUser.getDisplayName() != null && !StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
 				String[] displayName = directoryUser.getDisplayName().split(",");
 				if (displayName.length > 1) {
 					directoryUser.setDisplayName(displayName[1] + "  " + displayName[0]);
