@@ -427,9 +427,13 @@ public class  IAMServiceAccountsService {
 			directoryUser = directoryService.getUserDetailsFromCorp(userName);
 		}
 		if (directoryUser != null) {
-			String[] displayName = directoryUser.getDisplayName().split(",");
-			if (displayName.length > 1) {
-				directoryUser.setDisplayName(displayName[1] + "  " + displayName[0]);
+			if(directoryUser.getDisplayName() != null && !StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+				String[] displayName = directoryUser.getDisplayName().split(",");
+				if (displayName.length > 1) {
+					directoryUser.setDisplayName(displayName[1] + "  " + displayName[0]);
+				}
+			} else {
+				directoryUser.setDisplayName(userName);
 			}
 		}
 		return directoryUser;
