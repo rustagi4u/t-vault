@@ -231,7 +231,6 @@ const TransferSafeOwner = (props) => {
         </EachValueWrap>
         <EachValueWrap>
           <Label>Safe Type:</Label>
-          {console.log(`transferData`, transferData.type)}
           <Value capitalize="capitalize">
             {transferData?.type === 'Apps' || transferData?.type === 'apps'
               ? 'Application Safe'
