@@ -310,6 +310,11 @@ const CreateModal = (props) => {
         .then((res) => {
           setResponseType(null);
           if (res?.data?.data) {
+            if (!res.data.data.type) {
+              const { path } = history.location.state.safe;
+              const typeFromPath = path.substring(0, path.indexOf('/'));
+              res.data.data.type = typeFromPath;
+            }
             setSafeDetails(res.data.data);
             setName(res.data.data.name);
             setDescription(res.data.data.description);
