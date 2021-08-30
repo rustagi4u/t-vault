@@ -20,9 +20,7 @@ import ScaledLoader from '../../../../../components/Loaders/ScaledLoader';
 import CertificatesReviewDetails from '../CertificatesReviewDetails';
 import CertificateItemDetail from '../CertificateItemDetail';
 import apiService from '../../apiService';
-import EditCertificate from '../EditCertificate';
 import TransferCertificate from '../TransferCertificateOwner';
-import CreateCertificates from '../../CreateCertificates';
 import LeftColumn from './components/LeftColumn';
 import { useStateValue } from '../../../../../contexts/globalState';
 import SelectWithCountComponent from '../../../../../components/FormFields/SelectWithCount';
@@ -1146,17 +1144,6 @@ const CertificatesDashboard = () => {
                 )}
               </>
             )}
-            {certificateList.length > 0 && (
-              <FloatBtnWrapper>
-                <FloatingActionButtonComponent
-                  href="/certificates/create-ceritificate"
-                  color="secondary"
-                  icon="add"
-                  tooltipTitle="Create New Certificate"
-                  tooltipPos="left"
-                />
-              </FloatBtnWrapper>
-            )}
           </LeftColumnSection>
           <RightColumnSection
             mobileViewStyles={isMobileScreen ? MobileViewForListDetailPage : ''}
@@ -1220,29 +1207,6 @@ const CertificatesDashboard = () => {
               />
             </Switch>
           </RightColumnSection>
-          <Switch>
-            <Route
-              exact
-              path="/certificates/create-ceritificate"
-              render={() => (
-                <CreateCertificates
-                  refresh={() => {
-                    clearDataAndLoad();
-                    searchAllcertApi();
-                  }}
-                />
-              )}
-            />
-            <Route
-              exact
-              path="/certificates/edit-certificate"
-              render={() => (
-                <EditCertificate
-                  refresh={(status) => onCloseAllModal(status)}
-                />
-              )}
-            />
-          </Switch>
         </SectionPreview>
         {responseType === -1 && (
           <SnackbarComponent
