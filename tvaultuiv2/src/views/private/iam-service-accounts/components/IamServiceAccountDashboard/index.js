@@ -350,6 +350,7 @@ const IamServiceAccountDashboard = () => {
 
   // Function to get the metadata of the given service account
   const fetchPermission = useCallback(async () => {
+    const isAdmin = JSON.parse(sessionStorage.getItem('isAdmin'));
     setAccountMetaData({ response: {}, error: '' });
     setPermissionResponse({ status: 'loading' });
     if (listItemDetails?.active) {
@@ -361,7 +362,9 @@ const IamServiceAccountDashboard = () => {
           setPermissionResponse({ status: 'success' });
           setAccountMetaData({ response: res.data, error: '' });
           if (
-            res.data.owner_ntid.toLowerCase() === state.username.toLowerCase()
+            res.data.owner_ntid.toLowerCase() ===
+              state.username.toLowerCase() ||
+            isAdmin
           ) {
             setDisabledPermission(false);
             const eachUsersDetails = await getEachUsersDetails(res.data.users);
@@ -387,6 +390,7 @@ const IamServiceAccountDashboard = () => {
 
   // Function to get the secret of the given service account.
   const getSecrets = useCallback(() => {
+    console.log('in getsecrets');
     setAccountSecretError('');
     if (listItemDetails.active) {
       setAccountSecretData({});
