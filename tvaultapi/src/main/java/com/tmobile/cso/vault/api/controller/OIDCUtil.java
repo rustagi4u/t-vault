@@ -492,19 +492,22 @@ public class OIDCUtil {
 				build()));
 		String mountAccessor = fetchMountAccessorForOidc(token);
 		if (!StringUtils.isEmpty(mountAccessor)) {
-			// Get user details from GSM
-			DirectoryUser directoryUser = directoryService.getUserDetailsByCorpId(username);
-
-			if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
-				// Get user details from Corp domain (For sprint users)
-				directoryUser = directoryService.getUserDetailsFromCorp(username);
+			// Fix to for sprint users login with @tmobileusa.onmicrosoft.com. Skip user fetch from GSM/CORP
+			String aliasName = userDetails.getEmail();
+			if (!aliasName.contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
+				// Get user details from GSM or CORP for users other than @tmobileusa.onmicrosoft.com
+				DirectoryUser directoryUser = directoryService.getUserDetailsByCorpId(username);
 
 				if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
-					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OIDCEntityResponse());
+					// Get user details from Corp domain (For sprint users)
+					directoryUser = directoryService.getUserDetailsFromCorp(username);
+
+					if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
+						return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OIDCEntityResponse());
+					}
 				}
+				aliasName = directoryUser.getUserEmail();
 			}
-			
-			String aliasName = directoryUser.getUserEmail();
 
 			OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
 			oidcLookupEntityRequest.setAlias_name(aliasName);
