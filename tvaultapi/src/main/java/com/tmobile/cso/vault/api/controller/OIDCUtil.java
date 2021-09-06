@@ -493,8 +493,13 @@ public class OIDCUtil {
 		String mountAccessor = fetchMountAccessorForOidc(token);
 		if (!StringUtils.isEmpty(mountAccessor)) {
 			// Fix to for sprint users login with @tmobileusa.onmicrosoft.com. Skip user fetch from GSM/CORP
-			String aliasName = userDetails.getEmail();
-			if (!aliasName.contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
+
+			String aliasName = "";
+			// If fetching owner permission and email is @tmobileusa.onmicrosoft.com
+			if (userDetails != null && username.equals(userDetails.getEmail()) && userDetails.getEmail().contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
+					aliasName = userDetails.getEmail();
+			}
+			else {
 				// Get user details from GSM or CORP for users other than @tmobileusa.onmicrosoft.com
 				DirectoryUser directoryUser = directoryService.getUserDetailsByCorpId(username);
 
