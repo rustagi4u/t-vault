@@ -981,8 +981,6 @@ public class  IAMServiceAccountsService {
 	 * @return
 	 */
 	private List<IAMServiceAccountResponse> getAllIAMSvcFromMetadata(String token) {
-		String metadataPath = IAMServiceAccountConstants.IAM_SVCC_ACC_META_PATH;
-
 		List<IAMServiceAccountResponse> onboardedlist = new ArrayList<>();
 		List<String> allIAMSvcAccNames = getIAMSvcNamesFromMetadataAsList(token);
 		for (String iamSvcAccName: allIAMSvcAccNames) {
