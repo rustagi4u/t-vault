@@ -504,4 +504,18 @@ public class  DirectoryService {
 		users.setData(usersList);
 		return ResponseEntity.status(HttpStatus.OK).body(users);
 	}
+
+	/**
+	 * Gets user from Directory Server based on desktopProfile
+	 * @param UserPrincipalName
+	 * @return
+	 */
+	public List<DirectoryUser> searchUserInGSMByDesktopProfile(String UserPrincipalName) {
+		AndFilter andFilter = new AndFilter();
+		andFilter.and(new LikeFilter("desktopProfile", UserPrincipalName));
+		andFilter.and(new EqualsFilter(OBJCLASS, "user"));
+
+		List<DirectoryUser> allPersons = getAllPersons(andFilter);
+		return allPersons;
+	}
 }

@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.gson.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -34,10 +35,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.tmobile.cso.vault.api.common.SSLCertificateConstants;
 import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.exception.LogMessage;
@@ -1219,5 +1216,125 @@ public class OIDCUtil {
 			}
 		}
 		return allGroupEmail;
+	}
+
+	/**
+	 * Method to get the sprint email of users with having email @tmobileusa.onmicrosoft.com
+	 *
+	 * @param userEmail
+	 * @return
+	 */
+	public AADUserObject getSprintEmailFromAzure(String userEmail) {
+		String accessToken = getSSOToken();
+		AADUserObject aadUserObject = new AADUserObject();
+		JsonParser jsonParser = new JsonParser();
+		HttpClient httpClient = httpUtils.getHttpClient();
+		if (httpClient == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, SSLCertificateConstants.GET_ID_USER_STRING)
+					.put(LogMessage.MESSAGE, HTTPFAILMSG)
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return null;
+		}
+
+		String filterSearch = "?$select=id,mail,otherMails&ConsistencyLevel=eventual&$search=%22mail:" + userEmail + "%22%20OR%20%22otherMails:" + userEmail + "%22";
+
+		String api = ssoGetUserEndpoint + filterSearch;
+
+		HttpGet getRequest = new HttpGet(api);
+		getRequest.addHeader(AUTHORIZATION, BEARERSTR + accessToken);
+
+		StringBuilder jsonResponse = new StringBuilder();
+
+		try {
+			HttpResponse apiResponse = httpClient.execute(getRequest);
+			if (apiResponse.getStatusLine().getStatusCode() == 200) {
+				aadUserObject = parseSprintUserObjectFromAADResponse(jsonParser, jsonResponse, apiResponse);
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, GETAZUREUSEROBJ)
+						.put(LogMessage.MESSAGE, String.format("Retrieved %s user id from AAD", aadUserObject.getUserId()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return aadUserObject;
+			}
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, GETAZUREUSEROBJ)
+					.put(LogMessage.MESSAGE, "Failed to retrieve user id from AAD")
+					.put(LogMessage.STATUS, String.valueOf(apiResponse.getStatusLine().getStatusCode()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} catch (IOException e) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, GETAZUREUSEROBJ)
+					.put(LogMessage.MESSAGE, "Failed to parse AAD user api response")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		}
+		return aadUserObject;
+	}
+
+	/**
+	 *
+	 * @param jsonParser
+	 * @param jsonResponse
+	 * @param apiResponse
+	 * @return
+	 * @throws IOException
+	 */
+	private AADUserObject parseSprintUserObjectFromAADResponse(JsonParser jsonParser, StringBuilder jsonResponse,
+															HttpResponse apiResponse) {
+		readResponseContent(jsonResponse, apiResponse, GETAZUREUSEROBJ);
+		AADUserObject aadUserObject = new AADUserObject();
+		JsonObject responseJson = (JsonObject) jsonParser.parse(jsonResponse.toString());
+		if (responseJson != null && responseJson.has("value")) {
+			JsonArray valueArray = responseJson.get("value").getAsJsonArray();
+			if (valueArray.size() > 0) {
+				JsonObject userObject = valueArray.get(0).getAsJsonObject();
+				if (userObject != null && userObject.has("id")) {
+					aadUserObject.setUserId(userObject.get("id").getAsString());
+				}
+				if (userObject != null && userObject.has("mail")) {
+					aadUserObject.setEmail(userObject.get("mail").getAsString());
+				}
+				String otherEmail = getOtherEmail(userObject);
+				if (!StringUtils.isEmpty(otherEmail)) {
+					aadUserObject.setOtherEmail(otherEmail);
+				}
+
+			}
+		}
+
+		return aadUserObject;
+	}
+
+	private String getOtherEmail(JsonObject userObject) {
+		String otherEmail = "";
+		if (userObject != null && userObject.has("otherMails")) {
+			JsonArray otherEmails = userObject.get("otherMails").getAsJsonArray();
+			if (otherEmails.size() >0) {
+				otherEmail = otherEmails.get(0).getAsString();
+			}
+		}
+		return otherEmail;
+	}
+
+	/**
+	 * To get Sprint user NTid from @tmobileusa.onmicrosoft.com email.
+	 * @param email
+	 * @return
+	 */
+	public String getSprintUserNtId(String email) {
+		String ntId = "";
+		// get sprint email from @tmobileusa.onmicrosoft.com
+		AADUserObject aadUserObject = getSprintEmailFromAzure(email);
+		// get ntid using spring email
+		if (aadUserObject != null && !org.springframework.util.StringUtils.isEmpty(aadUserObject.getOtherEmail())) {
+			List<DirectoryUser> directoryUserList = directoryService.searchUserInGSMByDesktopProfile(aadUserObject.getOtherEmail());
+			if (!directoryUserList.isEmpty() && directoryUserList.get(0) != null) {
+				ntId = directoryUserList.get(0).getUserName();
+			}
+		}
+		return ntId;
 	}
 }

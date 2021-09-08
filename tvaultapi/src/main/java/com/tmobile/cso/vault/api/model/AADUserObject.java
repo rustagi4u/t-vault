@@ -26,15 +26,17 @@ public class AADUserObject implements Serializable{
 
 	private String userId;
 	private String email;
+	private String otherEmail;
 
 	public AADUserObject() {
 		// TODO Auto-generated constructor stub
 	}
 
-	public AADUserObject(String userId, String email) {
+	public AADUserObject(String userId, String email, String otherEmail) {
 		super();
 		this.userId = userId;
 		this.email = email;
+		this.otherEmail = otherEmail;
 	}
 
 	public String getUserId() {
@@ -51,5 +53,13 @@ public class AADUserObject implements Serializable{
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public String getOtherEmail() {
+		return otherEmail;
+	}
+
+	public void setOtherEmail(String otherEmail) {
+		this.otherEmail = otherEmail;
 	}
 }
