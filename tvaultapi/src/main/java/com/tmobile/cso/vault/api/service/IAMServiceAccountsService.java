@@ -834,20 +834,27 @@ public class  IAMServiceAccountsService {
 				.put(LogMessage.MESSAGE, "Trying to get list of onboaded IAM service accounts")
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
-		String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
-				userDetails.getUsername(), userDetails);
 		List<IAMServiceAccountResponse> onboardedlist = new ArrayList<>();
-		for (String policy : latestPolicies) {
-			if (policy.startsWith("o_iamsvcacc")) {
-				IAMServiceAccountResponse iamServiceAccountResponse = new IAMServiceAccountResponse();
-				String iamSvcName = policy.substring(12);
-				String[] accountID = iamSvcName.split("_");
-				String separator = "_";
-				int sepPos = iamSvcName.indexOf(separator);
-				iamServiceAccountResponse.setMetaDataName(iamSvcName);
-				iamServiceAccountResponse.setUserName(iamSvcName.substring(sepPos + separator.length()));
-				iamServiceAccountResponse.setAccountID(accountID[0]);
-				onboardedlist.add(iamServiceAccountResponse);
+
+		if (userDetails.isAdmin()) {
+			// get IAM list from metadata
+			onboardedlist = getAllIAMSvcFromMetadata(token);
+		}
+		else {
+			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
+					userDetails.getUsername(), userDetails);
+			for (String policy : latestPolicies) {
+				if (policy.startsWith("o_iamsvcacc")) {
+					IAMServiceAccountResponse iamServiceAccountResponse = new IAMServiceAccountResponse();
+					String iamSvcName = policy.substring(12);
+					String[] accountID = iamSvcName.split("_");
+					String separator = "_";
+					int sepPos = iamSvcName.indexOf(separator);
+					iamServiceAccountResponse.setMetaDataName(iamSvcName);
+					iamServiceAccountResponse.setUserName(iamSvcName.substring(sepPos + separator.length()));
+					iamServiceAccountResponse.setAccountID(accountID[0]);
+					onboardedlist.add(iamServiceAccountResponse);
+				}
 			}
 		}
 		response = new Response();
@@ -855,16 +862,11 @@ public class  IAMServiceAccountsService {
 		response.setSuccess(true);
 		response.setResponse("{\"keys\":" + JSONUtil.getJSON(onboardedlist) + "}");
 
-		if (HttpStatus.OK.equals(response.getHttpstatus())) {
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, "listOnboardedIAMServiceAccounts")
-					.put(LogMessage.MESSAGE, "Successfully retrieved the list of IAM Service Accounts")
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
-		} else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
-			return ResponseEntity.status(HttpStatus.OK).body("{\"keys\":[]}");
-		}
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, "listOnboardedIAMServiceAccounts")
+				.put(LogMessage.MESSAGE, String.format("Successfully retrieved the list of [%d] IAM Service Accounts", onboardedlist.size()))
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
 
@@ -959,47 +961,88 @@ public class  IAMServiceAccountsService {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
 					"{\"errors\":[\"Access denied. Not authorized to perform this operation.\"]}");
 		}
+		List<IAMServiceAccountResponse> onboardedlist = getAllIAMSvcFromMetadata(token);
+		if (!onboardedlist.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.OK).body("{\"keys\":" + JSONUtil.getJSON(onboardedlist) + "}");
+		}
+		else {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, "listAllOnboardedIAMServiceAccounts")
+					.put(LogMessage.MESSAGE, "Empty list of IAM Service accounts from metadata")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"keys\":[]}");
+		}
+	}
+
+	/**
+	 * To get the list of IAM service accouts from metadata.
+	 * @param token
+	 * @return
+	 */
+	private List<IAMServiceAccountResponse> getAllIAMSvcFromMetadata(String token) {
+		List<IAMServiceAccountResponse> onboardedlist = new ArrayList<>();
+		List<String> allIAMSvcAccNames = getIAMSvcNamesFromMetadataAsList(token);
+		for (String iamSvcAccName: allIAMSvcAccNames) {
+			IAMServiceAccountResponse iamServiceAccountResponse = new IAMServiceAccountResponse();
+			String[] accountID = iamSvcAccName.split("_");
+			String separator = "_";
+			int sepPos = iamSvcAccName.indexOf(separator);
+			iamServiceAccountResponse.setMetaDataName(iamSvcAccName);
+			iamServiceAccountResponse.setUserName(iamSvcAccName.substring(sepPos + separator.length()));
+			iamServiceAccountResponse.setAccountID(accountID[0]);
+			onboardedlist.add(iamServiceAccountResponse);
+		}
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, "getAllIAMSvcFromMetadata")
+				.put(LogMessage.MESSAGE, "Successfully retrieved the list of IAM Service Accounts from Vault")
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		return onboardedlist;
+	}
+
+	/**
+	 * To get all IAM service account names from metadata as list.
+	 * @param token
+	 * @return
+	 */
+	private List<String> getIAMSvcNamesFromMetadataAsList(String token) {
 		String metadataPath = IAMServiceAccountConstants.IAM_SVCC_ACC_META_PATH;
 
 		Response response = reqProcessor.process("/iam/onboardedlist", PATHSTR + metadataPath + "\"}", token);
-		List<IAMServiceAccountResponse> onboardedlist = new ArrayList<>();
+		List<String> allIAMSvcAccNames = new ArrayList<>();
 		if (HttpStatus.OK.equals(response.getHttpstatus())) {
 
 			try {
 				Map<String, Object> requestParams = new ObjectMapper().readValue(response.getResponse(), new TypeReference<Map<String, Object>>(){});
-				List<String> allIAMSvcAccNames = (ArrayList<String>) requestParams.get("keys");
-				for (String iamSvcAccName: allIAMSvcAccNames) {
-					IAMServiceAccountResponse iamServiceAccountResponse = new IAMServiceAccountResponse();
-					String[] accountID = iamSvcAccName.split("_");
-					String separator = "_";
-					int sepPos = iamSvcAccName.indexOf(separator);
-					iamServiceAccountResponse.setMetaDataName(iamSvcAccName);
-					iamServiceAccountResponse.setUserName(iamSvcAccName.substring(sepPos + separator.length()));
-					iamServiceAccountResponse.setAccountID(accountID[0]);
-					onboardedlist.add(iamServiceAccountResponse);
-				}
+				allIAMSvcAccNames = (ArrayList<String>) requestParams.get("keys");
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-						.put(LogMessage.ACTION, "listAllOnboardedIAMServiceAccounts")
+						.put(LogMessage.ACTION, "getIAMSvcNamesFromMetadataAsList")
 						.put(LogMessage.MESSAGE, "Successfully retrieved the list of IAM Service Accounts from Vault ")
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-				
+
 			} catch (Exception e) {
 				log.error("Unable to get list of onboarded IAM Service Accounts.");
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-						put(LogMessage.ACTION, "listAllOnboardedIAMServiceAccounts").
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "getIAMSvcNamesFromMetadataAsList").
 						put(LogMessage.MESSAGE, String.format ("Unable to get list of all onboarded IAM Service Accounts due to [%s] ",e.getMessage())).
-						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						build()));
 			}
-			return ResponseEntity.status(response.getHttpstatus()).body("{\"keys\":" + JSONUtil.getJSON(onboardedlist) + "}");
-			
-		} else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"keys\":[]}");
 		}
-		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+		else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "getIAMSvcNamesFromMetadataAsList").
+					put(LogMessage.MESSAGE, String.format ("Unable to get list of all onboarded IAM Service Accounts [%s]", response!=null?response.getResponse():"")).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+		}
+		return allIAMSvcAccNames;
 	}
+
 	/**
 	 * Add Group to IAM Service Account
 	 *
@@ -1760,49 +1803,60 @@ public class  IAMServiceAccountsService {
 	}
 
 	/*
-	 * 
+	 * To get the list of IAM service accounts with read/write/deny permission.
 	 * @param userDetails
 	 * @param token
 	 * @return
 	 */
 	public ResponseEntity<String> getIAMServiceAccountsList(UserDetails userDetails, String userToken) {
 		oidcUtil.renewUserToken(userDetails.getClientToken());
-		String token = userDetails.getClientToken();
-		if (!userDetails.isAdmin()) {
-			token = userDetails.getSelfSupportToken();
-		}
-		String[] policies = policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails);
-
-		policies = filterPoliciesBasedOnPrecedence(Arrays.asList(policies));
-
 		List<Map<String, String>> svcListUsers = new ArrayList<>();
-		Map<String, List<Map<String, String>>> safeList = new HashMap<>();
-		if (policies != null) {
-			for (String policy : policies) {
-				Map<String, String> safePolicy = new HashMap<>();
-				String[] iamPolicies = policy.split("_", -1);
-				if (iamPolicies.length >= 3) {
-					String[] policyName = Arrays.copyOfRange(iamPolicies, 2, iamPolicies.length);
-					String safeName = String.join("_", policyName);
-					String safeType = iamPolicies[1];
+		Map<String, List<Map<String, String>>> iamList = new HashMap<>();
 
-					if (policy.startsWith("r_")) {
-						safePolicy.put(safeName, "read");
-					} else if (policy.startsWith("w_")) {
-						safePolicy.put(safeName, "write");
-					} else if (policy.startsWith("d_")) {
-						safePolicy.put(safeName, "deny");
-					}
-					if (!safePolicy.isEmpty()) {
-						if (safeType.equals(TVaultConstants.IAM_SVC_ACC_PATH_PREFIX)) {
-							svcListUsers.add(safePolicy);
+		if (userDetails.isAdmin()) {
+			// Get IAM list from metadata
+			List<String> allIAMSvcs = getIAMSvcNamesFromMetadataAsList(userToken);
+			for (String iamSvcName : allIAMSvcs) {
+				Map<String, String> iamPermission= new HashMap<>();
+				// Admin users are given default write permission. This is for handling in UI.
+				iamPermission.put(iamSvcName, "write");
+				svcListUsers.add(iamPermission);
+			}
+		}
+		else {
+			String token = userDetails.getSelfSupportToken();
+			String[] policies = policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails);
+
+			policies = filterPoliciesBasedOnPrecedence(Arrays.asList(policies));
+
+			if (policies != null) {
+				for (String policy : policies) {
+					Map<String, String> safePolicy = new HashMap<>();
+					String[] iamPolicies = policy.split("_", -1);
+					if (iamPolicies.length >= 3) {
+						String[] policyName = Arrays.copyOfRange(iamPolicies, 2, iamPolicies.length);
+						String safeName = String.join("_", policyName);
+						String safeType = iamPolicies[1];
+
+						if (policy.startsWith("r_")) {
+							safePolicy.put(safeName, "read");
+						} else if (policy.startsWith("w_")) {
+							safePolicy.put(safeName, "write");
+						} else if (policy.startsWith("d_")) {
+							safePolicy.put(safeName, "deny");
+						}
+						if (!safePolicy.isEmpty()) {
+							if (safeType.equals(TVaultConstants.IAM_SVC_ACC_PATH_PREFIX)) {
+								svcListUsers.add(safePolicy);
+							}
 						}
 					}
 				}
 			}
-			safeList.put(TVaultConstants.IAM_SVC_ACC_PATH_PREFIX, svcListUsers);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(JSONUtil.getJSON(safeList));
+		iamList.put(TVaultConstants.IAM_SVC_ACC_PATH_PREFIX, svcListUsers);
+
+		return ResponseEntity.status(HttpStatus.OK).body(JSONUtil.getJSON(iamList));
 	}
 
 	/**
