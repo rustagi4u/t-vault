@@ -19,6 +19,7 @@ package com.tmobile.cso.vault.api.validator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.controller.OIDCUtil;
@@ -104,7 +105,9 @@ public class TokenValidator {
 
 						// for sprint user login in with *.@tmobileusa.onmicrosoft.com, take ntid from email
 						if (email.contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
-							lookupDetails.setUsername(email.substring(0, email.indexOf("@")).toLowerCase());
+							String ntId = oidcUtil.getSprintUserNtIdUsingExtensionAttribute(email);
+							lookupDetails.setUsername(ntId);
+							//lookupDetails.setUsername(email.substring(0, email.indexOf("@")).toLowerCase());
 						}
 						else {
 							ResponseEntity<DirectoryObjects> directoryObjectsResponseEntity = directoryService.searchByUPN(email);
