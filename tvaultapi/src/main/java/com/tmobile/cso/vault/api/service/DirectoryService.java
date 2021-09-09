@@ -507,12 +507,12 @@ public class  DirectoryService {
 
 	/**
 	 * Gets user from Directory Server based on desktopProfile
-	 * @param UserPrincipalName
+	 * @param extensionAttribute
 	 * @return
 	 */
-	public List<DirectoryUser> searchUserInGSMByDesktopProfile(String UserPrincipalName) {
+	public List<DirectoryUser> searchUserInGSMByExtensionAttribute(String extensionAttribute) {
 		AndFilter andFilter = new AndFilter();
-		andFilter.and(new LikeFilter("desktopProfile", UserPrincipalName));
+		andFilter.and(new LikeFilter("extensionAttribute15", extensionAttribute));
 		andFilter.and(new EqualsFilter(OBJCLASS, "user"));
 
 		List<DirectoryUser> allPersons = getAllPersons(andFilter);

@@ -1224,7 +1224,7 @@ public class OIDCUtil {
 	 * @param userEmail
 	 * @return
 	 */
-	public AADUserObject getSprintEmailFromAzure(String userEmail) {
+	public AADUserObject getExtensionAttribute(String userEmail) {
 		String accessToken = getSSOToken();
 		AADUserObject aadUserObject = new AADUserObject();
 		JsonParser jsonParser = new JsonParser();
@@ -1238,7 +1238,7 @@ public class OIDCUtil {
 			return null;
 		}
 
-		String filterSearch = "?$select=id,mail,otherMails&ConsistencyLevel=eventual&$search=%22mail:" + userEmail + "%22%20OR%20%22otherMails:" + userEmail + "%22";
+		String filterSearch = "?$select=id,mail,otherMails,onPremisesExtensionAttributes&ConsistencyLevel=eventual&$search=%22mail:" + userEmail + "%22%20OR%20%22otherMails:" + userEmail + "%22";
 
 		String api = ssoGetUserEndpoint + filterSearch;
 
@@ -1297,26 +1297,16 @@ public class OIDCUtil {
 				if (userObject != null && userObject.has("mail")) {
 					aadUserObject.setEmail(userObject.get("mail").getAsString());
 				}
-				String otherEmail = getOtherEmail(userObject);
-				if (!StringUtils.isEmpty(otherEmail)) {
-					aadUserObject.setOtherEmail(otherEmail);
+				if (userObject != null && userObject.has("onPremisesExtensionAttributes")) {
+					JsonObject onPremisesExtensionAttributes = userObject.get("onPremisesExtensionAttributes").getAsJsonObject();
+					if (onPremisesExtensionAttributes != null && onPremisesExtensionAttributes.has("extensionAttribute15")) {
+						aadUserObject.setExtensionAttribute(onPremisesExtensionAttributes.get("extensionAttribute15").getAsString());
+					}
 				}
-
 			}
 		}
 
 		return aadUserObject;
-	}
-
-	private String getOtherEmail(JsonObject userObject) {
-		String otherEmail = "";
-		if (userObject != null && userObject.has("otherMails")) {
-			JsonArray otherEmails = userObject.get("otherMails").getAsJsonArray();
-			if (otherEmails.size() >0) {
-				otherEmail = otherEmails.get(0).getAsString();
-			}
-		}
-		return otherEmail;
 	}
 
 	/**
@@ -1324,13 +1314,13 @@ public class OIDCUtil {
 	 * @param email
 	 * @return
 	 */
-	public String getSprintUserNtId(String email) {
+	public String getSprintUserNtIdUsingExtensionAttribute(String email) {
 		String ntId = "";
-		// get sprint email from @tmobileusa.onmicrosoft.com
-		AADUserObject aadUserObject = getSprintEmailFromAzure(email);
-		// get ntid using spring email
-		if (aadUserObject != null && !org.springframework.util.StringUtils.isEmpty(aadUserObject.getOtherEmail())) {
-			List<DirectoryUser> directoryUserList = directoryService.searchUserInGSMByDesktopProfile(aadUserObject.getOtherEmail());
+		// get extension attribute 15 from @tmobileusa.onmicrosoft.com
+		AADUserObject aadUserObject = getExtensionAttribute(email);
+		// get ntid using extension attribute
+		if (aadUserObject != null && !StringUtils.isEmpty(aadUserObject.getExtensionAttribute())) {
+			List<DirectoryUser> directoryUserList = directoryService.searchUserInGSMByExtensionAttribute(aadUserObject.getExtensionAttribute());
 			if (!directoryUserList.isEmpty() && directoryUserList.get(0) != null) {
 				ntId = directoryUserList.get(0).getUserName();
 			}

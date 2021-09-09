@@ -105,7 +105,7 @@ public class TokenValidator {
 
 						// for sprint user login in with *.@tmobileusa.onmicrosoft.com, take ntid from email
 						if (email.contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
-							String ntId = oidcUtil.getSprintUserNtId(email);
+							String ntId = oidcUtil.getSprintUserNtIdUsingExtensionAttribute(email);
 							lookupDetails.setUsername(ntId);
 							//lookupDetails.setUsername(email.substring(0, email.indexOf("@")).toLowerCase());
 						}
