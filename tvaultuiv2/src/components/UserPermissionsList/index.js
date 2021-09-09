@@ -62,10 +62,11 @@ const UserPermissionsList = (props) => {
     isAzureSvcAccount,
     isIamSvcAccount,
     userDetails,
+    owner,
   } = props;
   // get logged in user info
   const state = useStateValue();
-
+  console.log(owner);
   const getUsersDisplayName = (userName) => {
     const obj = userDetails.find(
       (item) => item.userName.toLowerCase() === userName.toLowerCase()
@@ -84,7 +85,10 @@ const UserPermissionsList = (props) => {
             <EachUserWrap
               inActitveStyles={
                 state[0]?.username?.toLowerCase() === key?.toLowerCase() &&
-                (isAzureSvcAccount || isIamSvcAccount)
+                isAzureSvcAccount
+                  ? 'pointer-events:none;opacity:0.5'
+                  : owner?.toLowerCase() === key?.toLowerCase() &&
+                    isIamSvcAccount
                   ? 'pointer-events:none;opacity:0.5'
                   : ''
               }
@@ -125,12 +129,14 @@ UserPermissionsList.propTypes = {
   isSvcAccount: PropTypes.bool,
   isAzureSvcAccount: PropTypes.bool,
   isIamSvcAccount: PropTypes.bool,
+  owner: PropTypes.string,
 };
 
 UserPermissionsList.defaultProps = {
   isSvcAccount: false,
   isAzureSvcAccount: false,
   isIamSvcAccount: false,
+  owner: '',
 };
 
 export default UserPermissionsList;
