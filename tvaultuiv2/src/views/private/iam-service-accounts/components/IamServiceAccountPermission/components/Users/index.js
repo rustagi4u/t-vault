@@ -237,6 +237,7 @@ const Users = (props) => {
                     onEditClick={(key, value) => onEditClick(key, value)}
                     onDeleteClick={(key, value) => onDeleteClick(key, value)}
                     userDetails={userDetails}
+                    owner={accountMetaData?.response?.owner_ntid}
                   />
                 )}
               {(!accountMetaData?.response?.users ||
@@ -245,7 +246,9 @@ const Users = (props) => {
                 <NoDataWrapper>
                   <NoData
                     imageSrc={noPermissionsIcon}
-                    description={'No <strong>Users</strong> are given permission to access this IAM service account, add users to access the account.'}
+                    description={
+                      'No <strong>Users</strong> are given permission to access this IAM service account, add users to access the account.'
+                    }
                     actionButton={
                       // eslint-disable-next-line react/jsx-wrap-multilines
                       <ButtonComponent
