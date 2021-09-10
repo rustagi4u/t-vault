@@ -1396,7 +1396,7 @@ public class  IAMServiceAccountsService {
 						"{\"errors\":[\"Failed to add user permission to IAM Service account. Only Sudo and Write permissions can be added as part of Onboard.\"]}");
 			}
 
-			if (isOwnerPemissionGettingChanged(iamServiceAccountUser, userDetails.getUsername(), isPartOfOnboard)) {
+			if (isOwnerPemissionGettingChanged(iamServiceAccountUser, getOwnerNTIdFromMetadata(token, uniqueIAMSvcaccName), isPartOfOnboard)) {
 				log.error(
 						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -1421,13 +1421,13 @@ public class  IAMServiceAccountsService {
 	 * @param iamServiceAccountUser
 	 * @return
 	 */
-	private boolean isOwnerPemissionGettingChanged(IAMServiceAccountUser iamServiceAccountUser, String currentUsername, boolean isPartOfOnboard) {
+	private boolean isOwnerPemissionGettingChanged(IAMServiceAccountUser iamServiceAccountUser, String ownerNtId, boolean isPartOfOnboard) {
 		if (isPartOfOnboard) {
 			// sudo as part of onboard is allowed.
 			return false;
 		}
 		// if owner is grating read/ deny to himself, not allowed. Write is allowed as part of activation.
-		if (iamServiceAccountUser.getUsername().equalsIgnoreCase(currentUsername) && !iamServiceAccountUser.getAccess().equals(TVaultConstants.WRITE_POLICY)) {
+		if (iamServiceAccountUser.getUsername().equalsIgnoreCase(ownerNtId) && !iamServiceAccountUser.getAccess().equals(TVaultConstants.WRITE_POLICY)) {
 			return true;
 		}
 		return false;
@@ -1788,7 +1788,7 @@ public class  IAMServiceAccountsService {
 	public boolean isAuthorizedToAddPermissionInIAMSvcAcc(UserDetails userDetails, String serviceAccount, String token,
 			boolean isPartOfOnboard) {
 		// IAM admin users can add sudo policy for owner while onboarding the service account
-		if (isPartOfOnboard) {
+		if (userDetails.isAdmin() || isPartOfOnboard) {
 			return true;
 		}
 		// Owner of the service account can add/remove users, groups, aws roles and approles to service account
@@ -2036,7 +2036,7 @@ public class  IAMServiceAccountsService {
 
 		if(isAuthorized){
 			// Deleting owner permission is not allowed
-			if (iamServiceAccountUser.getUsername().equalsIgnoreCase(userDetails.getUsername())) {
+			if (iamServiceAccountUser.getUsername().equalsIgnoreCase(getOwnerNTIdFromMetadata(token, uniqueIAMSvcaccName ))) {
 				log.error(
 						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
