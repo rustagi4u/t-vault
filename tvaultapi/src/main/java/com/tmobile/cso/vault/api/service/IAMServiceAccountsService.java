@@ -1815,7 +1815,7 @@ public class  IAMServiceAccountsService {
 
 		if (userDetails.isAdmin()) {
 			// Get IAM list from metadata
-			List<String> allIAMSvcs = getIAMSvcNamesFromMetadataAsList(userToken);
+			List<String> allIAMSvcs = getIAMSvcNamesFromMetadataAsList(userToken;
 			for (String iamSvcName : allIAMSvcs) {
 				Map<String, String> iamPermission= new HashMap<>();
 				// Admin users are given default write permission. This is for handling in UI.
@@ -2942,9 +2942,11 @@ public class  IAMServiceAccountsService {
 	 * @return
 	 */
 	public boolean hasAddOrRemovePermission(UserDetails userDetails, String serviceAccount, String token) {
-		// Owner of the service account can add/remove users, groups, aws roles
+		// Owner of the service account and admin users can add/remove users, groups, aws roles
 		// and approles to service account
-
+		if (userDetails.isAdmin()) {
+			return true;
+		}
 		String ownerPolicy = new StringBuffer()
 				.append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
 				.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(serviceAccount).toString();
