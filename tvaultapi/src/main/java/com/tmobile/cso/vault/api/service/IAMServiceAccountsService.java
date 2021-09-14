@@ -1815,7 +1815,7 @@ public class  IAMServiceAccountsService {
 
 		if (userDetails.isAdmin()) {
 			// Get IAM list from metadata
-			List<String> allIAMSvcs = getIAMSvcNamesFromMetadataAsList(userToken;
+			List<String> allIAMSvcs = getIAMSvcNamesFromMetadataAsList(userToken);
 			for (String iamSvcName : allIAMSvcs) {
 				Map<String, String> iamPermission= new HashMap<>();
 				// Admin users are given default write permission. This is for handling in UI.
