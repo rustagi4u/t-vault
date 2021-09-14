@@ -23,6 +23,7 @@ import java.util.List;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.tmobile.cso.vault.api.model.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +44,6 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.tmobile.cso.vault.api.exception.LogMessage;
-import com.tmobile.cso.vault.api.model.DirectoryGroup;
-import com.tmobile.cso.vault.api.model.DirectoryObjects;
-import com.tmobile.cso.vault.api.model.DirectoryObjectsList;
-import com.tmobile.cso.vault.api.model.DirectoryUser;
 import com.tmobile.cso.vault.api.utils.JSONUtil;
 import com.tmobile.cso.vault.api.utils.ThreadLocalContext;
 
@@ -261,6 +258,9 @@ public class  DirectoryService {
 		andFilter.and(new EqualsFilter(OBJCLASS, "user"));
 
 		List<DirectoryUser> allPersons = getAllPersons(andFilter);
+		if (allPersons.size() == 0) {
+			allPersons.add(getUserDetailsFromCorp(ntId));
+		}
 		DirectoryObjects users = new DirectoryObjects();
 		DirectoryObjectsList usersList = new DirectoryObjectsList();
 		usersList.setValues(allPersons.toArray(new DirectoryUser[allPersons.size()]));
@@ -301,6 +301,17 @@ public class  DirectoryService {
 			andFilter.and(orFilter);
 		}
 		List<DirectoryUser> allPersons = getAllPersons(andFilter);
+		if (allPersons.size() == 0) {
+			andFilter = new AndFilter();
+			OrFilter orFilter = new OrFilter();
+			String[] userNtIds = ntIds.split(",");
+			andFilter.and(new EqualsFilter(OBJCLASS, "user"));
+			for (String ntId : userNtIds) {
+				orFilter.or(new EqualsFilter("CN", ntId.trim()));
+			}
+			andFilter.and(orFilter);
+			allPersons = getAllPersonsFromCorp(andFilter);
+		}
 		DirectoryObjects users = new DirectoryObjects();
 		DirectoryObjectsList usersList = new DirectoryObjectsList();
 		usersList.setValues(allPersons.toArray(new DirectoryUser[allPersons.size()]));
