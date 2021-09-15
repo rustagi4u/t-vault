@@ -70,7 +70,7 @@ const UserPermissionsList = (props) => {
     const obj = userDetails.find(
       (item) => item.userName.toLowerCase() === userName.toLowerCase()
     );
-    if (obj) {
+    if (obj && obj.displayName) {
       return `${obj.displayName} (${obj.userName})`;
     }
     return userName;
