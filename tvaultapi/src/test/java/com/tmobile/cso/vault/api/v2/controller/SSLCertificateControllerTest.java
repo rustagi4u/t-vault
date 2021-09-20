@@ -687,21 +687,6 @@ public class SSLCertificateControllerTest {
 	}
 
 	@Test
-    public void testUpdateCertOwnerSuccess() throws Exception {
-		String responseJson = "{\"messages\":[\"Certificate Owner Transferred Successfully\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(sslCertificateService.updateCertOwner( Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyObject()))
-				.thenReturn(responseEntityExpected);
-		MvcResult result = mockMvc
-				.perform(MockMvcRequestBuilders.put("/v2/sslcert/internal/certificatename.t-mobile.com/owneremail@test.com/transferowner")
-						.requestAttr("UserDetails", userDetails).header("vault-token", token)
-						.header("Content-Type", "application/json;charset=UTF-8"))
-				.andExpect(status().isOk()).andReturn();
-		String actual = result.getResponse().getContentAsString();
-		assertEquals(responseJson, actual);
-    }
-
-	@Test
     public void testDeleteCertificateSuccess() throws Exception {
 		String responseJson = "{\"messages\":[\"Certificate deleted successfully\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
