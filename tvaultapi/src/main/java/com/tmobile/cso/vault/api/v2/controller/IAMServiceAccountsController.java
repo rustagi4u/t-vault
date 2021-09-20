@@ -170,7 +170,8 @@ public class IAMServiceAccountsController {
 	public ResponseEntity<String> getIAMServiceAccountSecretKey(HttpServletRequest request,
 			@RequestHeader(value = "vault-token") String token, @PathVariable("iam_svc_name") String iamsvcname,
 			@PathVariable("folderName") String folderName) {
-		return iamServiceAccountsService.getIAMServiceAccountSecretKey(token, iamsvcname, folderName);
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.getIAMServiceAccountSecretKey(userDetails.isAdmin()?userDetails.getSelfSupportToken():token, iamsvcname, folderName);
 	}
 
 
@@ -184,9 +185,10 @@ public class IAMServiceAccountsController {
 	 */
 	@ApiOperation(value = "${IAMServiceAccountsController.readFolders.value}", notes = "${IAMServiceAccountsController.readFolders.notes}", hidden = true)
 	@GetMapping(value = "/v2/iamserviceaccounts/folders/secrets", produces = "application/json")
-	public ResponseEntity<String> readFolders(@RequestHeader(value = "vault-token") String token,
+	public ResponseEntity<String> readFolders(HttpServletRequest request, @RequestHeader(value = "vault-token") String token,
 			@RequestParam("path") String path) throws IOException {
-		return iamServiceAccountsService.readFolders(token, path);
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.readFolders(userDetails.isAdmin()? userDetails.getSelfSupportToken():token, path);
 	}
 
 	/**
@@ -277,7 +279,8 @@ public class IAMServiceAccountsController {
 	@PostMapping(value="/v2/iamserviceaccount/rotate",produces="application/json")
 	@ApiOperation(value = "${IAMServiceAccountsController.rotateIAMServiceAccountCreds.value}", notes = "${IAMServiceAccountsController.rotateIAMServiceAccountCreds.notes}")
 	public ResponseEntity<String> rotateIAMServiceAccountCreds(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @RequestBody @Valid IAMServiceAccountRotateRequest iamServiceAccountRotateRequest){
-		return iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest);
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest, userDetails);
 	}
 	
 	/**
@@ -290,10 +293,11 @@ public class IAMServiceAccountsController {
 	 */
 	@ApiOperation(value = "${IAMServiceAccountsController.readSecrets.value}", notes = "${IAMServiceAccountsController.readSecrets.notes}", hidden = false)
 	@GetMapping(value = "/v2/iamserviceaccounts/secrets/{aws_account_id}/{iam_svc_name}/{accessKey}", produces = "application/json")
-	public ResponseEntity<String> readSecrets(@RequestHeader(value = "vault-token") String token,
+	public ResponseEntity<String> readSecrets(HttpServletRequest request, @RequestHeader(value = "vault-token") String token,
 			@PathVariable("aws_account_id") String awsAccountID, @PathVariable("iam_svc_name") String iamSvcName,
 			@PathVariable("accessKey") String accessKey) throws IOException {
-		return iamServiceAccountsService.readSecrets(token, awsAccountID, iamSvcName, accessKey);
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.readSecrets(token, awsAccountID, iamSvcName, accessKey, userDetails);
 	}
 	
 	/**

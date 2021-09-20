@@ -3242,7 +3242,7 @@ public class  IAMServiceAccountsService {
 										put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 										build()));
 								// Rotate IAM service account secret for each access key id in metadata
-								if (rotateIAMServiceAccountByAccessKeyId(token, awsAccountId, iamServiceAccountName, accessKeyId, i+1)) {
+								if (rotateIAMServiceAccountByAccessKeyId(token, awsAccountId, iamServiceAccountName, accessKeyId, i+1, userDetails)) {
 									secretSaveCount++;
 								}
 							}
@@ -3365,7 +3365,7 @@ public class  IAMServiceAccountsService {
 	 * @param secretFolder
 	 * @return
 	 */
-	public ResponseEntity<String> rotateIAMServiceAccount(String token, IAMServiceAccountRotateRequest iamServiceAccountRotateRequest) {
+	public ResponseEntity<String> rotateIAMServiceAccount(String token, IAMServiceAccountRotateRequest iamServiceAccountRotateRequest, UserDetails userDetails) {
 		boolean rotationStatus = false;
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
@@ -3381,7 +3381,7 @@ public class  IAMServiceAccountsService {
 		String iamSvcName = iamServiceAccountRotateRequest.getUserName().toLowerCase();
 		String uniqueIAMSvcaccName = awsAccountId + "_" + iamSvcName;
 
-		if (!hasResetPermissionForIAMServiceAccount(token, uniqueIAMSvcaccName) && !(isAuthorizedIAMAdminApprole(token))) {
+		if (!hasResetPermissionForIAMServiceAccount(token, uniqueIAMSvcaccName, userDetails) && !(isAuthorizedIAMAdminApprole(token))) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, IAMServiceAccountConstants.ROTATE_IAM_SVCACC_TITLE).
@@ -3391,6 +3391,9 @@ public class  IAMServiceAccountsService {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Access denied: No permission to rotate secret for IAM service account.\"]}");
 		}
 
+		if (userDetails.isAdmin()) {
+			token = tokenUtils.getSelfServiceToken();
+		}
 		// Get metadata to check the accesskeyid
 		JsonObject iamMetadataJson = getIAMMetadata(token, uniqueIAMSvcaccName);
 
@@ -3441,7 +3444,7 @@ public class  IAMServiceAccountsService {
 							if (!StringUtils.isEmpty(folderName)) {
 								int accessKeyIndex = Integer.parseInt(folderName.split("_")[1]);
 								rotationStatus = rotateIAMServiceAccountByAccessKeyId(token, awsAccountId, iamSvcName,
-										accessKeyId, accessKeyIndex);
+										accessKeyId, accessKeyIndex, userDetails);
 								break;
 							}
 						}
@@ -3494,7 +3497,11 @@ public class  IAMServiceAccountsService {
 	 * @param uniqueIAMSvcaccName
 	 * @return
 	 */
-	private boolean hasResetPermissionForIAMServiceAccount(String token, String uniqueIAMSvcaccName) {
+	private boolean hasResetPermissionForIAMServiceAccount(String token, String uniqueIAMSvcaccName, UserDetails userDetails) {
+		// Admin users have reset permission in all service accounts.
+		if (userDetails.isAdmin()) {
+			return true;
+		}
 		String resetPermission = "w_"+ IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX + uniqueIAMSvcaccName;
 		ObjectMapper objectMapper = new ObjectMapper();
 		List<String> currentPolicies = new ArrayList<>();
@@ -3538,7 +3545,7 @@ public class  IAMServiceAccountsService {
 	 * @param accessKeyId
 	 * @return
 	 */
-	private boolean rotateIAMServiceAccountByAccessKeyId(String token,  String awsAccountId, String iamServiceAccountName, String accessKeyId, int accessKeyIndex) {
+	private boolean rotateIAMServiceAccountByAccessKeyId(String token, String awsAccountId, String iamServiceAccountName, String accessKeyId, int accessKeyIndex, UserDetails userDetails) {
 		String uniqueIAMSvcaccName = awsAccountId + "_" + iamServiceAccountName;
 		IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
 
@@ -3590,11 +3597,11 @@ public class  IAMServiceAccountsService {
 	 * @return
 	 * @throws IOException
 	 */
-	public ResponseEntity<String> readSecrets(String token, String awsAccountID, String iamSvcName, String accessKey)
+	public ResponseEntity<String> readSecrets(String token, String awsAccountID, String iamSvcName, String accessKey, UserDetails userDetails)
 			throws IOException {
 
 		List<String> currentpolicies = commonUtils.getTokePoliciesAsList(token);
-		if (!CollectionUtils.isEmpty(currentpolicies) && !Collections.disjoint(Arrays.asList(TVaultConstants.IAM_AZURE_ADMIN_POLICY_LIST), currentpolicies)) {
+		if (!userDetails.isAdmin() && !CollectionUtils.isEmpty(currentpolicies) && !Collections.disjoint(Arrays.asList(TVaultConstants.IAM_AZURE_ADMIN_POLICY_LIST), currentpolicies)) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "readSecrets")
@@ -3604,6 +3611,9 @@ public class  IAMServiceAccountsService {
 					+ JSONUtil.getJSON("Access denied: No permission to read secret for IAM service account") + "}");
 		}
 
+		if (userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
+		}
 		iamSvcName = iamSvcName.toLowerCase();
 		String iamSvcNamePath = IAMServiceAccountConstants.IAM_SVCC_ACC_PATH + awsAccountID + '_' + iamSvcName;
 		ResponseEntity<String> response = readFolders(token, iamSvcNamePath);
@@ -4687,7 +4697,7 @@ public class  IAMServiceAccountsService {
 		String iamSvcName = iamServiceAccountAccessKey.getUserName().toLowerCase();
 		String uniqueIAMSvcaccName = awsAccountId + "_" + iamSvcName;
 
-		if (!hasResetPermissionForIAMServiceAccount(token, uniqueIAMSvcaccName)) {
+		if (!hasResetPermissionForIAMServiceAccount(token, uniqueIAMSvcaccName, userDetails)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, IAMServiceAccountConstants.DELETE_IAMSVCACC_ACCESSKEY_MSG).
@@ -4696,7 +4706,9 @@ public class  IAMServiceAccountsService {
 					build()));
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Access denied: No permission to delete this IAM service account access key\"]}");
 		}
-
+		if (userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
+		}
 		return processRequestAndDeleteIAMSvcAccAccessKey(token, uniqueIAMSvcaccName, awsAccountId, iamSvcName, accessKeyId);
 	}
 
@@ -5200,8 +5212,11 @@ public class  IAMServiceAccountsService {
 
         String uniqueIAMSvcaccName = awsAccountId + "_" + iamSvcName;
 
-        if (isAuthorizedToAddPermissionInIAMSvcAcc(userDetails, uniqueIAMSvcaccName, token, false) || hasResetPermissionForIAMServiceAccount(token, uniqueIAMSvcaccName)) {
-            // Get metadata to check the accesskeyids
+        if (isAuthorizedToAddPermissionInIAMSvcAcc(userDetails, uniqueIAMSvcaccName, token, false) || hasResetPermissionForIAMServiceAccount(token, uniqueIAMSvcaccName, userDetails)) {
+			if (userDetails.isAdmin()) {
+				token = userDetails.getSelfSupportToken();
+			}
+			// Get metadata to check the accesskeyids
             JsonObject iamMetadataJson = getIAMMetadata(token, uniqueIAMSvcaccName);
             int metadataSecretCount = 0;
 			if (null!= iamMetadataJson) {
