@@ -485,7 +485,7 @@ public class IAMServiceAccountsControllerTest {
 		String inputJson = getJSON(iamServiceAccountRotateRequest);
 		String responseJson = "{\"messages\":[\"IAM Service account activated successfully\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(iamServiceAccountsService.rotateIAMServiceAccount(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(IAMServiceAccountRotateRequest.class))).thenReturn(responseEntityExpected);
+		when(iamServiceAccountsService.rotateIAMServiceAccount(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(IAMServiceAccountRotateRequest.class), Mockito.any())).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/iamserviceaccount/rotate").requestAttr("UserDetails", userDetails)
 				.header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -501,7 +501,7 @@ public class IAMServiceAccountsControllerTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
 
-		when(iamServiceAccountsService.readSecrets(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(iamServiceAccountsService.readSecrets(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(responseEntityExpected);		
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/iamserviceaccounts/secrets/123456789012/testiamsvcacc01/1212zdasdssss")
 				.header(VAULT_TOKEN_STRING, token).header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)

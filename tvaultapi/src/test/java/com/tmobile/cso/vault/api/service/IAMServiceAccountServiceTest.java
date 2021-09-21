@@ -2126,7 +2126,53 @@ public class IAMServiceAccountServiceTest {
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"IAM Service account secret rotated successfully\"]}");
 		IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
-		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest);
+		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest, userDetails);
+		assertEquals(expectedResponse, actualResponse);
+	}
+
+	@Test
+	public void test_rotateIAMServiceAccount_successfull_admin() {
+
+		String iamServiceAccountName = "svc_vault_test5";
+		String token = "123123123123";
+		String awsAccountId = "1234567890";
+		String path = "metadata/iamsvcacc/1234567890_svc_vault_test5";
+		String iamSecret = "abcdefgh";
+		String accessKeyId = "testaccesskey";
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
+		String iamMetaDataStrActivated = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": true, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
+
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"w_iamsvcacc_1234567890_svc_vault_test5 \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("w_iamsvcacc_1234567890_svc_vault_test5");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+			when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(new ArrayList<>());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		IAMServiceAccountSecret iamServiceAccountSecret = new IAMServiceAccountSecret(iamServiceAccountName, accessKeyId, iamSecret, 1609754282000L, awsAccountId, "", "");
+
+		when(iamServiceAccountUtils.rotateIAMSecret(Mockito.any())).thenReturn(iamServiceAccountSecret);
+		when(iamServiceAccountUtils.writeIAMSvcAccSecret(token, "iamsvcacc/1234567890_svc_vault_test5/secret_1", iamServiceAccountName, iamServiceAccountSecret)).thenReturn(true);
+		when(iamServiceAccountUtils.updateIAMSvcAccNewAccessKeyIdInMetadata(eq(token), eq(awsAccountId), eq(iamServiceAccountName), eq(accessKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(iamServiceAccountUtils.updateActivatedStatusInMetadata(token, iamServiceAccountName, awsAccountId)).thenReturn(responseNoContent);
+		when(reqProcessor.process(eq("/iam/list"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"folder_1\"]}"));
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"accessKeyId\":\"testaccesskey\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"1234567890\",\"expiryDateEpoch\":1609845308000,\"userName\":\"svc_vault_test5\",\"expiryDate\":\"2021-01-05 16:45:08\"}}"));
+
+		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"IAM Service account secret rotated successfully\"]}");
+		IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
+		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest, getMockUser(true));
 		assertEquals(expectedResponse, actualResponse);
 	}
 
@@ -2152,7 +2198,7 @@ public class IAMServiceAccountServiceTest {
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Access denied: No permission to rotate secret for IAM service account.\"]}");
 		IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
-		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest);
+		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest, userDetails);
 		assertEquals(expectedResponse, actualResponse);
 	}
 
@@ -2198,7 +2244,7 @@ public class IAMServiceAccountServiceTest {
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to rotate secret for IAM Service account Access Key Id\"]}");
 		IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
-		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest);
+		ResponseEntity<String> actualResponse = iamServiceAccountsService.rotateIAMServiceAccount(token, iamServiceAccountRotateRequest, userDetails);
 		assertEquals(expectedResponse, actualResponse);
 	}
 
