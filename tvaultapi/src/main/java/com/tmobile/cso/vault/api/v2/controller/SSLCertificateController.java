@@ -24,6 +24,8 @@ import com.tmobile.cso.vault.api.service.SSLCertificateAWSRoleService;
 import com.tmobile.cso.vault.api.service.SSLCertificateService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import springfox.documentation.annotations.ApiIgnore;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -150,6 +152,7 @@ public class SSLCertificateController {
 	 * @return
 	 * @throws Exception
 	 */
+	@ApiIgnore
 	@ApiOperation(value = "${CertificateController.getTargetSystemList.value}", notes = "${CertificateController.getTargetSystemList.notes}")
 	@GetMapping(value = "/v2/sslcert/{certType}/targetsystems", produces = "application/json")
 	public ResponseEntity<String> getTargetSystemList(HttpServletRequest request, @RequestHeader(value = "vault-token") String token, @PathVariable("certType") String certType) throws Exception {
@@ -248,19 +251,6 @@ public class SSLCertificateController {
 		return sslCertificateService.getCertificateDetails(token, certificateName, certificateType);
 	}
 
-	 /**
-	 * @param request
-	 * @param token
-	 * @param certificateId
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.renewCertificate.value}", notes = "${SSLCertificateController.renewCertificate.notes}", hidden = false)
-	@PostMapping(value = "/v2/certificates/{certType}/{certName}/renew", produces = "application/json")
-	public ResponseEntity<String> renewCertificate(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token, @PathVariable("certType") String certType, @PathVariable("certName") String certName) throws ParseException {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.renewCertificate(certType, certName, userDetails, token);
-	}
 	
 	/**
 	 * Removes permission for a user from the certificate
@@ -306,21 +296,6 @@ public class SSLCertificateController {
 		return sslCertificateService.getListOfCertificates(token, certificateType, limit, offset);
 	}
 	
-	/**
-	 * Transfer the ownership Of Certificates
-	 * 
-	 * @param request
-	 * @param token
-	 * @param certificateType
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.transferCertificateOwner.value}", notes = "${SSLCertificateController.transferCertificateOwner.notes}", hidden = false)
-	@PutMapping(value = "/v2/sslcert/{certType}/{certName}/{certOwnerEmailId}/transferowner", produces = "application/json")
-	public ResponseEntity<String> transferCertOwner(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token,  @PathVariable("certType") String certType, @PathVariable("certName") String certName,@PathVariable("certOwnerEmailId") String certOwnerEmailId) throws Exception {
-		UserDetails userDetails = (UserDetails) request.getAttribute("UserDetails");
-		return sslCertificateService.updateCertOwner(certType,certName,certOwnerEmailId, userDetails);
-	}
 	
 	/**
 	 * Transfer the ownership Of Certificates
@@ -391,6 +366,7 @@ public class SSLCertificateController {
 	 * @param certificateType	
 	 * @return	
 	 */	
+	@ApiIgnore
 	@ApiOperation(value = "${SSLCertificateController.checkstatus.value}", notes = "${SSLCertificateController.checkstatus.notes}")	
 	@GetMapping(value = "/v2/sslcert/checkstatus/{certificate_name}/{certificate_type}", produces = "application/json")	
 	public ResponseEntity<String> checkCertificateStatus(HttpServletRequest request,	
@@ -504,25 +480,6 @@ public class SSLCertificateController {
 		return sslCertificateAWSRoleService.removeAWSRoleFromSSLCertificate(userDetails, token, certificateAWSRoleRequest);
 	}
 
-	/**
-	 * Delete/UnLink the certificate from application
-	 * @param request
-	 * @param token
-	 * @param certificateName
-	 * @param certificateType
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.unlinkCertificate.value}", notes = "${SSLCertificateController" +
-			".unlinkCertificate.notes}", hidden = false)
-	@PostMapping(value="/v2/sslcert/unlink/{certificate-name}/{certificate-type}/{release-reason}",produces="application/json")
-	public ResponseEntity<String> unlinkCertificate(HttpServletRequest request,
-											@RequestHeader(value="vault-token") String token,
-													@PathVariable(value="certificate-name") String certificateName,
-													@PathVariable(value="certificate-type") String certificateType,
-													@PathVariable(value="release-reason") String releaseReason) {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.unLinkCertificate(userDetails, certificateName,certificateType,releaseReason);
-	}
 
 	/**
 	 * Get all on-board pending certificates from nclm
@@ -536,23 +493,6 @@ public class SSLCertificateController {
 		return sslCertificateService.getAllOnboardPendingCertificates(token, userDetails, limit, offset);
 	}
 
-	/**
-	 * To Onboard single NCLM certificates to tvault
-	 *
-	 * @param request
-	 * @param token
-	 * @param sslCertificateRequest
-	 * @return
-	 * @throws Exception
-	 */
-	@ApiOperation(value = "${SSLCertificateController.onboardSSLCertificate.value}", notes = "${SSLCertificateController.onboardSSLCertificate.notes}", hidden = false)
-	@PostMapping(value = "/v2/sslcert/onboardSSLcertificate", consumes = "application/json", produces = "application/json")
-	public ResponseEntity<String> onboardSSLCertificate(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token,
-			@Valid @RequestBody SSLCertificateOnboardRequest sslCertificateRequest) throws Exception {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.onboardSSLcertificate(userDetails, token, sslCertificateRequest);
-	}
 	
 	/**
 	 * To Update SSL Certificate metadata
@@ -580,18 +520,7 @@ public class SSLCertificateController {
 		return sslCertificateService.saveAllAppDetailsForOldCerts(token, userDetails);
 	}
 	
-	/**
-	 * To Create SSL Certificate through API
-	 * @param sslCertificateRequest
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.sslcreate.value}", notes = "${SSLCertificateController.sslcreate.notes}", hidden = false)
-	@PostMapping(value="/v2/sslcerts",consumes="application/json",produces="application/json")
-	public ResponseEntity<String> generateSSLCertificateAPI(HttpServletRequest request, @RequestHeader(value=
-			"vault-token") String token,@Valid @RequestBody SSLCertificateRequest sslCertificateRequest)  {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.API);
-	}
+
 
 	@ApiOperation(value = "${SSLCertificateController.getFullCertificateList.value}", notes = "${SSLCertificateController.getFullCertificateList.notes}")
 	@GetMapping(value = "/v2/sslcert/allcertificates", produces = "application/json")
