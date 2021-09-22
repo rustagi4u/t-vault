@@ -995,6 +995,28 @@ public class IAMServiceAccountServiceTest {
 				.thenReturn(ldapConfigureResponse);
 		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
 
+		// Send email
+		DirectoryUser directoryUser = new DirectoryUser();
+		directoryUser.setDisplayName("testUserfirstname,lastname");
+		directoryUser.setGivenName("testUser");
+		directoryUser.setUserEmail("testUser@t-mobile.com");
+		directoryUser.setUserId("normaluser");
+		directoryUser.setUserName("normaluser");
+
+		List<DirectoryUser> persons = new ArrayList<>();
+		persons.add(directoryUser);
+		DirectoryObjects users = new DirectoryObjects();
+		DirectoryObjectsList usersList = new DirectoryObjectsList();
+		usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+		users.setData(usersList);
+
+		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(iamServiceAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
+
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
@@ -1067,6 +1089,28 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
 				.thenReturn(ldapConfigureResponse);
 		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		// Send email
+		DirectoryUser directoryUser = new DirectoryUser();
+		directoryUser.setDisplayName("testUserfirstname,lastname");
+		directoryUser.setGivenName("testUser");
+		directoryUser.setUserEmail("testUser@t-mobile.com");
+		directoryUser.setUserId("normaluser");
+		directoryUser.setUserName("normaluser");
+
+		List<DirectoryUser> persons = new ArrayList<>();
+		persons.add(directoryUser);
+		DirectoryObjects users = new DirectoryObjects();
+		DirectoryObjectsList usersList = new DirectoryObjectsList();
+		usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+		users.setData(usersList);
+
+		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(iamServiceAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
@@ -1168,6 +1212,28 @@ public class IAMServiceAccountServiceTest {
 				.thenReturn(ldapConfigureResponse);
 		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
 
+		// Send email
+		DirectoryUser directoryUser = new DirectoryUser();
+		directoryUser.setDisplayName("testUserfirstname,lastname");
+		directoryUser.setGivenName("testUser");
+		directoryUser.setUserEmail("testUser@t-mobile.com");
+		directoryUser.setUserId("normaluser");
+		directoryUser.setUserName("normaluser");
+
+		List<DirectoryUser> persons = new ArrayList<>();
+		persons.add(directoryUser);
+		DirectoryObjects users = new DirectoryObjects();
+		DirectoryObjectsList usersList = new DirectoryObjectsList();
+		usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+		users.setData(usersList);
+
+		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(iamServiceAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
+
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
@@ -1233,44 +1299,6 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-	public void test_transferIAMServiceAccountOwner_InvalidSecret() throws IOException {
-		userDetails = getMockUser(true);
-		token = userDetails.getClientToken();
-		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
-		serviceAccount.setOwnerEmail("oldowner@email.com");
-		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
-				"newuser", "newowner@t-mobile.com", null, null, null, null);
-
-		// Get metadata
-		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[],\"userName\":\"testaccount\"}}";
-		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
-
-		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
-		String path = "metadata/iamsvcacc/1234567_testaccount";
-		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
-				iamMetaDataStr));
-
-		// Validations
-		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
-		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
-				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"errors\":[\"Invalid secret data in request.\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
-		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-		assertEquals(responseEntityExpected, responseEntity);
-	}
-
-	@Test
 	public void test_transferIAMServiceAccountOwner_FailedToRemoveUserPermissions() throws IOException {
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();
@@ -1302,12 +1330,54 @@ public class IAMServiceAccountServiceTest {
 		}
 
 		// Process and remove user permission from IAM Service Account
-		Response userResponse = getMockResponse(HttpStatus.BAD_REQUEST, true, "{}");
-		Response responseNoContent = getMockResponse(HttpStatus.BAD_REQUEST, true, "{\"policies\":null}");
-		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+		Response userResponseBadRequest = getMockResponse(HttpStatus.BAD_REQUEST, true, "{}");
+		Response userResponseOk = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response responseBadRequest = getMockResponse(HttpStatus.BAD_REQUEST, true, "{\"policies\":null}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponseOk).thenReturn(userResponseBadRequest);
 
-		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseBadRequest);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent).thenReturn(responseBadRequest);
+
+		// Update metadata for new owner
+		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
+				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
+
+		// Add User to Service Account
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		// Send email
+		DirectoryUser directoryUser = new DirectoryUser();
+		directoryUser.setDisplayName("testUserfirstname,lastname");
+		directoryUser.setGivenName("testUser");
+		directoryUser.setUserEmail("testUser@t-mobile.com");
+		directoryUser.setUserId("normaluser");
+		directoryUser.setUserName("normaluser");
+
+		List<DirectoryUser> persons = new ArrayList<>();
+		persons.add(directoryUser);
+		DirectoryObjects users = new DirectoryObjects();
+		DirectoryObjectsList usersList = new DirectoryObjectsList();
+		usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+		users.setData(usersList);
+
+		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(iamServiceAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
@@ -1355,6 +1425,21 @@ public class IAMServiceAccountServiceTest {
 
 		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
 		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+
+		// Add User to Service Account
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", token)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
 
 		// Update metadata for new owner
 		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),

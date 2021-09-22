@@ -337,7 +337,8 @@ public class EmailUtils {
 	 * @param subject
 	 * @param variables
 	 */
-	public void sendIAMSvcAccHtmlEmalFromTemplate(String from, List<String> to, String subject, Map<String, String> variables) {
+	public void sendIAMSvcAccHtmlEmalFromTemplate(String from, List<String> to, String subject, Map<String, String> variables,
+												  String templateFileName) {
 		MimeMessage message = javaMailSender.createMimeMessage();
 		MimeMessageHelper helper = null;
 		try {
@@ -345,7 +346,6 @@ public class EmailUtils {
 			helper.setFrom(from);
 			helper.setTo(to.toArray(new String[to.size()]));
 			helper.setSubject(subject);
-			String templateFileName = IAMServiceAccountConstants.IAM_EMAIL_TEMPLATE_NAME;
 
 			// inline image content identifies
 			for (Map.Entry<String, String> entry : IAMServiceAccountConstants.IAM_EMAIL_TEMPLATE_IMAGE_IDS.entrySet()) {
