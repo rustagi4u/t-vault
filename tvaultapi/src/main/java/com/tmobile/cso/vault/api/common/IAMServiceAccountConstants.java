@@ -54,7 +54,9 @@ public final class IAMServiceAccountConstants {
 	public static final String USERNAME_PARAM_STRING = "{\"username\":\"";
 
 	public static final String IAM_EMAIL_TEMPLATE_NAME = "IAMEmailtemplate";
+	public static final String IAM_TRANSFER_TEMPLATE_NAME = "IAMTransferEmailTemplate";
 	public static final String IAM_ONBOARD_EMAIL_SUBJECT="Onboarding IAM Service Account %s is successful";
+	public static final String IAM_TRANSFER_EMAIL_SUBJECT="IAM Service Account %s has been successfully transferred";
 	public static final String IAM_SECRET_FOLDER_PREFIX = "secret_";
 	public static final String IAM_AUTH_TOKEN_PREFIX = "cloud-iam";
 
