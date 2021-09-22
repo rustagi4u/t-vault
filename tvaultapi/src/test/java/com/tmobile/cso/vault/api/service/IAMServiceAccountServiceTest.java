@@ -938,6 +938,503 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
+	public void test_transferIAMServiceAccountOwner_Success() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newowner", "newowner@t-mobile.com", null, null, null, null);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Process and remove user permission from IAM Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+
+		// Update metadata for new owner
+		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
+				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
+
+		// Add User to Service Account
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", token)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_WithNewAppDetails() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newowner", "newowner@t-mobile.com", "app2", "newname", "wow", null);
+
+		String iamSvcAccName = serviceAccount.getAwsAccountId() + "_" + serviceAccount.getUserName();
+		String iamSvccAccPath = IAMServiceAccountConstants.IAM_SVCC_ACC_PATH + iamSvcAccName;
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Process and remove user permission from IAM Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+
+		IAMServiceAccountMetadataDetails iamServiceAccountMetadataDetails = populateIAMSvcAccMetaData(serviceAccount);
+		IAMSvccAccMetadata iamSvccAccMetadata = new IAMSvccAccMetadata(iamSvccAccPath,
+				iamServiceAccountMetadataDetails);
+
+		// Update metadata for new owner
+		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
+				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
+
+		// Add User to Service Account
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", token)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_WithAddGroup() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccountGroup iamSvcAccGroup = new IAMServiceAccountGroup("testaccount", "group1", "write", "1234567");
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newowner", "newowner@t-mobile.com", null, null, null, iamSvcAccGroup.getGroupname());
+
+		String iamSvcAccName = serviceAccount.getAwsAccountId() + "_" + serviceAccount.getUserName();
+		String iamSvccAccPath = IAMServiceAccountConstants.IAM_SVCC_ACC_PATH + iamSvcAccName;
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+
+		// Get metadata
+		String serviceAccountMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response serviceAccountMetadataResponse = getMockResponse(HttpStatus.OK, true, serviceAccountMetadataBody);
+
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Add Group
+		userDetails = getMockUser(false);
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+		String[] policies = { "o_iamsvcacc_1234567_testaccount" };
+		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
+		Response groupResp = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"group1\"}", token)).thenReturn(groupResp);
+		ReflectionTestUtils.setField(iamServiceAccountsService, "vaultAuthMethod", "ldap");
+		ObjectMapper objMapper = new ObjectMapper();
+		String responseJson = groupResp.getResponse();
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			resList.add("w_shared_mysafe01");
+			resList.add("w_shared_mysafe02");
+			when(ControllerUtil.getPoliciesAsListFromJson(objMapper, responseJson)).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		Response groupMetadataResponse = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}");
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token)))
+				.thenReturn(serviceAccountMetadataResponse)
+				.thenReturn(groupMetadataResponse);
+
+		// Process and remove user permission from IAM Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
+
+		// create metadata for new owner
+		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
+				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
+
+		// Add User to Service Account
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", token)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_OwnerAlreadyExists() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"normaluser", "newowner@t-mobile.com", null, null, null, null);
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"errors\":[\"Failed to transfer IAM Service Account owner. The owner given is already the current owner.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_NotAuthorized() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newuser", "newowner@t-mobile.com", null, null, null, null);
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.FORBIDDEN, true, "{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.FORBIDDEN).body(expectedResponse);
+		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_InvalidSecret() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newuser", "newowner@t-mobile.com", null, null, null, null);
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"errors\":[\"Invalid secret data in request.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_FailedToRemoveUserPermissions() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newowner", "newowner@t-mobile.com", null, null, null, null);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Process and remove user permission from IAM Service Account
+		Response userResponse = getMockResponse(HttpStatus.BAD_REQUEST, true, "{}");
+		Response responseNoContent = getMockResponse(HttpStatus.BAD_REQUEST, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"errors\":[\"Removing permissions from the old owner failed.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
+		assertEquals(HttpStatus.MULTI_STATUS, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_UpdateMetadataFailed() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newowner", "newowner@t-mobile.com", null, null, null, null);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Process and remove user permission from IAM Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+
+		// Update metadata for new owner
+		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
+				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.BAD_REQUEST, false,"{}"));
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"errors\":[\"Metadata update failed for IAM Service Account.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
+		assertEquals(HttpStatus.MULTI_STATUS, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_AddSudoPermissionFailed() throws IOException {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+		serviceAccount.setOwnerEmail("oldowner@email.com");
+		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
+				"newowner", "newowner@t-mobile.com", null, null, null, null);
+
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
+
+		// Get metadata
+		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
+		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(expectedMetadataResponse);
+
+		String path = "metadata/iamsvcacc/1234567_testaccount";
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		// Validations
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Process and remove user permission from IAM Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
+
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+
+		// Update metadata for new owner
+		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
+				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
+
+		// Add User to Service Account
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.BAD_REQUEST, false, "{}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", token)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
+				userDetails, iamSvcAccTransfer);
+		String expectedResponse = "{\"errors\":[\"Failed to add sudo permission to owner.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
+		assertEquals(HttpStatus.MULTI_STATUS, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
 	public void testRemoveUserFromIAMSvcAccLdapSuccess() {
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();

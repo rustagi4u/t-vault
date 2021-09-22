@@ -2047,8 +2047,18 @@ public class  IAMServiceAccountsService {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 						"{\"errors\":[\"Failed to remove user permission from IAM Service account. Owner permission cannot be changed.\"]}");
 			}
+
+			String readPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.READ_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
+			String writePolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.WRITE_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
+			String denyPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.DENY_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
+
+			List<String> policiesToRemove = new ArrayList<>();
+			policiesToRemove.add(readPolicy);
+			policiesToRemove.add(writePolicy);
+			policiesToRemove.add(denyPolicy);
+
 			return processAndRemoveUserPermissionFromIAMSvcAcc(token, iamServiceAccountUser, userDetails,
-					oidcEntityResponse, uniqueIAMSvcaccName);
+					oidcEntityResponse, uniqueIAMSvcaccName, policiesToRemove);
 		}
 		else {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: No permission to remove user from this IAM service account\"]}");
@@ -2066,7 +2076,7 @@ public class  IAMServiceAccountsService {
 	 */
 	private ResponseEntity<String> processAndRemoveUserPermissionFromIAMSvcAcc(String token,
 			IAMServiceAccountUser iamServiceAccountUser, UserDetails userDetails, OIDCEntityResponse oidcEntityResponse,
-			String uniqueIAMSvcaccName) {
+			String uniqueIAMSvcaccName, List<String> policiesToRemove) {
 
 		Response userResponse = new Response();
 		if (TVaultConstants.USERPASS.equals(vaultAuthMethod)) {
@@ -2102,7 +2112,7 @@ public class  IAMServiceAccountsService {
 				build()));
 
 		return createPoliciesAndRemoveUserFromSvcAcc(token, iamServiceAccountUser, userDetails, oidcEntityResponse,
-				uniqueIAMSvcaccName, userResponse);
+				uniqueIAMSvcaccName, userResponse, policiesToRemove);
 	}
 
 	/**
@@ -2117,17 +2127,11 @@ public class  IAMServiceAccountsService {
 	 */
 	private ResponseEntity<String> createPoliciesAndRemoveUserFromSvcAcc(String token,
 			IAMServiceAccountUser iamServiceAccountUser, UserDetails userDetails, OIDCEntityResponse oidcEntityResponse,
-			String uniqueIAMSvcaccName, Response userResponse) {
+			String uniqueIAMSvcaccName, Response userResponse, List<String> policiesToRemove) {
 		String readPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.READ_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
 		String writePolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.WRITE_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
 		String denyPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.DENY_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
 		String ownerPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY)).append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
-
-		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-				.put(LogMessage.ACTION, IAMServiceAccountConstants.REMOVE_USER_FROM_IAMSVCACC_MSG)
-				.put(LogMessage.MESSAGE, String.format("Policies are, read - [%s], write - [%s], deny -[%s], owner - [%s]", readPolicy, writePolicy, denyPolicy, ownerPolicy))
-				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 
 		String responseJson="";
 		String groups="";
@@ -2156,9 +2160,14 @@ public class  IAMServiceAccountsService {
 						build()));
 			}
 			policies.addAll(currentpolicies);
-			policies.remove(readPolicy);
-			policies.remove(writePolicy);
-			policies.remove(denyPolicy);
+			for (String policy : policiesToRemove) {
+				policies.remove(policy);
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.REMOVE_USER_FROM_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Removing policy from list - [%s]", policy))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			}
 		}
 		String policiesString = org.apache.commons.lang3.StringUtils.join(policies, ",");
 		String currentpoliciesString = org.apache.commons.lang3.StringUtils.join(currentpolicies, ",");
@@ -5474,4 +5483,314 @@ public class  IAMServiceAccountsService {
             return false;
         }
     }
+
+	/**
+	 * Transfer an IAM service account from one owner to another
+	 *
+	 * @param token
+	 * @param userDetails
+	 * @param iamServiceAccountTransfer
+	 * @return ResponseEntity<String>
+	 */
+	public ResponseEntity<String> transferIAMServiceAccountOwner(String token, UserDetails userDetails, IAMServiceAccountTransfer iamServiceAccountTransfer) throws IOException {
+		String iamSvcAccName = iamServiceAccountTransfer.getAwsAccountId() + "_" +
+				iamServiceAccountTransfer.getUserName();
+		String iamSvccAccPath = IAMServiceAccountConstants.IAM_SVCC_ACC_PATH + iamSvcAccName;
+		String iamSvccAccMetaPath = IAMServiceAccountConstants.IAM_SVCC_ACC_META_PATH + iamSvcAccName;
+		Response metaResponse = getMetadata(token, userDetails, iamSvccAccPath);
+		IAMServiceAccount iamSvcAcc = constructIAMSvcAccObjectFromMetadata(metaResponse);
+
+		if (iamSvcAcc == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.MESSAGE, "Failed constructing metadata object.")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"Failed to get metadata for this IAM Service Account.\"]}");
+		}
+
+		if (iamServiceAccountTransfer.getOwnerEmail().equals(iamSvcAcc.getOwnerEmail()) ||
+				iamServiceAccountTransfer.getOwnerNtid().equals(iamSvcAcc.getOwnerNtid())) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.MESSAGE, "Failed to transfer IAM Service Account owner. The owner given is already the current owner.")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"Failed to transfer IAM Service Account owner. The owner given is already the current owner.\"]}");
+		}
+
+		ResponseEntity<String> validationErrors = getTokenAndSecretValidationErrors(token, iamSvcAcc);
+		if (validationErrors != null) {
+			return validationErrors;
+		}
+
+		if (iamServiceAccountTransfer.getAdSelfSupportGroup() != null) {
+			iamSvcAcc.setAdSelfSupportGroup(iamServiceAccountTransfer.getAdSelfSupportGroup());
+			IAMServiceAccountGroup newGroup = new IAMServiceAccountGroup(iamServiceAccountTransfer.getUserName(),
+					iamServiceAccountTransfer.getAdSelfSupportGroup(), IAMServiceAccountConstants.IAM_WRITE_PERMISSION_STRING,
+					iamServiceAccountTransfer.getAwsAccountId());
+			ResponseEntity<String> addGroupResponse = addGroupToIAMServiceAccount(token, newGroup,
+					userDetails, true);
+
+			if (HttpStatus.OK.equals(addGroupResponse.getStatusCode())) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+						.put(LogMessage.MESSAGE, String.format("Successfully added group [%s] to the IAM Service Account",
+								iamServiceAccountTransfer.getAdSelfSupportGroup()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			} else {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+						.put(LogMessage.MESSAGE, String.format("Adding group [%s] to the IAM Service Account failed.",
+								iamServiceAccountTransfer.getAdSelfSupportGroup()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
+						"{\"errors\":[\"Adding group to IAM Service Account failed.\"]}");
+			}
+		}
+
+		IAMServiceAccountUser oldOwner = new IAMServiceAccountUser(iamSvcAcc.getUserName().toLowerCase(),
+				iamSvcAcc.getOwnerNtid(), TVaultConstants.SUDO_POLICY, iamSvcAcc.getAwsAccountId());
+		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+		String ownerPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
+				.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(iamSvcAccName).toString();
+
+		List<String> policiesToRemove = new ArrayList<>();
+		policiesToRemove.add(ownerPolicy);
+
+		if (!userDetails.isAdmin()) {
+			token = tokenUtils.getSelfServiceToken();
+		}
+		ResponseEntity<String> removeOldPermissionResponse = processAndRemoveUserPermissionFromIAMSvcAcc(token, oldOwner, userDetails,
+				oidcEntityResponse, iamSvcAccName, policiesToRemove);
+
+		if (HttpStatus.OK.equals(removeOldPermissionResponse.getStatusCode())) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Successfully removed permission from old owner [%s]", oldOwner.getUsername()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Failed to remove permission from old owner [%s]", oldOwner.getUsername()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
+					"{\"errors\":[\"Removing permissions from the old owner failed.\"]}");
+		}
+
+		iamSvcAcc.setOwnerEmail(iamServiceAccountTransfer.getOwnerEmail());
+		iamSvcAcc.setOwnerNtid(iamServiceAccountTransfer.getOwnerNtid());
+		if (iamServiceAccountTransfer.getApplicationName() != null) {
+			iamSvcAcc.setApplicationName(iamServiceAccountTransfer.getApplicationName());
+		}
+		if (iamServiceAccountTransfer.getApplicationId() != null) {
+			iamSvcAcc.setApplicationId(iamServiceAccountTransfer.getApplicationId());
+		}
+		if (iamServiceAccountTransfer.getApplicationTag() != null) {
+			iamSvcAcc.setApplicationTag(iamServiceAccountTransfer.getApplicationTag());
+		}
+		boolean metadataCreatedForNewOwner = updateMetadata(token, iamSvcAcc, iamSvccAccPath);
+
+		if (metadataCreatedForNewOwner) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Successfully updated Metadata for the IAM Service Account [%s]", iamSvccAccMetaPath))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.MESSAGE,
+							String.format("Updating metadata for IAM Service Account [%s] failed.", iamSvccAccMetaPath))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
+					"{\"errors\":[\"Metadata update failed for IAM Service Account.\"]}");
+		}
+
+		boolean sudoPermissionAddedToNewOwner = addSudoPermissionToOwner(token, iamSvcAcc, userDetails, iamSvcAccName);
+
+		if (sudoPermissionAddedToNewOwner) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Successfully added sudo permission for owner [%s]", iamSvcAcc.getOwnerNtid()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.MESSAGE,
+							String.format("Failed to add sudo permission to owner [%s].", iamSvcAcc.getOwnerNtid()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
+					"{\"errors\":[\"Failed to add sudo permission to owner.\"]}");
+		}
+
+		return ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}");
+	}
+
+	/**
+	 * Checks the user's authorization as well as validates
+	 * that the secret is valid
+	 *
+	 * @param token
+	 * @param iamSvcAcc
+	 * @return ResponseEntity<String>
+	 */
+	private ResponseEntity<String> getTokenAndSecretValidationErrors(String token, IAMServiceAccount iamSvcAcc) {
+		if (!isAuthorizedIAMAdminApprole(token)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
+					.put(LogMessage.MESSAGE,
+							"Access denied. IAM admin approle not authorized.")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+					"{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}");
+		}
+		if(!isValidIamSvcaccSecret(iamSvcAcc)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Invalid secret data in request.", iamSvcAcc.getUserName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"Invalid secret data in request.\"]}");
+		}
+		return null;
+	}
+
+	/**
+	 * Updates the metadata for IAM service account.
+	 * It does this by getting the current metadata and updating
+	 * the fields based on the passed IAMServiceAccount object.
+	 * @param token
+	 * @param iamSvcAcc
+	 * @param iamSvcAccMetaPath
+	 * @return boolean
+	 */
+	private boolean updateMetadata(String token, IAMServiceAccount iamSvcAcc, String iamSvcAccMetaPath) {
+
+		Response metadataResponse = ControllerUtil.updateMetadataOnIAMSvcUpdate(iamSvcAccMetaPath, iamSvcAcc, token);
+
+		if (HttpStatus.NO_CONTENT.equals(metadataResponse.getHttpstatus()) || HttpStatus.OK.equals(metadataResponse.getHttpstatus())) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Successfully updated Metadata for the IAM Service Account [%s]", iamSvcAccMetaPath))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
+					.put(LogMessage.MESSAGE,
+							String.format("Updating metadata for IAM Service Account [%s] failed.", iamSvcAccMetaPath))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Constructs a new IAMServiceAccount object based on
+	 * the metadata response passed in. It takes the fields
+	 * from the response and maps them to the new object.
+	 * @param metaResponse
+	 * @return IAMServiceAccount
+	 */
+	private IAMServiceAccount constructIAMSvcAccObjectFromMetadata(Response metaResponse) {
+		IAMServiceAccount iamSvcAcc = new IAMServiceAccount();
+
+		if (metaResponse !=null && metaResponse.getHttpstatus().equals(HttpStatus.OK)) {
+			try {
+				JsonNode jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("ad_group");
+				if (jsonNode != null) {
+					iamSvcAcc.setAdSelfSupportGroup(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("userName");
+				if (jsonNode != null) {
+					iamSvcAcc.setUserName(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("awsAccountId");
+				if (jsonNode != null) {
+					iamSvcAcc.setAwsAccountId(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("awsAccountName");
+				if (jsonNode != null) {
+					iamSvcAcc.setAwsAccountName(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("createdAtEpoch");
+				if (jsonNode != null) {
+					iamSvcAcc.setCreatedAtEpoch(jsonNode.asLong());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("owner_ntid");
+				if (jsonNode != null) {
+					iamSvcAcc.setOwnerNtid(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("owner_email");
+				if (jsonNode != null) {
+					iamSvcAcc.setOwnerEmail(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("application_id");
+				if (jsonNode != null) {
+					iamSvcAcc.setApplicationId(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("application_name");
+				if (jsonNode != null) {
+					iamSvcAcc.setApplicationName(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("application_tag");
+				if (jsonNode != null) {
+					iamSvcAcc.setApplicationTag(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("expiryDateEpoch");
+				if (jsonNode != null) {
+					iamSvcAcc.setExpiryDateEpoch(jsonNode.asLong());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("expiryDuration");
+				if (jsonNode != null) {
+					iamSvcAcc.setExpiryDuration(jsonNode.asLong());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("expiryDuration");
+				if (jsonNode != null) {
+					iamSvcAcc.setExpiryDuration(jsonNode.asLong());
+				}
+				JsonParser jsonParser = new JsonParser();
+				JsonArray dataSecret = ((JsonObject) jsonParser.parse(new ObjectMapper().readTree(metaResponse.getResponse()).get("data").toString()))
+						.getAsJsonArray("secret");
+
+				List<IAMSecrets> secrets = new ArrayList<>();
+				for (int i = 0; i < dataSecret.size(); i++) {
+					IAMSecrets secret = new IAMSecrets();
+					JsonElement jsonElement = dataSecret.get(i);
+					JsonObject jsonObject = jsonElement.getAsJsonObject();
+					if (jsonObject.get("expiryDateEpoch") != null) {
+						secret.setExpiryDateEpoch(jsonObject.get("expiryDateEpoch").getAsLong());
+					}
+					if (jsonObject.get("accessKeyId") != null) {
+						secret.setAccessKeyId(jsonObject.get("accessKeyId").getAsString());
+					}
+					secrets.add(secret);
+				}
+				iamSvcAcc.setSecret(secrets);
+			} catch (IOException e) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "getServiceAccountMetadataDetails").
+						put(LogMessage.MESSAGE, String.format("Failed to parse IAM service account metadata for [%s]", iamSvcAcc.getApplicationName())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return null;
+			}
+		}
+		return iamSvcAcc;
+	}
 }

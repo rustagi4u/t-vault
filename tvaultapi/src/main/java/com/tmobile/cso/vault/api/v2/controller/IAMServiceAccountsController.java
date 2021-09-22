@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.tmobile.cso.vault.api.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -34,19 +35,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tmobile.cso.vault.api.exception.TVaultValidationException;
-import com.tmobile.cso.vault.api.model.AWSIAMRole;
-import com.tmobile.cso.vault.api.model.AWSLoginRole;
-import com.tmobile.cso.vault.api.model.IAMServiceAccount;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountAWSRole;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountAccessKey;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountApprole;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountGroup;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountKey;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountOffboardRequest;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountRotateRequest;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountSecret;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountUser;
-import com.tmobile.cso.vault.api.model.UserDetails;
 import com.tmobile.cso.vault.api.service.IAMServiceAccountsService;
 
 import io.swagger.annotations.Api;
@@ -75,6 +63,20 @@ public class IAMServiceAccountsController {
 	public ResponseEntity<String> onboardIAMServiceAccount( HttpServletRequest request, @RequestHeader(value="vault-token") String token, @RequestBody @Valid IAMServiceAccount iamServiceAccount ){
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
 		return iamServiceAccountsService.onboardIAMServiceAccount(token, iamServiceAccount, userDetails);
+	}
+
+	/**
+	 * Transfers an IAM service account from one owner to another
+	 * @param request
+	 * @param token
+	 * @return
+	 */
+	@ApiOperation(value = "${IAMServiceAccountsController.transferIAMServiceAccountOwner.value}", notes = "${IAMServiceAccountsController.transferIAMServiceAccountOwner.notes}")
+	@PostMapping(value="/v2/iamserviceaccounts/transfer", produces="application/json")
+	public ResponseEntity<String> transferIAMServiceAccountOwner( HttpServletRequest request, @RequestHeader(value="vault-token") String token,
+																  @RequestBody @Valid IAMServiceAccountTransfer iamServiceAccountTransfer) throws IOException {
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.transferIAMServiceAccountOwner(token, userDetails, iamServiceAccountTransfer);
 	}
 
 	/**
