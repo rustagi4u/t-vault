@@ -31,6 +31,7 @@ import com.tmobile.cso.vault.api.service.SelfSupportService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @CrossOrigin
@@ -121,6 +122,7 @@ public class SelfSupportController {
 	 * @param safe
 	 * @return
 	 */
+	@ApiIgnore
 	@ApiOperation(value = "${SelfSupportController.createSafe.value}", notes = "${SelfSupportController.createSafe.notes}")
 	@PostMapping(value="/v2/ss/sdb", consumes="application/json",produces="application/json")
 	public ResponseEntity<String> createSafe(HttpServletRequest request, @RequestHeader(value="vault-token" ) String token, @RequestBody Safe safe) {
