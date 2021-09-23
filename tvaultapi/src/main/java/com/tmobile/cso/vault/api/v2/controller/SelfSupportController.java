@@ -116,19 +116,7 @@ public class SelfSupportController {
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.getInfo(userDetails, path);
 	}
-	/**
-	 * 
-	 * @param token
-	 * @param safe
-	 * @return
-	 */
-	@ApiIgnore
-	@ApiOperation(value = "${SelfSupportController.createSafe.value}", notes = "${SelfSupportController.createSafe.notes}")
-	@PostMapping(value="/v2/ss/sdb", consumes="application/json",produces="application/json")
-	public ResponseEntity<String> createSafe(HttpServletRequest request, @RequestHeader(value="vault-token" ) String token, @RequestBody Safe safe) {
-		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
-		return selfSupportService.createSafe(userDetails, safe);
-	}
+
 	/**
 	 * 
 	 * @param request

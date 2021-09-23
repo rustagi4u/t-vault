@@ -161,24 +161,6 @@ public class SelfSupportControllerTest {
                 .andExpect(content().string(containsString(responseJson)));
     }
 
-    @Test
-    public void test_createSafe() throws Exception {
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String inputJson =new ObjectMapper().writeValueAsString(safe);
-        String responseJson = "{\"messages\":[\"Safe updated \"]}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-        UserDetails userDetails = getMockUser(false);
-        when(selfSupportService.createSafe(eq(userDetails), Mockito.any(Safe.class))).thenReturn(responseEntityExpected);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/v2/ss/sdb").requestAttr("UserDetails", userDetails)
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
-                .header("Content-Type", "application/json;charset=UTF-8")
-                .content(inputJson))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(responseJson)));
-    }
 
     @Test
     public void test_isAuthorized() throws Exception {
