@@ -968,6 +968,12 @@ public class IAMServiceAccountServiceTest {
 			e.printStackTrace();
 		}
 
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+
 		// Process and remove user permission from IAM Service Account
 		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
@@ -1058,6 +1064,12 @@ public class IAMServiceAccountServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
 
 		// Process and remove user permission from IAM Service Account
 		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
@@ -1158,6 +1170,12 @@ public class IAMServiceAccountServiceTest {
 			e.printStackTrace();
 		}
 
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+
 		// Add Group
 		userDetails = getMockUser(false);
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
@@ -1250,6 +1268,12 @@ public class IAMServiceAccountServiceTest {
 		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
 				"normaluser", "newowner@t-mobile.com", null, null, null, null);
 
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+
 		// Get metadata
 		String expectedMetadataBody = "{\"data\":{\"application_id\":\"app1\",\"application_name\":\"App1\",\"application_tag\":\"App1\",\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"},\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\",\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDuration\":12345}],\"userName\":\"testaccount\"}}";
 		Response expectedMetadataResponse = getMockResponse(HttpStatus.OK, true, expectedMetadataBody);
@@ -1290,6 +1314,12 @@ public class IAMServiceAccountServiceTest {
 		Response lookupResponse = getMockResponse(HttpStatus.FORBIDDEN, true, "{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
 
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}";
@@ -1328,6 +1358,12 @@ public class IAMServiceAccountServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
 
 		// Process and remove user permission from IAM Service Account
 		Response userResponseBadRequest = getMockResponse(HttpStatus.BAD_REQUEST, true, "{}");
@@ -1418,6 +1454,12 @@ public class IAMServiceAccountServiceTest {
 			e.printStackTrace();
 		}
 
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+
 		// Process and remove user permission from IAM Service Account
 		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
@@ -1483,6 +1525,12 @@ public class IAMServiceAccountServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
+		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
+				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
 
 		// Process and remove user permission from IAM Service Account
 		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
