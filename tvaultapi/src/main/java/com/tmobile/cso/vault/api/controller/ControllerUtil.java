@@ -858,6 +858,70 @@ public final class ControllerUtil {
 		return null;
 
 	}
+
+	/**
+	 * Update metadata on IAM service account update
+	 * @param path
+	 * @param iamServiceAccount
+	 * @param token
+	 * @return Response
+	 */
+	public static Response updateMetadataOnIAMSvcUpdate(String path, IAMServiceAccount iamServiceAccount, String token) {
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, "updateMetadataOnSvcUpdate").
+				put(LogMessage.MESSAGE, "Trying to update metadata on AD service account update.").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+		String _path = METADATASTR + path;
+		ObjectMapper objMapper = new ObjectMapper();
+		String pathjson = PATHSTR + _path + "\"}";
+
+		Response metadataResponse = reqProcessor.process(READSTR,pathjson,token);
+		Map<String,Object> _metadataMap = null;
+		if(HttpStatus.OK.equals(metadataResponse.getHttpstatus())){
+			try {
+				_metadataMap = objMapper.readValue(metadataResponse.getResponse(), new TypeReference<Map<String,Object>>() {});
+			} catch (IOException e) {
+				log.error(e);
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, UPDATEMETADATASTR).
+						put(LogMessage.MESSAGE, String.format ("Error creating _metadataMap for type IAM service account update, name [%s], and path [%s] message [%s]", iamServiceAccount.getUserName(), _path, e.getMessage())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+			}
+
+			@SuppressWarnings("unchecked")
+			Map<String,Object> metadataMap = (Map<String,Object>) _metadataMap.get("data");
+
+			metadataMap.put("ad_group", iamServiceAccount.getAdSelfSupportGroup());
+			metadataMap.put("application_name", iamServiceAccount.getApplicationName());
+			metadataMap.put("application_id", iamServiceAccount.getApplicationId());
+			metadataMap.put("application_tag", iamServiceAccount.getApplicationTag());
+			metadataMap.put("owner_ntid", iamServiceAccount.getOwnerNtid());
+			metadataMap.put("owner_email", iamServiceAccount.getOwnerEmail());
+
+			String metadataJson = "";
+			try {
+				metadataJson = objMapper.writeValueAsString(metadataMap);
+			} catch (JsonProcessingException e) {
+				log.error(e);
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, UPDATEMETADATASTR).
+						put(LogMessage.MESSAGE, String.format ("Error creating _metadataMap for type IAM service account update, name [%s], and path [%s] message [%s]", iamServiceAccount.getUserName(), _path, e.getMessage())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+			}
+
+			String writeJson =  PATHSTR + _path + DATASTR + metadataJson + "}";
+			metadataResponse = reqProcessor.process(WRITESTR, writeJson, token);
+			return metadataResponse;
+		}
+		return null;
+
+	}
 	
 	/**
 	 * Update metadata for the service account on password reset
