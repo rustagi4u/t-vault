@@ -869,8 +869,8 @@ public final class ControllerUtil {
 	public static Response updateMetadataOnIAMSvcUpdate(String path, IAMServiceAccount iamServiceAccount, String token) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-				put(LogMessage.ACTION, "updateMetadataOnSvcUpdate").
-				put(LogMessage.MESSAGE, "Trying to update metadata on AD service account update.").
+				put(LogMessage.ACTION, "updateMetadataOnIAMSvcUpdate").
+				put(LogMessage.MESSAGE, "Trying to update metadata on IAM service account.").
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
 		String _path = METADATASTR + path;
