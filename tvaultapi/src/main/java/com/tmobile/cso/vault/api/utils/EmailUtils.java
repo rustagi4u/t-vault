@@ -334,17 +334,22 @@ public class EmailUtils {
 	 * To send HTML email notification
 	 * @param from
 	 * @param to
+	 * @param cc
 	 * @param subject
 	 * @param variables
+	 * @param templateFileName
 	 */
-	public void sendIAMSvcAccHtmlEmalFromTemplate(String from, List<String> to, String subject, Map<String, String> variables,
-												  String templateFileName) {
+	public void sendIAMSvcAccHtmlEmalFromTemplate(String from, List<String> to, List<String> cc, String subject,
+												  Map<String, String> variables, String templateFileName) {
 		MimeMessage message = javaMailSender.createMimeMessage();
 		MimeMessageHelper helper = null;
 		try {
 			helper = new MimeMessageHelper(message,true, "UTF-8");
 			helper.setFrom(from);
 			helper.setTo(to.toArray(new String[to.size()]));
+			if (cc != null) {
+				helper.setCc(cc.toArray(new String[cc.size()]));
+			}
 			helper.setSubject(subject);
 
 			// inline image content identifies
