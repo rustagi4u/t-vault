@@ -807,16 +807,6 @@ const SafeDashboard = () => {
                     <NoSafeWrap>
                       <NoData
                         imageSrc={NoSafesIcon}
-                        // description="Create a safe to get started!"
-                        // actionButton={
-                        //   <FloatingActionButtonComponent
-                        //     href="/safes/create-safe"
-                        //     color="secondary"
-                        //     icon="addd"
-                        //     tooltipTitle="Create New Safe"
-                        //     tooltipPos="bottom"
-                        //   />
-                        // }
                         customStyle={noDataStyle}
                       />
                     </NoSafeWrap>
