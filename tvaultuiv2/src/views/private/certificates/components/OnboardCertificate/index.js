@@ -768,6 +768,8 @@ const OnboardCertificates = (props) => {
                               : notifyOptions.map(
                                   (item) =>
                                     `${item?.userEmail?.toLowerCase()}, ${
+                                      item?.displayName &&
+                                      item?.displayName !== '' &&
                                       getName(
                                         item?.displayName?.toLowerCase()
                                       ) !== ' '
