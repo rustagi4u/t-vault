@@ -205,7 +205,8 @@ public class  IAMServiceAccountsService {
 		boolean iamSvcAccOwnerPermissionAddStatus = createIAMSvcAccPolicies(token, iamServiceAccount, userDetails, iamSvcAccName);
 		if (iamSvcAccOwnerPermissionAddStatus) {
 			// Add sudo permission to owner
-			boolean iamSvcAccCreationStatus = addSudoPermissionToOwner(token, iamServiceAccount, userDetails, iamSvcAccName);
+			ResponseEntity<String> iamSvcAccCreationResponse = addSudoPermissionToOwner(token, iamServiceAccount, userDetails, iamSvcAccName);
+			boolean iamSvcAccCreationStatus = HttpStatus.OK.equals(iamSvcAccCreationResponse.getStatusCode());
 			boolean selfSupportGroupAssoicationStatus = true;
 			// Add self support group to IAM service account (if available)
 			if (!StringUtils.isEmpty(iamServiceAccount.getAdSelfSupportGroup())) {
@@ -366,7 +367,7 @@ public class  IAMServiceAccountsService {
 	 * @param iamSvcAccName
 	 * @return
 	 */
-	private boolean addSudoPermissionToOwner(String token, IAMServiceAccount iamServiceAccount, UserDetails userDetails,
+	private ResponseEntity<String> addSudoPermissionToOwner(String token, IAMServiceAccount iamServiceAccount, UserDetails userDetails,
 											 String iamSvcAccName) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -392,7 +393,7 @@ public class  IAMServiceAccountsService {
 						.put(LogMessage.MESSAGE, String.format("Successfully added owner permission to [%s] for IAM service " +
 								ACCOUNTSTR, iamServiceAccount.getOwnerNtid(), iamSvcAccName))
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-				return true;
+				return addWritePermissionToIAMSvcAccResponse;
 			}
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -400,6 +401,7 @@ public class  IAMServiceAccountsService {
 					.put(LogMessage.MESSAGE, String.format("Failed to add write permission to [%s] for IAM service " +
 							"as part of onboarding" + ACCOUNTSTR, iamServiceAccount.getOwnerNtid(), iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return addWritePermissionToIAMSvcAccResponse;
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -407,8 +409,7 @@ public class  IAMServiceAccountsService {
 				.put(LogMessage.MESSAGE, String.format("Failed to add owner permission to [%s] for IAM service " +
 						ACCOUNTSTR, iamServiceAccount.getOwnerNtid(), iamSvcAccName))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-		return false;
-
+		return addUserToIAMSvcAccResponse;
 	}
 
 	/**
@@ -1056,6 +1057,7 @@ public class  IAMServiceAccountsService {
 	 * @param token
 	 * @param iamServiceAccountGroup
 	 * @param userDetails
+	 * @param isPartOfOnboard
 	 * @return
 	 */
 	public ResponseEntity<String> addGroupToIAMServiceAccount(String token,
@@ -1131,9 +1133,8 @@ public class  IAMServiceAccountsService {
 	 * @param token
 	 * @param userDetails
 	 * @param oidcGroup
-	 * @param groupName
-	 * @param iamSvcAccName
-	 * @param access
+	 * @param iamServiceAccountGroup
+	 * @param iamSvcAccountName
 	 * @return
 	 */
 	private ResponseEntity<String> processAndAddGroupPoliciesToIAMSvcAcc(String token, UserDetails userDetails,
@@ -1231,11 +1232,10 @@ public class  IAMServiceAccountsService {
 	 * @param token
 	 * @param userDetails
 	 * @param oidcGroup
-	 * @param groupName
-	 * @param iamSvcAccName
-	 * @param access
+	 * @param iamServiceAccountGroup
 	 * @param policies
 	 * @param currentpolicies
+	 * @param iamSvcAccountName
 	 * @return
 	 */
 	private ResponseEntity<String> configureGroupAndUpdateMetadataForIAMSvcAcc(String token, UserDetails userDetails,
@@ -1295,7 +1295,7 @@ public class  IAMServiceAccountsService {
 			}
 		} else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("{\"errors\":[\"Group configuration failed.Try Again\"]}");
+					.body(String.format("{\"errors\":[\"Unable to update group policies for group %s\"]}", iamServiceAccountGroup.getGroupname()));
 		}
 	}
 
@@ -2187,7 +2187,7 @@ public class  IAMServiceAccountsService {
 					oidcEntityResponse, groups, currentpolicies, currentpoliciesString);
 		}
 		else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to remvoe the user from the IAM Service Account\"]}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to remove the user from the IAM Service Account\"]}");
 		}
 	}
 
@@ -5528,19 +5528,20 @@ public class  IAMServiceAccountsService {
 				iamSvcAcc.getOwnerNtid(), TVaultConstants.SUDO_POLICY, iamSvcAcc.getAwsAccountId());
 		iamSvcAcc.setOwnerEmail(iamServiceAccountTransfer.getOwnerEmail());
 		iamSvcAcc.setOwnerNtid(iamServiceAccountTransfer.getOwnerNtid());
-		if (iamServiceAccountTransfer.getApplicationName() != null && !iamServiceAccountTransfer.getApplicationName().equals("")) {
+
+		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getApplicationName())) {
 			iamSvcAcc.setApplicationName(iamServiceAccountTransfer.getApplicationName());
 		}
-		if (iamServiceAccountTransfer.getApplicationId() != null && !iamServiceAccountTransfer.getAwsAccountId().equals("")) {
+		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getApplicationId())) {
 			iamSvcAcc.setApplicationId(iamServiceAccountTransfer.getApplicationId());
 		}
-		if (iamServiceAccountTransfer.getApplicationTag() != null && !iamServiceAccountTransfer.getApplicationTag().equals("")) {
+		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getApplicationTag())) {
 			iamSvcAcc.setApplicationTag(iamServiceAccountTransfer.getApplicationTag());
 		}
 
-		boolean sudoPermissionAddedToNewOwner = addSudoPermissionToOwner(token, iamSvcAcc, userDetails, iamSvcAccName);
+		ResponseEntity<String> addSudoPermissionToOwnerResponse = addSudoPermissionToOwner(token, iamSvcAcc, userDetails, iamSvcAccName);
 
-		if (sudoPermissionAddedToNewOwner) {
+		if (HttpStatus.OK.equals(addSudoPermissionToOwnerResponse.getStatusCode())) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
@@ -5556,12 +5557,10 @@ public class  IAMServiceAccountsService {
 									iamSvcAcc.getOwnerNtid(), iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			revertTransferOnTransferPermissionFailure(iamSvcAcc, iamSvcAccName, userDetails, token);
-			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
-					"{\"errors\":[\"Failed to add sudo permission to owner.\"]}");
+			return addSudoPermissionToOwnerResponse;
 		}
 
-		if (iamServiceAccountTransfer.getAdSelfSupportGroup() != null &&
-				!iamServiceAccountTransfer.getAdSelfSupportGroup().equals("")) {
+		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getAdSelfSupportGroup())) {
 			iamSvcAcc.setAdSelfSupportGroup(iamServiceAccountTransfer.getAdSelfSupportGroup());
 			IAMServiceAccountGroup newGroup = new IAMServiceAccountGroup(iamServiceAccountTransfer.getUserName(),
 					iamServiceAccountTransfer.getAdSelfSupportGroup(), IAMServiceAccountConstants.IAM_WRITE_PERMISSION_STRING,
@@ -5583,8 +5582,7 @@ public class  IAMServiceAccountsService {
 						.put(LogMessage.MESSAGE, String.format("Adding group [%s] to the IAM Service Account [%s] failed",
 								iamServiceAccountTransfer.getAdSelfSupportGroup(), iamSvcAcc))
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-				return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
-						"{\"errors\":[\"Adding group to IAM Service Account failed\"]}");
+				return addGroupResponse;
 			}
 		}
 
@@ -5618,8 +5616,7 @@ public class  IAMServiceAccountsService {
 					.put(LogMessage.MESSAGE, String.format("Failed to remove permission from old owner [%s] on account [%s]",
 							oldOwner.getUsername(), iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
-					"{\"errors\":[\"Removing permissions from the old owner failed.\"]}");
+			return removeOldPermissionResponse;
 		}
 
 		boolean metadataCreatedForNewOwner = updateMetadata(token, iamSvcAcc, iamSvcAccName, iamSvccAccPath);
@@ -5787,7 +5784,7 @@ public class  IAMServiceAccountsService {
 	private IAMServiceAccount constructIAMSvcAccObjectFromMetadata(Response metaResponse) {
 		IAMServiceAccount iamSvcAcc = new IAMServiceAccount();
 
-		if (metaResponse !=null && metaResponse.getHttpstatus().equals(HttpStatus.OK)) {
+		if (metaResponse !=null && HttpStatus.OK.equals(metaResponse.getHttpstatus())) {
 			try {
 				JsonNode jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("ad_group");
 				if (jsonNode != null) {
