@@ -97,7 +97,7 @@ const AddUser = (props) => {
     isSvcAccount,
     isCertificate,
     isAzureSvcAccount,
-    isIamSvcAccount
+    isIamSvcAccount,
   } = props;
   const [radioValue, setRadioValue] = useState('read');
   const [searchValue, setSearchValue] = useState('');
@@ -323,12 +323,12 @@ const AddUser = (props) => {
                 !isAzureSvcAccount &&
                 !isIamSvcAccount &&
                 !isSvcAccount && (
-                <InstructionText>
-                  Note: Denying the safe owner(normal user) will not take any
-                  effect for users.
-                </InstructionText>
-              )}
-              {isCertificate && (
+                  <InstructionText>
+                    Note: Denying the safe owner(normal user) will not take any
+                    effect for users.
+                  </InstructionText>
+                )}
+              {(isCertificate || isIamSvcAccount) && (
                 <InstructionText>
                   Note: Denying the admin will not take any effect for users.
                 </InstructionText>

@@ -145,36 +145,6 @@ public class SSLCertificateController {
 		return sslCertificateService.addGroupToCertificate(userDetails, token,certificateGroup);
 	}
 
-	/**
-	 * Get target system list.
-	 * @param request
-	 * @param token
-	 * @return
-	 * @throws Exception
-	 */
-	@ApiIgnore
-	@ApiOperation(value = "${CertificateController.getTargetSystemList.value}", notes = "${CertificateController.getTargetSystemList.notes}")
-	@GetMapping(value = "/v2/sslcert/{certType}/targetsystems", produces = "application/json")
-	public ResponseEntity<String> getTargetSystemList(HttpServletRequest request, @RequestHeader(value = "vault-token") String token, @PathVariable("certType") String certType) throws Exception {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.getTargetSystemList(token, userDetails, certType);
-	}
-
-	/**
-	 * Get service list from a target system.
-	 * @param request
-	 * @param token
-	 * @return
-	 * @throws Exception
-	 */
-	@ApiOperation(value = "${CertificateController.getTargetSystemServiceList.value}", notes = "${CertificateController.getTargetSystemServiceList.notes}")
-	@GetMapping(value = "/v2/sslcert/targetsystems/{targetsystem_id}/targetsystemservices", produces = "application/json")
-	public ResponseEntity<String> getTargetSystemServiceList(HttpServletRequest request, @RequestHeader(value = "vault-token") String token, @PathVariable("targetsystem_id") String targetSystemId) throws Exception {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.getTargetSystemServiceList(token, userDetails, targetSystemId);
-	}
-
-
     /**
      * Add approle to Certificate
      * @param request
@@ -296,22 +266,6 @@ public class SSLCertificateController {
 		return sslCertificateService.getListOfCertificates(token, certificateType, limit, offset);
 	}
 	
-	
-	/**
-	 * Transfer the ownership Of Certificates
-	 * 
-	 * @param request
-	 * @param token
-	 * @param certificateType
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.deleteCertificate.value}", notes = "${SSLCertificateController.deleteCertificate.notes}", hidden = false)
-	@DeleteMapping(value = "/v2/certificates/{certificate_name}/{certificate_type}", produces = "application/json")
-	public ResponseEntity<String> deleteCertificate(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token, @PathVariable("certificate_type") String certType, @PathVariable("certificate_name") String certName)  {
-		UserDetails userDetails = (UserDetails) request.getAttribute("UserDetails");
-		return sslCertificateService.deleteCertificate(token, certType, certName, userDetails);
-	}
 
 	/**
 	 * Get the latest certificate details if approved
@@ -360,23 +314,6 @@ public class SSLCertificateController {
 		return sslCertificateService.getAllCertificatesOnCertType(userDetails, certificateType, limit, offset);
 	}
 
-	/**	
-	 * Check if status is revoked	
-	 * @param certificateName	
-	 * @param certificateType	
-	 * @return	
-	 */	
-	@ApiIgnore
-	@ApiOperation(value = "${SSLCertificateController.checkstatus.value}", notes = "${SSLCertificateController.checkstatus.notes}")	
-	@GetMapping(value = "/v2/sslcert/checkstatus/{certificate_name}/{certificate_type}", produces = "application/json")	
-	public ResponseEntity<String> checkCertificateStatus(HttpServletRequest request,	
-			@RequestHeader(value = "vault-token") String token,	
-			@PathVariable("certificate_name") String certificateName,	
-			@PathVariable("certificate_type") String certificateType) {	
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);	
-		return sslCertificateService.checkCertificateStatus(certificateName, certificateType,	
-				userDetails);	
-	}
 
 	/**
 	 * To get list of application names based on the self service groups.
@@ -492,35 +429,8 @@ public class SSLCertificateController {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
 		return sslCertificateService.getAllOnboardPendingCertificates(token, userDetails, limit, offset);
 	}
-
 	
-	/**
-	 * To Update SSL Certificate metadata
-	 * @param sslCertificateRequest
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.ssledit.value}", notes = "${SSLCertificateController.ssledit.notes}", hidden = false)
-	@PutMapping(value="/v2/sslcert/",consumes="application/json",produces="application/json")
-	public ResponseEntity<String> updateSSLCertificate(HttpServletRequest request, @RequestHeader(value=
-			"vault-token") String token,@Valid @RequestBody CertificateUpdateRequest certificateUpdateRequest)  {
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.updateSSLCertificate(certificateUpdateRequest,userDetails,token);
-	}
-	/**
-	 * To save application details for all the existing certificates
-	 * @param request
-	 * @param token
-	 * @return
-	 */	
-	@ApiOperation(value = "${SSLCertificateController.saveappdetails.value}", notes = "${SSLCertificateController.saveappdetails.notes}")
-	@GetMapping(value = "/v2/sslcert/saveAppDetails", produces = "application/json")
-	public ResponseEntity<String> saveAppDetailsfForOlderCerts(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token)  { 
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.saveAllAppDetailsForOldCerts(token, userDetails);
-	}
 	
-
 
 	@ApiOperation(value = "${SSLCertificateController.getFullCertificateList.value}", notes = "${SSLCertificateController.getFullCertificateList.notes}")
 	@GetMapping(value = "/v2/sslcert/allcertificates", produces = "application/json")
