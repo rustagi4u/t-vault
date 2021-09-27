@@ -1043,7 +1043,7 @@ public class  IAMServiceAccountsService {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, "getIAMSvcNamesFromMetadataAsList").
-					put(LogMessage.MESSAGE, String.format ("Unable to get list of all onboarded IAM Service Accounts [%s]", response!=null?response.getResponse():"")).
+					put(LogMessage.MESSAGE, String.format ("Unable to get list of all onboarded IAM Service Accounts [%s]", response.getResponse())).
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
 		}
@@ -5642,9 +5642,10 @@ public class  IAMServiceAccountsService {
 					"{\"errors\":[\"Metadata update failed for IAM Service Account.\"]}");
 		}
 
+		DirectoryUser oldOwnerObj = getUserDetails(originalIAMSvcAcc.getOwnerNtid());
 		Map<String, String> mailTemplateVariables = new HashMap<>();
 		mailTemplateVariables.put("iamSvcAccName", iamSvcAcc.getUserName());
-		mailTemplateVariables.put("oldOwnerName", getUserDetails(originalIAMSvcAcc.getOwnerNtid()).getDisplayName());
+		mailTemplateVariables.put("oldOwnerName", oldOwnerObj!=null?oldOwnerObj.getDisplayName():"");
 		mailTemplateVariables.put("contactLink", supportEmail);
 		List<String> cc = new ArrayList<>();
 		cc.add(originalIAMSvcAcc.getOwnerEmail());
