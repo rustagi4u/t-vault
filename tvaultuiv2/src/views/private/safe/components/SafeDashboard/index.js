@@ -471,7 +471,6 @@ const SafeDashboard = () => {
       const safeName = val[val.length - 1];
       if (safeName !== 'create-safe' && safeName !== 'edit-safe') {
         const obj = safeList.find((safe) => safe.name === safeName);
-        setOwnerOfSafes(false);
         if (obj) {
           setSelectedSafeDetails({ ...obj });
         } else {
@@ -685,6 +684,7 @@ const SafeDashboard = () => {
             );
             if (notAvailableVal) {
               manage = true;
+              setOwnerOfSafes(true);
             }
             dataObj = {
               name: value.name,
