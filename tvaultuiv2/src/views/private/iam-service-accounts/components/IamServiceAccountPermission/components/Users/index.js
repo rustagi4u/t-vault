@@ -54,7 +54,7 @@ const Users = (props) => {
   const [editAccess, setEditAccess] = useState('');
   const [response, setResponse] = useState({ status: 'loading' });
   const isMobileScreen = useMediaQuery(small);
-
+  console.log(accountMetaData);
   // on iam svc account meta data is available.
   useEffect(() => {
     setResponse({ status: permissionResponse });
@@ -195,6 +195,18 @@ const Users = (props) => {
     setResponse({ status: 'edit' });
   };
 
+  const isSudoOnly = (users) => {
+    console.log(Object.values(users)[0]);
+    if (
+      users &&
+      Object.keys(users).length === 1 &&
+      Object.values(users)[0] === 'sudo'
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (selectedParentTab === 0) {
       onCancelClicked();
@@ -242,7 +254,8 @@ const Users = (props) => {
                 )}
               {(!accountMetaData?.response?.users ||
                 userDetails.length === 0 ||
-                Object.keys(accountMetaData.response.users).length === 0) && (
+                Object.keys(accountMetaData.response.users).length === 0 ||
+                isSudoOnly(accountMetaData?.response?.users)) && (
                 <NoDataWrapper>
                   <NoData
                     imageSrc={noPermissionsIcon}
