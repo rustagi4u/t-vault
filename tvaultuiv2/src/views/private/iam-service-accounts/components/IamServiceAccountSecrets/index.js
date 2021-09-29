@@ -1,6 +1,9 @@
 /* eslint-disable react/jsx-curly-newline */
 /* eslint-disable react/jsx-one-expression-per-line */
 /* eslint-disable react/jsx-wrap-multilines */
+/* eslint-disable no-nested-ternary */
+/* eslint-disable react/no-unused-prop-types */
+
 import React, { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -34,9 +37,7 @@ import SuccessAndErrorModal from '../../../../../components/SuccessAndErrorModal
 import BackdropLoader from '../../../../../components/Loaders/BackdropLoader';
 import NamedButton from '../../../../../components/NamedButton';
 import addFolderPlus from '../../../../../assets/folder-plus.svg';
-import {
-  IconDeleteActive,
-} from '../../../../../assets/SvgIcons';
+import { IconDeleteActive } from '../../../../../assets/SvgIcons';
 
 const UserList = styled.div`
   display: flex;
@@ -535,39 +536,41 @@ const IamServiceAccountSecrets = (props) => {
                 label={
                   openConfirmationModal?.type === 'create'
                     ? 'Create'
-                    : (openConfirmationModal?.type === 'delete'
+                    : openConfirmationModal?.type === 'delete'
                     ? 'Delete'
-                    : 'Rotate')
+                    : 'Rotate'
                 }
                 color="secondary"
                 onClick={
                   openConfirmationModal?.type === 'create'
                     ? () => onCreateAccessKeyConfirm()
-                    : (openConfirmationModal?.type === 'delete'
+                    : openConfirmationModal?.type === 'delete'
                     ? () => onDeleteConfirmedClicked()
-                    : () => onRotateConfirmedClicked())
+                    : () => onRotateConfirmedClicked()
                 }
                 width={isMobileScreen ? '100%' : '45%'}
               />
             }
           />
         )}
-        {response.status === 'loading' && (
+        {(response.status === 'loading' || secretResponse === 'loading') && (
           <LoaderSpinner customStyle={customStyle} />
         )}
-        {response.status !== 'loading' && (
+        {response.status !== 'loading' && secretResponse !== 'loading' && (
           <>
-            {accountDetail?.name && (Object.keys(accountSecretData)?.length === 0 ||
-              accountSecretData?.folders?.length <= 1) && (accountDetail.permission === 'write')&& (
-              <UserList>
-                <NamedButton
-                  label="Create Access Key"
-                  onClick={createAccesskey}
-                  customStyle={customBtnStyles}
-                  iconSrc={addFolderPlus}
-                />
-              </UserList>
-            )}
+            {accountDetail?.name &&
+              (Object.keys(accountSecretData)?.length === 0 ||
+                accountSecretData?.folders?.length <= 1) &&
+              accountDetail.permission === 'write' && (
+                <UserList>
+                  <NamedButton
+                    label="Create Access Key"
+                    onClick={createAccesskey}
+                    customStyle={customBtnStyles}
+                    iconSrc={addFolderPlus}
+                  />
+                </UserList>
+              )}
             {!accountDetail?.name && (
               <AccessDeniedWrap>
                 <AccessDeniedIcon src={NoSecretsIcon} alt="accessDeniedLogo" />
@@ -641,16 +644,22 @@ const IamServiceAccountSecrets = (props) => {
                             )}
                             {secretsData.accessKeySecret === null && (
                               <SecretInputfield
-                                type={'text'}
-                                value={'No secret'}
+                                type="text"
+                                value="No secret"
                                 readOnly
                               />
                             )}
                             <div className="expirationDate">
-                              <div className="expiry">{(secretsData.expiryDateEpoch > 0) ? "Expires:" : ""} </div>
-                              <div>{
-                                (secretsData.expiryDateEpoch > 0) ? formatDate(secretsData.expiryDate) : ""
-                                }</div>
+                              <div className="expiry">
+                                {secretsData.expiryDateEpoch > 0
+                                  ? 'Expires:'
+                                  : ''}{' '}
+                              </div>
+                              <div>
+                                {secretsData.expiryDateEpoch > 0
+                                  ? formatDate(secretsData.expiryDate)
+                                  : ''}
+                              </div>
                             </div>
                           </InfoWrapper>
                         </SecretDetailsWrap>
@@ -722,30 +731,40 @@ const IamServiceAccountSecrets = (props) => {
               ))}
             </SecretFolderWrap>
           )}
-        {response.status === 'error' && accountSecretError !== "No access keys/secrets available for this IAM Service account" && (
-          <Error
-            description={
-              accountSecretError || response.message || 'Something went wrong!'
-            }
-          />
-        )}
-        {response.status === 'error' && accountSecretError === "No access keys/secrets available for this IAM Service account" && (
-          <Error
-            description={
-              accountSecretError || response.message || 'Something went wrong!'
-            }
-            actionButton={accountDetail.permission === 'write' && (
-              <ButtonComponent
-                label="Create"
-                icon="add"
-                color="secondary"
-                disabled={response.status === 'loading'}
-                width={isMobileScreen ? '100%' : '9.4rem'}
-                onClick={() => createAccesskey()}
-              />
-            )}
-          />
-        )}
+        {response.status === 'error' &&
+          accountSecretError !==
+            'No access keys/secrets available for this IAM Service account' && (
+            <Error
+              description={
+                accountSecretError ||
+                response.message ||
+                'Something went wrong!'
+              }
+            />
+          )}
+        {response.status === 'error' &&
+          accountSecretError ===
+            'No access keys/secrets available for this IAM Service account' && (
+            <Error
+              description={
+                accountSecretError ||
+                response.message ||
+                'Something went wrong!'
+              }
+              actionButton={
+                accountDetail.permission === 'write' && (
+                  <ButtonComponent
+                    label="Create"
+                    icon="add"
+                    color="secondary"
+                    disabled={response.status === 'loading'}
+                    width={isMobileScreen ? '100%' : '9.4rem'}
+                    onClick={() => createAccesskey()}
+                  />
+                )
+              }
+            />
+          )}
         {responseType === 1 && (
           <SnackbarComponent
             open
