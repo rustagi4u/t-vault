@@ -54,7 +54,6 @@ const Users = (props) => {
   const [editAccess, setEditAccess] = useState('');
   const [response, setResponse] = useState({ status: 'loading' });
   const isMobileScreen = useMediaQuery(small);
-  console.log(accountMetaData);
   // on iam svc account meta data is available.
   useEffect(() => {
     setResponse({ status: permissionResponse });
@@ -196,7 +195,6 @@ const Users = (props) => {
   };
 
   const isSudoOnly = (users) => {
-    console.log(Object.values(users)[0]);
     if (
       users &&
       Object.keys(users).length === 1 &&
@@ -217,7 +215,8 @@ const Users = (props) => {
   return (
     <ComponentError>
       <>
-        {response.status === 'loading' && (
+        {(response.status === 'loading' ||
+          permissionResponse.status === 'loading') && (
           <LoaderSpinner customStyle={customStyle} />
         )}
         {response.status === 'add' && (
@@ -238,6 +237,7 @@ const Users = (props) => {
           />
         )}
         {response.status === 'success' &&
+          permissionResponse.status !== 'loading' &&
           accountMetaData?.response &&
           Object.keys(accountMetaData?.response).length > 0 && (
             <>
