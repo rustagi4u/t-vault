@@ -407,172 +407,19 @@ public class SafesServiceTest {
     public void testdeleteSafefailed400() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         String path = "shared/mysafe01";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe(path,safeBasicDetails);
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe", "T-Vault", "tvt");
+        Safe safe = new Safe(path, safeBasicDetails);
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid 'path' specified\"]}");
 
         when(ControllerUtil.isValidSafePath(path)).thenReturn(false);
         when(ControllerUtil.isValidSafe(path, token)).thenReturn(false);
         when(ControllerUtil.isValidDataPath(path)).thenReturn(false);
         UserDetails userDetails = new UserDetails();
-        userDetails.setUsername("testuser1"); 
+        userDetails.setUsername("testuser1");
         ResponseEntity<String> responseEntity = safesService.deleteSafe(token, safe, userDetails);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
-
-    @Test
-    public void testupdateSafesuccessfully() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        String metadatajson = "{\"path\":\"metadata/shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\",\"aws-roles\":null,\"groups\":null,\"users\":null}}";
-
-        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
-        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
-        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
-        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
-        when(ControllerUtil.isValidSafePath(any())).thenReturn(true);
-
-        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",token)).thenReturn(readResponse);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
-        when(reqProcessor.process("/sdb/update",metadatajson,token)).thenReturn(responseNoContent);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-
-    @Test
-    public void testupdateSafefailuredescriptiontoolong() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe My first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values: Description too long\"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void testupdateSafefailure400() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid 'path' specified\"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
-        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
-        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
-        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
-        when(ControllerUtil.isValidSafePath(any())).thenReturn(false);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void testupdateSafefailure404() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        Response readResponse = getMockResponse(HttpStatus.NOT_FOUND, true, "");
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error Fetching existing safe info. please check the path specified \"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
-        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
-        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
-        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
-        when(ControllerUtil.isValidSafePath(any())).thenReturn(true);
-
-        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",token)).thenReturn(readResponse);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void testupdateSafefailureinvalidInput() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values\"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValid(reqparams)).thenReturn(false);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
 
     @Test
     public void test_addUserToSafe_failure_400() {

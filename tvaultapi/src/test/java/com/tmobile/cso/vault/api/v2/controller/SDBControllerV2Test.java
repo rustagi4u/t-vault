@@ -139,25 +139,6 @@ public class SDBControllerV2Test {
     }
 
     @Test
-    public void test_updateSafe() throws Exception {
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String inputJson =new ObjectMapper().writeValueAsString(safe);
-        String responseJson = "{\"messages\":[\"Safe updated \"]}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(safesService.updateSafe(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any())).thenReturn(responseEntityExpected);
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/v2/sdb")
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
-                .header("Content-Type", "application/json;charset=UTF-8")
-                .content(inputJson))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(responseJson)));
-    }
-
-    @Test
     public void test_createSafe() throws Exception {
         SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
         Safe safe = new Safe("shared/mysafe01",safeBasicDetails);

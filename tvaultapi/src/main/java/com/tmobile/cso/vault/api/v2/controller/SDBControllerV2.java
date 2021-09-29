@@ -98,17 +98,7 @@ public class SDBControllerV2 {
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return safesService.deletefolder(token, path, userDetails, false);
 	}
-	/**
-	 * Updates a Safe
-	 * @param token
-	 * @param safe
-	 * @return
-	 */
-	@ApiOperation(value = "${SafesController.updateSafe.value}", notes = "${SafesController.updateSafe.notes}", hidden = true)
-	@PutMapping(value="/v2/sdb",consumes="application/json",produces="application/json")
-	public ResponseEntity<String> updateSafe(@RequestHeader(value="vault-token" ) String token, @RequestBody Safe safe){
-		return safesService.updateSafe(token, safe);
-	}
+
 	/**
 	 * Creates a Safe
 	 * @param token
