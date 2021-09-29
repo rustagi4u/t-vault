@@ -1,4 +1,6 @@
 /* eslint-disable react/jsx-wrap-multilines */
+/* eslint-disable no-unused-vars */
+
 import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
@@ -32,21 +34,6 @@ const PsudoPopper = (props) => {
   return (
     <ComponentError>
       <IconWrap>
-        <TooltipComponent
-          title="Edit"
-          renderContent={
-            <Link
-              to={{
-                pathname: path,
-                state: { safe },
-              }}
-            >
-              <Icon>
-                <IconEdit />
-              </Icon>
-            </Link>
-          }
-        />
         <TooltipComponent
           title="Delete"
           placement="top"

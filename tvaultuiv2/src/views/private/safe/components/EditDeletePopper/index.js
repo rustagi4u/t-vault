@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
@@ -49,10 +50,6 @@ const EditDeletePopper = (props) => {
             horizontal: 'right',
           }}
         >
-          <PopperItem onClick={onEditClicked}>
-            <IconEdit />
-            <span>Edit</span>
-          </PopperItem>
           <PopperItem onClick={onDeleteClicked}>
             <IconDeleteActive />
             <span> Delete</span>

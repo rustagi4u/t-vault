@@ -2,6 +2,7 @@
 /* eslint-disable no-return-assign */
 /* eslint-disable react/jsx-wrap-multilines */
 /* eslint-disable no-param-reassign */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback, lazy } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
@@ -36,8 +37,6 @@ import { ListContainer } from '../../../../../styles/GlobalStyles/listingStyle';
 import configData from '../../../../../config/config';
 import SearchboxWithDropdown from '../../../../../components/FormFields/SearchboxWithDropdown';
 import LeftColumn from './component/leftColumn';
-
-const CreateSafe = lazy(() => import('../../CreateSafe'));
 
 const ColumnSection = styled('section')`
   position: relative;
@@ -629,9 +628,7 @@ const SafeDashboard = () => {
    * @description function to edit the safe.
    * @param {object} safe safe details.
    */
-  const onEditSafeClicked = (safe) => {
-    history.push({ pathname: '/safes/edit-safe', state: { safe } });
-  };
+  const onEditSafeClicked = (safe) => {};
 
   const loadMoreData = () => {
     setIsInfiniteScrollLoading(true);
@@ -888,22 +885,6 @@ const SafeDashboard = () => {
             message="Safe deleted successfully!"
           />
         )}
-        <Switch>
-          <Route
-            exact
-            path="/safes/create-safe"
-            render={(routeProps) => (
-              <CreateSafe routeProps={{ ...routeProps }} refresh={fetchData} />
-            )}
-          />
-          <Route
-            exact
-            path="/safes/edit-safe"
-            render={(routeProps) => (
-              <CreateSafe routeProps={{ ...routeProps }} refresh={fetchData} />
-            )}
-          />
-        </Switch>
       </>
     </ComponentError>
   );

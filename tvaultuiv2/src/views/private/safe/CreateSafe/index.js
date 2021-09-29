@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-wrap-multilines */
 /* eslint-disable react/jsx-curly-newline */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
@@ -296,51 +297,6 @@ const CreateModal = (props) => {
         setOpen(false);
         history.goBack();
       });
-  }, [history]);
-
-  useEffect(() => {
-    if (
-      history?.location?.pathname === '/safes/edit-safe' &&
-      history?.location?.state
-    ) {
-      setEditSafe(true);
-      setResponseType(0);
-      apiService
-        .getSafeDetails(history.location.state.safe.path)
-        .then((res) => {
-          setResponseType(null);
-          if (res?.data?.data) {
-            if (!res.data.data.type) {
-              const { path } = history.location.state.safe;
-              const typeFromPath = path.substring(0, path.indexOf('/'));
-              res.data.data.type = typeFromPath;
-            }
-            setSafeDetails(res.data.data);
-            setName(res.data.data.name);
-            setDescription(res.data.data.description);
-            if (sessionStorage.getItem('isAdmin') === 'false') {
-              setOwner(sessionStorage.getItem('owner'));
-            } else {
-              setOwner(res.data.data.owner);
-            }
-            setApplicationName(res.data.data.appName);
-            if (res.data.data.type === 'users') {
-              setSafeType('Users Safe');
-            } else if (res.data.data.type === 'apps') {
-              setSafeType('Application Safe');
-            } else {
-              setSafeType('Shared Safe');
-            }
-            setIsValidEmail(true);
-          }
-        })
-        .catch((err) => {
-          if (err?.response?.data?.errors && err?.response?.data?.errors[0]) {
-            setToastMessage(err.response.data.errors[0]);
-          }
-          setResponseType(-1);
-        });
-    }
   }, [history]);
 
   const constructPayload = () => {
