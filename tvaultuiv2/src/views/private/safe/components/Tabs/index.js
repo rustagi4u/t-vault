@@ -117,6 +117,7 @@ const SelectionTabs = (props) => {
     setEnableAddFolder(true);
   };
   const [previousVal, setPreviousVal] = useState({});
+  const isAdmin = JSON.parse(sessionStorage.getItem('isAdmin'));
   // toast close handling
   const onToastClose = (reason) => {
     if (reason === 'clickaway') {
@@ -278,7 +279,8 @@ const SelectionTabs = (props) => {
             textColor="primary"
           >
             <Tab className={classes.tab} label="Secrets" {...a11yProps(0)} />
-            {(safeDetail?.manage ||
+            {(isAdmin ||
+              safeDetail?.manage ||
               safePermissionData?.response?.owner?.toLowerCase() ===
                 sessionStorage.getItem('owner')?.toLowerCase() ||
               safePermissionData?.response?.ownerid?.toLowerCase() ===
