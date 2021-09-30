@@ -367,7 +367,9 @@ const IamServiceAccountDashboard = () => {
             isAdmin
           ) {
             setDisabledPermission(false);
+            setPermissionResponse({ status: 'loading' });
             const eachUsersDetails = await getEachUsersDetails(res.data.users);
+            setPermissionResponse({ status: 'success' });
             if (eachUsersDetails !== null) {
               setUserDetails([...eachUsersDetails]);
             }
@@ -390,7 +392,6 @@ const IamServiceAccountDashboard = () => {
 
   // Function to get the secret of the given service account.
   const getSecrets = useCallback(() => {
-    console.log('in getsecrets');
     setAccountSecretError('');
     if (listItemDetails.active) {
       setAccountSecretData({});
