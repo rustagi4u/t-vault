@@ -412,6 +412,8 @@ public class  IAMServiceAccountsService {
 		return addUserToIAMSvcAccResponse;
 	}
 
+
+
 	/**
 	 * To check if the user/token has permission for onboarding or offboarding IAM service account.
 	 * @param token
@@ -1098,15 +1100,13 @@ public class  IAMServiceAccountsService {
 		if (canAddGroup) {
 			// Only Sudo policy can be added (as part of onboard) before activation.
 			if (isPartOfOnboard && !TVaultConstants.WRITE_POLICY.equals(iamServiceAccountGroup.getAccess())) {
-				log.error(
-						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-								.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
-								.put(LogMessage.MESSAGE, String.format(
-										"Failed to add group permission to IAM Service account. [%s] is not activated.",
-										iamSvcAccountName))
-								.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
-								.build()));
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Failed to add group permission to IAM Service account. [%s] is not activated.",
+								iamSvcAccountName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+						.build()));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 						"{\"errors\":[\"Failed to add group permission to IAM Service account. Only Rotate permissions can be added to the self support group as part of Onboard.\"]}");
 			}
@@ -1139,14 +1139,80 @@ public class  IAMServiceAccountsService {
 	 */
 	private ResponseEntity<String> processAndAddGroupPoliciesToIAMSvcAcc(String token, UserDetails userDetails,
 			OIDCGroup oidcGroup, IAMServiceAccountGroup iamServiceAccountGroup, String iamSvcAccountName) {
+		List<String> policies = new ArrayList<>();
+		List<String> currentpolicies = new ArrayList<>();
 		String policy = new StringBuffer()
 				.append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(iamServiceAccountGroup.getAccess()))
 				.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(iamSvcAccountName).toString();
 
+		processNewGroupPolicy(token, policy, iamSvcAccountName, oidcGroup, iamServiceAccountGroup, policies, currentpolicies);
+
+		ResponseEntity<String> configureGroupResponse = configureGroup(token, userDetails, oidcGroup, iamServiceAccountGroup,
+				policies, currentpolicies, iamSvcAccountName);
+
+		if (configureGroupResponse.getStatusCode().equals(HttpStatus.NO_CONTENT) ||
+				configureGroupResponse.getStatusCode().equals(HttpStatus.OK)) {
+			log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("Successfully added policy [%s] to group [%s]",
+							policy, iamServiceAccountGroup.getGroupname()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+
+			Response updateMetadataResponse = updateMetadata(token, iamSvcAccountName, IAMServiceAccountConstants.IAM_GROUP_MSG_STRING,
+					iamServiceAccountGroup.getGroupname(), iamServiceAccountGroup.getAccess());
+
+			if (updateMetadataResponse.getHttpstatus().equals(HttpStatus.NO_CONTENT) ||
+					updateMetadataResponse.getHttpstatus().equals(HttpStatus.OK)) {
+				log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Successfully updated metadata for group [%s]", iamServiceAccountGroup.getGroupname()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			} else {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Failed to update metadata for group [%s]", iamServiceAccountGroup.getGroupname()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				String currentpoliciesString = org.apache.commons.lang3.StringUtils.join(currentpolicies, ",");
+
+				return revertGroupPermissionForIAMSvcAcc(token, userDetails, oidcGroup,
+						iamServiceAccountGroup.getGroupname(), currentpolicies, currentpoliciesString,
+						updateMetadataResponse);
+			}
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("Failed to configure group policies for group [%s]", iamServiceAccountGroup.getGroupname()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(String.format("{\"errors\":[\"Unable to update group policies for group %s\"]}", iamServiceAccountGroup.getGroupname()));
+		}
+
+		return ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Group is successfully associated with IAM Service Account\"]}");
+	}
+
+	/**
+	 * Helper method for adding a new policy to a group.
+	 * Adds current policies for the group as well as the new policy to the policies list.
+	 * @param token
+	 * @param policyToAdd
+	 * @param iamSvcAccountName
+	 * @param oidcGroup
+	 * @param iamServiceAccountGroup
+	 * @param policies
+	 * @param currentpolicies
+	 * @return void
+	 */
+	private void processNewGroupPolicy(String token, String policyToAdd, String iamSvcAccountName, OIDCGroup oidcGroup,
+									   IAMServiceAccountGroup iamServiceAccountGroup, List<String> policies, List<String> currentpolicies) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
-				.put(LogMessage.MESSAGE, String.format(POLICYSTR, policy))
+				.put(LogMessage.MESSAGE, String.format(POLICYSTR, policyToAdd))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		String readPolicy = new StringBuffer()
 				.append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.READ_POLICY))
@@ -1191,8 +1257,6 @@ public class  IAMServiceAccountsService {
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 
 		String responseJson = "";
-		List<String> policies = new ArrayList<>();
-		List<String> currentpolicies = new ArrayList<>();
 
 		if (HttpStatus.OK.equals(groupResp.getHttpstatus())) {
 			responseJson = groupResp.getResponse();
@@ -1218,13 +1282,39 @@ public class  IAMServiceAccountsService {
 			policies.remove(readPolicy);
 			policies.remove(writePolicy);
 			policies.remove(denyPolicy);
-			policies.add(policy);
-		} else {
-			// New group to be configured
-			policies.add(policy);
 		}
-		return configureGroupAndUpdateMetadataForIAMSvcAcc(token, userDetails, oidcGroup, iamServiceAccountGroup,
-				policies, currentpolicies, iamSvcAccountName);
+
+		policies.add(policyToAdd);
+	}
+
+	private ResponseEntity<String> configureGroup(String token, UserDetails userDetails, OIDCGroup oidcGroup,
+												  IAMServiceAccountGroup iamServiceAccountGroup, List<String> policies,
+												  List<String> currentpolicies, String iamSvcAccountName) {
+		String policiesString = org.apache.commons.lang3.StringUtils.join(policies, ",");
+
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+				.put(LogMessage.MESSAGE, String.format("Policies before configuring group are [%s]", policies))
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+
+		Response ldapConfigresponse = new Response();
+		if (TVaultConstants.LDAP.equals(vaultAuthMethod)) {
+			ldapConfigresponse = ControllerUtil.configureLDAPGroup(iamServiceAccountGroup.getGroupname(),
+					policiesString, token);
+		} else if (TVaultConstants.OIDC.equals(vaultAuthMethod)) {
+			ldapConfigresponse = oidcUtil.updateGroupPolicies(token, iamServiceAccountGroup.getGroupname(), policies,
+					currentpolicies, oidcGroup != null ? oidcGroup.getId() : null);
+			oidcUtil.renewUserToken(userDetails.getClientToken());
+		}
+
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
+				.put(LogMessage.MESSAGE, String.format("After configured the group [%s] and status [%s] ", iamServiceAccountGroup.getGroupname(), ldapConfigresponse.getHttpstatus()))
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+
+		return ResponseEntity.status(ldapConfigresponse.getHttpstatus()).body(ldapConfigresponse.getResponse());
 	}
 
 	/**
@@ -1389,34 +1479,54 @@ public class  IAMServiceAccountsService {
 		boolean isAuthorized = isAuthorizedToAddPermissionInIAMSvcAcc(userDetails, uniqueIAMSvcaccName, token, isPartOfOnboard);
 
 		if (isAuthorized) {
-			// Only Sudo & Write policy can be added (as part of onbord) before activation.
+			// Only Sudo & Write policy can be added (as part of onboard) before activation.
 			if (isPartOfOnboard && !TVaultConstants.SUDO_POLICY.equals(iamServiceAccountUser.getAccess()) &&
 					!TVaultConstants.WRITE_POLICY.equals(iamServiceAccountUser.getAccess())) {
-				log.error(
-						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-								.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
-								.put(LogMessage.MESSAGE, String.format("Failed to add user permission to IAM Service account. [%s] is not activated.", iamServiceAccountUser.getIamSvcAccName()))
-								.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
-								.build()));
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Failed to add user permission to IAM Service account. [%s] is not activated.", iamServiceAccountUser.getIamSvcAccName()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+						.build()));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 						"{\"errors\":[\"Failed to add user permission to IAM Service account. Only Sudo and Write permissions can be added as part of Onboard.\"]}");
 			}
 
 			if (isOwnerPemissionGettingChanged(iamServiceAccountUser, getOwnerNTIdFromMetadata(token, uniqueIAMSvcaccName), isPartOfOnboard)) {
-				log.error(
-						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-								.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
-								.put(LogMessage.MESSAGE, "Failed to add user permission to IAM Service account. Owner permission cannot be changed..")
-								.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
-								.build()));
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, "Failed to add user permission to IAM Service account. Owner permission cannot be changed..")
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+						.build()));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 						"{\"errors\":[\"Failed to add user permission to IAM Service account. Owner permission cannot be changed.\"]}");
 			}
-			return getUserPoliciesForAddUserToIAMSvcAcc(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
+
+			Response userResponse = getUserPolicies(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
 					uniqueIAMSvcaccName);
 
+			String newPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(iamServiceAccountUser.getAccess()))
+					.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(uniqueIAMSvcaccName).toString();
+			if (userResponse.getHttpstatus().equals(HttpStatus.OK)) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Current policies for user [%s] are: [%s] -- Trying to add policy [%s]",
+								iamServiceAccountUser.getUsername(), userResponse.getResponse(), newPolicy))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+
+				return addPolicyToIAMSvcAcc(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
+						uniqueIAMSvcaccName, userResponse);
+			} else {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+						.put(LogMessage.MESSAGE, String.format("Failed to add policy [%s] for user [%s]",
+								newPolicy, iamServiceAccountUser.getUsername()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return ResponseEntity.status(userResponse.getHttpstatus()).body(userResponse.getResponse());
+			}
 		} else {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body("{\"errors\":[\"Access denied: No permission to add users to this IAM service account\"]}");
@@ -1441,7 +1551,7 @@ public class  IAMServiceAccountsService {
 	}
 
 	/**
-	 * Method to verify the user for add user to IAM service account.
+	 * Method to get user policies.
 	 * @param token
 	 * @param userDetails
 	 * @param iamServiceAccountUser
@@ -1449,7 +1559,7 @@ public class  IAMServiceAccountsService {
 	 * @param uniqueIAMSvcaccName
 	 * @return
 	 */
-	private ResponseEntity<String> getUserPoliciesForAddUserToIAMSvcAcc(String token, UserDetails userDetails,
+	private Response getUserPolicies(String token, UserDetails userDetails,
 			IAMServiceAccountUser iamServiceAccountUser, OIDCEntityResponse oidcEntityResponse,
 			String uniqueIAMSvcaccName) {
 		Response userResponse = new Response();
@@ -1463,6 +1573,7 @@ public class  IAMServiceAccountsService {
 			ResponseEntity<OIDCEntityResponse> responseEntity = oidcUtil.oidcFetchEntityDetails(token, iamServiceAccountUser.getUsername(),
 					userDetails, true);
 			if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+				Response response = new Response();
 				if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
 					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -1470,11 +1581,13 @@ public class  IAMServiceAccountsService {
 							.put(LogMessage.MESSAGE, String.format("Failed to fetch OIDC user for [%s]", iamServiceAccountUser.getUsername()))
 							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
 							.build()));
-					return ResponseEntity.status(HttpStatus.FORBIDDEN)
-							.body("{\"messages\":[\"User configuration failed. Please try again.\"]}");
+					response.setHttpstatus(HttpStatus.FORBIDDEN);
+					response.setResponse("{\"messages\":[\"User configuration failed. Please try again.\"]}");
+					return response;
 				}
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body("{\"messages\":[\"User configuration failed. Invalid user\"]}");
+				response.setHttpstatus(HttpStatus.NOT_FOUND);
+				response.setResponse("{\"messages\":[\"User configuration failed. Invalid user\"]}");
+				return response;
 			}
 
 			oidcEntityResponse.setEntityName(responseEntity.getBody().getEntityName());
@@ -1483,12 +1596,11 @@ public class  IAMServiceAccountsService {
 			userResponse.setHttpstatus(responseEntity.getStatusCode());
 		}
 
-		return addPolicyToIAMSvcAcc(token, userDetails, iamServiceAccountUser, oidcEntityResponse, uniqueIAMSvcaccName,
-				userResponse);
+		return userResponse;
 	}
 
 	/**
-	 * Method to create policies for add user to IAM service account and call the update process.
+	 * Method to create policies for user and call the update process.
 	 * @param token
 	 * @param userDetails
 	 * @param iamServiceAccountUser
@@ -1562,8 +1674,63 @@ public class  IAMServiceAccountsService {
 			// New user to be configured
 			policies.add(policy);
 		}
-		return configureUserPoliciesForAddUserToIAMSvcAcc(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
-				groups, policies, currentpolicies);
+
+		Response userConfigResponse = configureUserPolicies(token, userDetails, iamServiceAccountUser, oidcEntityResponse, groups, policies);
+
+		if (userConfigResponse.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("User policies have successfully been configured for user [%s] on service account [%s]",
+							iamServiceAccountUser.getUsername(), iamServiceAccountUser.getIamSvcAccName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("User policies could not be configured for user [%s] on service account [%s]",
+							iamServiceAccountUser.getUsername(), iamServiceAccountUser.getIamSvcAccName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+			return ResponseEntity.status(userConfigResponse.getHttpstatus())
+					.body(String.format("{\"errors\":[\"Failed to configure policies for user %s\"]}", iamServiceAccountUser.getUsername()));
+		}
+
+		Response metadataUpdateResponse = updateMetadata(token, uniqueIAMSvcaccName, IAMServiceAccountConstants.IAM_USERS_MSG_STRING,
+				iamServiceAccountUser.getUsername(), iamServiceAccountUser.getAccess());
+
+		if (metadataUpdateResponse.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("Metadata has successfully been updated for user [%s] on IAM service account [%s]",
+							iamServiceAccountUser.getUsername(), iamServiceAccountUser.getIamSvcAccName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("Failed to update metadata for user [%s] on IAM service account [%s]",
+							iamServiceAccountUser.getUsername(), iamServiceAccountUser.getIamSvcAccName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+			String currentpoliciesString = org.apache.commons.lang3.StringUtils.join(currentpolicies, ",");
+
+			return revertUserPoliciesForIAMSvcAcc(token, userDetails, oidcEntityResponse, iamServiceAccountUser.getUsername(), groups,
+					currentpolicies, currentpoliciesString);
+		}
+
+		log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
+				.put(LogMessage.MESSAGE, String.format("User [%s] is successfully associated to IAM Service Account [%s] with policy [%s].",
+						iamServiceAccountUser.getUsername(), iamServiceAccountUser.getIamSvcAccName(), iamServiceAccountUser.getAccess()))
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+				.build()));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Successfully added user to the IAM Service Account\"]}");
 	}
 
 	/**
@@ -1574,14 +1741,11 @@ public class  IAMServiceAccountsService {
 	 * @param oidcEntityResponse
 	 * @param groups
 	 * @param policies
-	 * @param currentpolicies
 	 * @return
 	 */
-	private ResponseEntity<String> configureUserPoliciesForAddUserToIAMSvcAcc(String token, UserDetails userDetails,
-			IAMServiceAccountUser iamServiceAccountUser, OIDCEntityResponse oidcEntityResponse, String groups,
-			List<String> policies, List<String> currentpolicies) {
+	private Response configureUserPolicies(String token, UserDetails userDetails, IAMServiceAccountUser iamServiceAccountUser,
+														 OIDCEntityResponse oidcEntityResponse, String groups, List<String> policies) {
 		String policiesString = org.apache.commons.lang3.StringUtils.join(policies, ",");
-		String currentpoliciesString = org.apache.commons.lang3.StringUtils.join(currentpolicies, ",");
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -1610,54 +1774,29 @@ public class  IAMServiceAccountsService {
 			}
 		}
 
-		if (userConfigresponse.getHttpstatus().equals(HttpStatus.NO_CONTENT)
-				|| userConfigresponse.getHttpstatus().equals(HttpStatus.OK)) {
-			return updateMetadataForAddUserToIAMSvcAcc(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
-					groups, currentpolicies, currentpoliciesString);
-		} else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("{\"errors\":[\"Failed to add user to the IAM Service Account\"]}");
-		}
+		return userConfigresponse;
 	}
 
 	/**
-	 * Method to update metadata for add user to IAM service account.
+	 * Method to update metadata for given type.
 	 * @param token
-	 * @param userDetails
-	 * @param iamServiceAccountUser
-	 * @param oidcEntityResponse
-	 * @param groups
-	 * @param currentpolicies
-	 * @param currentpoliciesString
-	 * @return
+	 * @param iamUniqueSvcaccName
+	 * @param type
+	 * @param name
+	 * @param access
+	 * @return ResponseEntity<String>
 	 */
-	private ResponseEntity<String> updateMetadataForAddUserToIAMSvcAcc(String token, UserDetails userDetails,
-			IAMServiceAccountUser iamServiceAccountUser, OIDCEntityResponse oidcEntityResponse, String groups,
-			List<String> currentpolicies, String currentpoliciesString) {
-		String iamUniqueSvcaccName = iamServiceAccountUser.getAwsAccountId() + "_" + iamServiceAccountUser.getIamSvcAccName();
-		// User has been associated with IAM Service Account. Now metadata has to be created
+	private Response updateMetadata(String token, String iamUniqueSvcaccName, String type, String name, String access) {
 		String path = new StringBuffer(IAMServiceAccountConstants.IAM_SVCC_ACC_PATH).append(iamUniqueSvcaccName)
 				.toString();
+
 		Map<String, String> params = new HashMap<>();
-		params.put("type", "users");
-		params.put("name", iamServiceAccountUser.getUsername());
-		params.put("path", path);
-		params.put(IAMServiceAccountConstants.IAM_ACCESS_MSG_STRING, iamServiceAccountUser.getAccess());
-		Response metadataResponse = ControllerUtil.updateMetadata(params, token);
-		if (metadataResponse != null && (HttpStatus.NO_CONTENT.equals(metadataResponse.getHttpstatus())
-				|| HttpStatus.OK.equals(metadataResponse.getHttpstatus()))) {
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-							.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_USER_TO_IAMSVCACC_MSG)
-							.put(LogMessage.MESSAGE, String.format("User [%s] is successfully associated to IAM Service Account [%s] with policy [%s].", iamServiceAccountUser.getUsername(), iamServiceAccountUser.getIamSvcAccName(),iamServiceAccountUser.getAccess()))
-							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
-							.build()));
-			return ResponseEntity.status(HttpStatus.OK)
-					.body("{\"messages\":[\"Successfully added user to the IAM Service Account\"]}");
-		} else {
-			return revertUserPoliciesForIAMSvcAcc(token, userDetails, oidcEntityResponse, iamServiceAccountUser.getUsername(), groups,
-					currentpolicies, currentpoliciesString);
-		}
+		params.put(IAMServiceAccountConstants.IAM_TYPE_MSG_STRING, type);
+		params.put(IAMServiceAccountConstants.IAM_NAME_MSG_STRING, name);
+		params.put(IAMServiceAccountConstants.IAM_PATH_MSG_STRING, path);
+		params.put(IAMServiceAccountConstants.IAM_ACCESS_MSG_STRING, access);
+
+		return ControllerUtil.updateMetadata(params, token);
 	}
 
 	/**

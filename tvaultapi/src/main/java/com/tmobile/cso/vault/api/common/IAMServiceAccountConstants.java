@@ -50,6 +50,10 @@ public final class IAMServiceAccountConstants {
 	
 	public static final String IAM_WRITE_PERMISSION_STRING = "write";
 	public static final String IAM_GROUP_MSG_STRING = "groups";
+	public static final String IAM_USERS_MSG_STRING = "users";
+	public static final String IAM_TYPE_MSG_STRING = "type";
+	public static final String IAM_NAME_MSG_STRING = "name";
+	public static final String IAM_PATH_MSG_STRING = "path";
 	public static final String IAM_ACCESS_MSG_STRING = "access";
 	public static final String USERNAME_PARAM_STRING = "{\"username\":\"";
 
