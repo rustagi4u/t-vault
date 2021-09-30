@@ -185,54 +185,6 @@ public class SafesServiceTest {
     }
 
     @Test
-    public void test_createfolder_successfully() {
-
-        String responseJson = "{  \"messages\": [    \"Folder created \"  ]}";
-        String path = "shared/mysafe01";
-        String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(any())).thenReturn(true);
-        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
-        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void test_createfolder_successfully_noContent() {
-
-        String responseJson = "{\"messages\":[\"Folder created \"]}";
-        String path = "shared/mysafe01";
-        String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(any())).thenReturn(true);
-        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
-        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void test_createfolder_failure_400() {
-
-        String responseJson = "{\"errors\":[\"Invalid path\"]}";
-        String path = "shared/mysafe01";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseJson);
-
-        when(ControllerUtil.isPathValid(any())).thenReturn(false);
-        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
     public void testcreateSafesuccessfully() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
@@ -1753,47 +1705,6 @@ public class SafesServiceTest {
         ResponseEntity<String> responseEntityActual = safesService.removeApproleFromSafe(token, inputJson);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
         assertEquals(responseEntityExpected, responseEntityActual);
-    }
-
-    @Test
-    public void test_createNestedfolder_successfully() {
-
-        String responseJson = "{\"messages\":[\"Folder created \"]}";
-        String path = "shared/mysafe01";
-        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(path)).thenReturn(true);
-        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
-        UserDetails userDetails = getMockUser(false);
-        VaultTokenLookupDetails  vaultTokenLookupDetails = new VaultTokenLookupDetails();
-        vaultTokenLookupDetails.setPolicies(new String[] {"w_shared_mysafe01"});
-        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-        try {
-            when(tokenValidator.getVaultTokenLookupDetails(token)).thenReturn(vaultTokenLookupDetails);
-        } catch (TVaultValidationException e) {}
-        ResponseEntity<String> responseEntity = safesService.createNestedfolder(token, path, userDetails);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
-    public void test_createNestedfolder_failure_400() {
-
-        String responseJson = "{\"errors\":[\"Invalid path\"]}";
-        String path = "shared/mysafe01";
-        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.BAD_REQUEST, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(path)).thenReturn(false);
-        UserDetails userDetails = getMockUser(false);
-        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-        ResponseEntity<String> responseEntity = safesService.createNestedfolder(token, path, userDetails);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
     @Test

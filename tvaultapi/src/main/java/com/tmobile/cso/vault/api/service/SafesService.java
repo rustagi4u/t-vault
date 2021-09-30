@@ -156,49 +156,6 @@ public class  SafesService {
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 
 	}
-
-	/**
-	 * Create a folder
-	 * @param token
-	 * @param path
-	 * @return
-	 */
-	public ResponseEntity<String> createfolder(String token, String path){
-
-		path = (path != null) ? path.toLowerCase() : path;
-		if(ControllerUtil.isPathValid(path)){
-			String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-					put(LogMessage.ACTION, "CreateFolder").
-					put(LogMessage.MESSAGE, String.format ("Trying to Create folder [%s]", path)).
-					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-					build()));
-			Response response = reqProcessor.process("/sdb/createfolder",jsonStr,token);
-			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
-				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-						put(LogMessage.ACTION, "Create Folder").
-						put(LogMessage.MESSAGE, "Create Folder completed").
-						put(LogMessage.STATUS, response.getHttpstatus().toString()).
-						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-						build()));
-				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Folder created \"]}");
-			}
-			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
-			
-		}else{
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-					put(LogMessage.ACTION, "Create Folder").
-					put(LogMessage.MESSAGE, "Create Folder failed").
-					put(LogMessage.RESPONSE, INVALID_PATH).
-					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-					build()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid path\"]}");
-		}
-
-	}
 	
 	/**
 	 * Creates Safe
@@ -2401,68 +2358,6 @@ public class  SafesService {
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(JSONUtil.getJSON(safesMap));
-	}
-
-	/**
-	 * Create folder
-	 * @param token
-	 * @param path
-	 * @return
-	 */
-	public ResponseEntity<String> createNestedfolder(String token, String path, UserDetails userDetails) {
-		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-				put(LogMessage.ACTION, "createNestedfolder").
-				put(LogMessage.MESSAGE, String.format ("Trying to createNestedfolder [%s]", path)).
-				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-				build()));
-		path = (path != null) ? path.toLowerCase(): path;
-
-
-		if(ControllerUtil.isPathValid(path) && 	isValidSafe(token, path)){
-			String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
-			Response response = reqProcessor.process("/sdb/createfolder",jsonStr,token);
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-					put(LogMessage.ACTION, "createNestedfolder").
-					put(LogMessage.MESSAGE, "createNestedfolder completed").
-					put(LogMessage.STATUS, response.getHttpstatus().toString()).
-					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-					build()));
-			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
-				// create version folder
-				Response versionCreationResponse = safeUtils.updateActivityInfo(token, path, userDetails, TVaultConstants.CREATE_ACTION, null, null);
-				if (HttpStatus.NO_CONTENT.equals(versionCreationResponse.getHttpstatus())) {
-					log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-							put(LogMessage.ACTION, "createNestedfolder").
-							put(LogMessage.MESSAGE, String.format ("Created version folder for [%s]", path)).
-							put(LogMessage.STATUS, versionCreationResponse.getHttpstatus().toString()).
-							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
-							build()));
-				}
-				else {
-					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-							put(LogMessage.ACTION, "createNestedfolder").
-							put(LogMessage.MESSAGE, String.format ("Failed to create version folder for [%s]", path)).
-							put(LogMessage.STATUS, versionCreationResponse.getHttpstatus().toString()).
-							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
-							build()));
-				}
-				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Folder created \"]}");
-			}
-			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
-		}else{
-			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-					put(LogMessage.ACTION, "createNestedfolder").
-					put(LogMessage.MESSAGE, "createNestedfolder completed").
-					put(LogMessage.RESPONSE, INVALID_PATH).
-					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-					build()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid path\"]}");
-		}
 	}
 
 	/**

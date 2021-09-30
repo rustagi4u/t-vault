@@ -75,18 +75,6 @@ public class SDBControllerV2 {
 	}
 
 	/**
-	 * Creates a SDB folder
-	 * @param token
-	 * @param path
-	 * @return
-	 */
-	@ApiIgnore
-	@PostMapping(value="/v2/sdb/folder",produces="application/json")
-	public ResponseEntity<String> createfolder(@RequestHeader(value="vault-token") String token, @RequestParam("path") String path){
-		return safesService.createfolder(token, path);		
-	}
-
-	/**
 	 * Deletes a SDB folder
 	 * @param token
 	 * @param path
@@ -220,20 +208,6 @@ public class SDBControllerV2 {
 	@GetMapping(value="/v2/sdb/list",produces="application/json")
 	public ResponseEntity<String> getFoldersRecursively(@RequestHeader(value="vault-token") String token, @RequestParam("path") String path, @RequestParam( name="limit",required=false) Integer limit, @RequestParam( name="offset",required=false) Integer offset) {
 		return safesService.getFoldersRecursively(token, path, limit, offset);
-	}
-
-	/**
-	 * Creates a sub folder for a given folder
-	 * @param token
-	 * @param path
-	 * @return
-	 */
-	@ApiOperation(value = "${SafesController.createFolder.value}", notes = "${SafesController.createFolder.notes}")
-	@PostMapping(value="/v2/sdb/createfolder",produces="application/json")
-	public ResponseEntity<String> createNestedfolder(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @RequestParam("path") String path){
-		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
-		return safesService.createNestedfolder(token, path, userDetails);
-
 	}
 
 	/**

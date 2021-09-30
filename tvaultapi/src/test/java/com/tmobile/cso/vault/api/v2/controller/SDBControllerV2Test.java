@@ -106,22 +106,6 @@ public class SDBControllerV2Test {
     }
 
     @Test
-    public void test_createfolder() throws Exception {
-        String inputJson ="{\"path\":\"users/safe1\",\"data\":{\"default\":\"default\"}}";
-        String responseJson = "{\"messages\":[\"Folder created \"]}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(safesService.createfolder(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any())).thenReturn(responseEntityExpected);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/v2/sdb/folder?path=users/safe1")
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
-                .header("Content-Type", "application/json;charset=UTF-8")
-                .content(inputJson))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(responseJson)));
-    }
-
-    @Test
     public void test_deletefolder() throws Exception {
         String responseJson = "{\"messages\":[\"SDB deleted\"]}";
         SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
@@ -323,20 +307,6 @@ public class SDBControllerV2Test {
         when(safesService.getFoldersRecursively("5PDrOhsy4ig8L3EpsJZSLAMg", "users/safe1", 20, 0)).thenReturn(responseEntityExpected);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/sdb/list?path=users/safe1&limit=20&offset=0")
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
-                .header("Content-Type", "application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(responseJson)));
-    }
-
-    @Test
-    public void test_createNestedfolder() throws Exception {
-        String responseJson = "{\"messages\":[\"Folder created \"]}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(safesService.createNestedfolder(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), Mockito.any())).thenReturn(responseEntityExpected);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/v2/sdb/createfolder?path=users/safe1")
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
