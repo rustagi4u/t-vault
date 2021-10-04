@@ -254,6 +254,7 @@ const AzureSecrets = (props) => {
   });
   const isMobileScreen = useMediaQuery(mediaBreakpoints.small);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -311,6 +312,10 @@ const AzureSecrets = (props) => {
       setSecretsData({});
     }
     setShowSecret(false);
+    const admin = sessionStorage.getItem('isAdmin');
+    if (admin) {
+      setIsAdmin(JSON.parse(admin));
+    }
   }, [secretResponse, azureDetail]);
 
   /**
@@ -549,8 +554,9 @@ const AzureSecrets = (props) => {
           </AccessDeniedWrap>
         )}
         {!azureMetaData.isActivated &&
-          azureMetaData?.owner_email?.toLowerCase() ===
-            sessionStorage.getItem('owner')?.toLowerCase() &&
+          (azureMetaData?.owner_email?.toLowerCase() ===
+            sessionStorage.getItem('owner')?.toLowerCase() ||
+            isAdmin) &&
           response.status === 'success' &&
           azureDetail.name && (
             <UserList>

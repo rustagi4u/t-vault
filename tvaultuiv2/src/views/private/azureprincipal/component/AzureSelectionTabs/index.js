@@ -100,6 +100,7 @@ const AzureSelectionTabs = (props) => {
     status: '',
     message: '',
   });
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -113,6 +114,7 @@ const AzureSelectionTabs = (props) => {
   };
 
   const getAzureServiceAllDetails = useCallback(() => {
+    setHasPermission(false);
     setPermissionResponse({ status: 'loading' });
     return apiService
       .getAzureserviceDetails(`${azureDetail.name}`)
@@ -120,8 +122,9 @@ const AzureSelectionTabs = (props) => {
         setAzureMetaData(res.data);
         if (
           res?.data?.isActivated &&
-          res?.data?.owner_ntid?.toLowerCase() ===
-            sessionStorage.getItem('username').toLowerCase()
+          (res?.data?.owner_ntid?.toLowerCase() ===
+            sessionStorage.getItem('username').toLowerCase() ||
+            isAdmin)
         ) {
           setHasPermission(true);
           getEachUser(res.data.users);
@@ -129,6 +132,13 @@ const AzureSelectionTabs = (props) => {
         } else {
           setHasPermission(false);
           setValue(0);
+        }
+        if (res?.data?.isActivated) {
+          if (isAdmin) {
+            setHasPermission(true);
+          } else {
+            setHasPermission(false);
+          }
         }
       })
       .catch((err) => {
@@ -143,11 +153,13 @@ const AzureSelectionTabs = (props) => {
         setHasPermission(false);
         setValue(0);
       });
-  }, [azureDetail]);
+  }, [azureDetail, isAdmin]);
 
   const getAzureDataSecrets = useCallback(() => {
+    console.log(azureDetail);
+
     if (azureDetail?.name) {
-      if (azureDetail.access !== 'N/A') {
+      if (azureDetail.access !== 'N/A' || isAdmin) {
         apiService
           .getAzureSecrets(azureDetail.name)
           .then((res) => {
@@ -179,7 +191,7 @@ const AzureSelectionTabs = (props) => {
         setSecretResponse({ status: 'success' });
       }
     }
-  }, [azureDetail]);
+  }, [azureDetail, isAdmin]);
 
   useEffect(() => {
     if (Object.keys(azureDetail).length > 0) {
@@ -198,6 +210,12 @@ const AzureSelectionTabs = (props) => {
 
   useEffect(() => {
     setValue(0);
+    const admin = sessionStorage.getItem('isAdmin');
+    if (admin) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
   }, [azureDetail]);
 
   return (

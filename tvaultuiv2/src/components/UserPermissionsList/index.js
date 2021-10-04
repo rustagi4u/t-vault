@@ -84,7 +84,8 @@ const UserPermissionsList = (props) => {
           {value?.toLowerCase() !== 'sudo' && (
             <EachUserWrap
               inActitveStyles={
-                state[0]?.username?.toLowerCase() === key?.toLowerCase() &&
+                (state[0]?.username?.toLowerCase() === key?.toLowerCase() ||
+                  owner?.toLowerCase() === key?.toLowerCase()) &&
                 isAzureSvcAccount
                   ? 'pointer-events:none;opacity:0.5'
                   : owner?.toLowerCase() === key?.toLowerCase() &&
