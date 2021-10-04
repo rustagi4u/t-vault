@@ -131,8 +131,7 @@ public class  IAMServiceAccountsService {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-				.put(LogMessage.MESSAGE,
-						String.format("Trying to onboard IAM Service Account [%s]", iamServiceAccount.getUserName()))
+				.put(LogMessage.MESSAGE, String.format("Trying to onboard IAM Service Account [%s]", iamServiceAccount.getUserName()))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		if (!isAuthorizedIAMAdminApprole(token)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
@@ -188,14 +187,15 @@ public class  IAMServiceAccountsService {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-					.put(LogMessage.MESSAGE, String.format("Successfully created Metadata for the IAM Service Account [%s]", iamSvccAccMetaPath))
+					.put(LogMessage.MESSAGE, String.format("Successfully created Metadata for the IAM Service Account [%s]",
+							iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
 					.put(LogMessage.MESSAGE,
-							String.format("Creating metadata for IAM Service Account [%s] failed.", iamSvccAccMetaPath))
+							String.format("Creating metadata for IAM Service Account [%s] failed.", iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
 					"{\"errors\":[\"Metadata creation failed for IAM Service Account.\"]}");
@@ -219,7 +219,7 @@ public class  IAMServiceAccountsService {
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 							.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-							.put(LogMessage.MESSAGE, String.format("Successfully onboarded the IAM Service Account[%s]  " +
+							.put(LogMessage.MESSAGE, String.format("Successfully onboarded the IAM Service Account [%s] " +
 											"with owner [%s]. But failed to add rotate permission to [%s]",
 									iamServiceAccount.getUserName(), iamServiceAccount.getOwnerEmail(),
 									iamServiceAccount.getAdSelfSupportGroup()))
@@ -1072,7 +1072,7 @@ public class  IAMServiceAccountsService {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, IAMServiceAccountConstants.ADD_GROUP_TO_IAMSVCACC_MSG)
-				.put(LogMessage.MESSAGE, "Trying to add Group to IAM Service Account")
+				.put(LogMessage.MESSAGE, String.format("Trying to add Group [%s] to IAM Service Account", iamServiceAccountGroup.getGroupname()))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		if (!userDetails.isAdmin()) {
 			token = tokenUtils.getSelfServiceToken();
@@ -1208,7 +1208,7 @@ public class  IAMServiceAccountsService {
 	 * @param oidcGroup
 	 * @param iamServiceAccountGroup
 	 * @param policies
-	 * @param currentpolicies
+	 * @param currentPolicies
 	 * @return void
 	 */
 	private void processNewGroupPolicy(String token, String policyToAdd, String iamSvcAccountName, OIDCGroup oidcGroup,
@@ -1447,7 +1447,7 @@ public class  IAMServiceAccountsService {
 								iamServiceAccountUser.getUsername(), userResponse.getResponse(), newPolicy))
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 
-				return addPolicyToIAMSvcAcc(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
+				return configurePoliciesAndUpdateMetadata(token, userDetails, iamServiceAccountUser, oidcEntityResponse,
 						uniqueIAMSvcaccName, userResponse);
 			} else {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
@@ -1487,7 +1487,6 @@ public class  IAMServiceAccountsService {
 	 * @param userDetails
 	 * @param iamServiceAccountUser
 	 * @param oidcEntityResponse
-	 * @param uniqueIAMSvcaccName
 	 * @return
 	 */
 	private Response getUserPolicies(String token, UserDetails userDetails,
@@ -1531,6 +1530,8 @@ public class  IAMServiceAccountsService {
 
 	/**
 	 * Method to create policies for user and call the update process.
+	 * This method 1. Gets the existing policies as a list 2. Adds the new policy
+	 * to the list 3. Configures the policies 4. Updates the metadata.
 	 * @param token
 	 * @param userDetails
 	 * @param iamServiceAccountUser
@@ -1539,7 +1540,7 @@ public class  IAMServiceAccountsService {
 	 * @param userResponse
 	 * @return
 	 */
-	private ResponseEntity<String> addPolicyToIAMSvcAcc(String token, UserDetails userDetails,
+	private ResponseEntity<String> configurePoliciesAndUpdateMetadata(String token, UserDetails userDetails,
 		IAMServiceAccountUser iamServiceAccountUser, OIDCEntityResponse oidcEntityResponse,
 		String uniqueIAMSvcaccName, Response userResponse) {
 
