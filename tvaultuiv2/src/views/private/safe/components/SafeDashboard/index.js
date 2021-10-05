@@ -819,6 +819,7 @@ const SafeDashboard = () => {
                     <NoSafeWrap>
                       <NoData
                         imageSrc={NoSafesIcon}
+                        description=""
                         customStyle={noDataStyle}
                       />
                     </NoSafeWrap>
@@ -826,7 +827,7 @@ const SafeDashboard = () => {
                 )}
               </>
             )}
-            {safeList?.length > 0 && (
+            {false && safeList?.length > 0 && (
               <FloatBtnWrapper>
                 <FloatingActionButtonComponent />
               </FloatBtnWrapper>
