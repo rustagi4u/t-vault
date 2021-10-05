@@ -38,6 +38,8 @@ import configData from '../../../../../config/config';
 import SearchboxWithDropdown from '../../../../../components/FormFields/SearchboxWithDropdown';
 import LeftColumn from './component/leftColumn';
 
+const CreateSafe = lazy(() => import('../../CreateSafe'));
+
 const ColumnSection = styled('section')`
   position: relative;
   background: ${(props) => props.backgroundColor || '#151820'};
@@ -628,7 +630,9 @@ const SafeDashboard = () => {
    * @description function to edit the safe.
    * @param {object} safe safe details.
    */
-  const onEditSafeClicked = (safe) => {};
+  const onEditSafeClicked = (safe) => {
+    history.push({ pathname: '/safes/edit-safe', state: { safe } });
+  };
 
   const loadMoreData = () => {
     setIsInfiniteScrollLoading(true);
@@ -885,6 +889,22 @@ const SafeDashboard = () => {
             message="Safe deleted successfully!"
           />
         )}
+        <Switch>
+          <Route
+            exact
+            path="/safes/create-safe"
+            render={(routeProps) => (
+              <CreateSafe routeProps={{ ...routeProps }} refresh={fetchData} />
+            )}
+          />
+          <Route
+            exact
+            path="/safes/edit-safe"
+            render={(routeProps) => (
+              <CreateSafe routeProps={{ ...routeProps }} refresh={fetchData} />
+            )}
+          />
+        </Switch>
       </>
     </ComponentError>
   );

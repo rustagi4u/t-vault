@@ -35,6 +35,21 @@ const PsudoPopper = (props) => {
     <ComponentError>
       <IconWrap>
         <TooltipComponent
+          title="Edit"
+          renderContent={
+            <Link
+              to={{
+                pathname: path,
+                state: { safe },
+              }}
+            >
+              <Icon>
+                <IconEdit />
+              </Icon>
+            </Link>
+          }
+        />
+        <TooltipComponent
           title="Delete"
           placement="top"
           renderContent={

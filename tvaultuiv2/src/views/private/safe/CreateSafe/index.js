@@ -299,6 +299,51 @@ const CreateModal = (props) => {
       });
   }, [history]);
 
+  useEffect(() => {
+    if (
+      history?.location?.pathname === '/safes/edit-safe' &&
+      history?.location?.state
+    ) {
+      setEditSafe(true);
+      setResponseType(0);
+      apiService
+        .getSafeDetails(history.location.state.safe.path)
+        .then((res) => {
+          setResponseType(null);
+          if (res?.data?.data) {
+            if (!res.data.data.type) {
+              const { path } = history.location.state.safe;
+              const typeFromPath = path.substring(0, path.indexOf('/'));
+              res.data.data.type = typeFromPath;
+            }
+            setSafeDetails(res.data.data);
+            setName(res.data.data.name);
+            setDescription(res.data.data.description);
+            if (sessionStorage.getItem('isAdmin') === 'false') {
+              setOwner(sessionStorage.getItem('owner'));
+            } else {
+              setOwner(res.data.data.owner);
+            }
+            setApplicationName(res.data.data.appName);
+            if (res.data.data.type === 'users') {
+              setSafeType('Users Safe');
+            } else if (res.data.data.type === 'apps') {
+              setSafeType('Application Safe');
+            } else {
+              setSafeType('Shared Safe');
+            }
+            setIsValidEmail(true);
+          }
+        })
+        .catch((err) => {
+          if (err?.response?.data?.errors && err?.response?.data?.errors[0]) {
+            setToastMessage(err.response.data.errors[0]);
+          }
+          setResponseType(-1);
+        });
+    }
+  }, [history]);
+
   const constructPayload = () => {
     let value = safeType.split(' ')[0].toLowerCase();
     const obj = allApplication.find((item) => applicationName === item.appName);
@@ -673,10 +718,7 @@ const CreateModal = (props) => {
                           )}
                           loader={autoLoader}
                           userInput={owner}
-                          disabled={
-                            !!editSafe ||
-                            sessionStorage.getItem('isAdmin') === 'false'
-                          }
+                          disabled
                           name="owner"
                           onSelected={(e, val) => onSelected(e, val)}
                           onChange={(e) => onOwnerChange(e)}
@@ -707,7 +749,7 @@ const CreateModal = (props) => {
                         <SelectComponent
                           menu={menu}
                           value={safeType}
-                          readOnly={!!editSafe}
+                          readOnly
                           onChange={(e) => setSafeType(e)}
                         />
                       </InputFieldLabelWrapper>
@@ -741,6 +783,7 @@ const CreateModal = (props) => {
                               ? `Application ${applicationName} does not exist!`
                               : ''
                           }
+                          disabled
                         />
                       </InputFieldLabelWrapper>
 
@@ -756,6 +799,7 @@ const CreateModal = (props) => {
                           onChange={(e) => setDescription(e.target.value)}
                           placeholder="Add some details about this safe"
                           characterLimit={1024}
+                          readOnly
                         />
                         <FieldInstruction>
                           Please add a minimum of 10 characters
@@ -783,16 +827,6 @@ const CreateModal = (props) => {
                           />
                         </CancelButton>
                       )}
-                      <ButtonComponent
-                        label={!editSafe ? 'Create' : 'Update'}
-                        color="secondary"
-                        icon={!editSafe ? 'add' : ''}
-                        disabled={disabledSave}
-                        onClick={() =>
-                          !editSafe ? onCreateSafes() : onEditSafes()
-                        }
-                        width={isMobileScreen ? '100%' : ''}
-                      />
                     </CancelSaveWrapper>
                   </>
                 )}

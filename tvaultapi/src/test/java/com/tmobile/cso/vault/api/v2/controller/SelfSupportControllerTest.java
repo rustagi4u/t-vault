@@ -637,6 +637,24 @@ public class SelfSupportControllerTest {
     }
 
     @Test
+    public void test_transferSafe() throws Exception {
+        String responseJson = "{\"messages\":[\"Safe transfer successful\"]}";
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+        UserDetails userDetails = getMockUser(false);
+        SafeTransferRequest safeTransferRequest = new SafeTransferRequest("safe1", "users","test.user@company.com");
+
+        String inputJson =new ObjectMapper().writeValueAsString(safeTransferRequest);
+        when(selfSupportService.transferSafe(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(SafeTransferRequest.class), eq(userDetails))).thenReturn(responseEntityExpected);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/v2/ss/transfersafe").requestAttr("UserDetails", userDetails)
+                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
+                .header("Content-Type", "application/json;charset=UTF-8")
+                .content(inputJson))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(responseJson)));
+    }
+
+    @Test
     public void testUpdateAppRoleSuccess() throws Exception {
 
         String[] policies = {"default"};

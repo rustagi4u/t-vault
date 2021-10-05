@@ -968,6 +968,156 @@ public class  SelfSupportService {
 	}
 
 	/**
+	 * Transfer safe ownership to a user.
+	 * @param token
+	 * @param safeTransferRequest
+	 * @return
+	 */
+	public ResponseEntity<String> transferSafe(String token, SafeTransferRequest safeTransferRequest, UserDetails userDetails) {
+
+		String powerToken = token;
+		if (!userDetails.isAdmin()) {
+			powerToken = tokenUtils.getSelfServiceToken();
+		}
+		String path = safeTransferRequest.getSafeType() + '/' + safeTransferRequest.getSafeName();
+
+		//get current owner NT id
+		Safe safeMetaData = safeUtils.getSafeMetaData(powerToken, safeTransferRequest.getSafeType(), safeTransferRequest.getSafeName());
+		if (safeMetaData == null) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Either Safe doesn't exist or you don't have enough permission to access this safe\"]}");
+		}
+		String currentOwnerNtid = safeMetaData.getSafeBasicDetails().getOwnerid();
+
+		if (userDetails.isAdmin() || (currentOwnerNtid != null && currentOwnerNtid.equalsIgnoreCase(userDetails.getUsername()))) {
+			String newOwnerEmail = safeTransferRequest.getNewOwnerEmail();
+
+			String newOwnerNtid = directoryService.getNtidForUser(newOwnerEmail);
+
+			if (StringUtils.isEmpty(newOwnerNtid)) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "transferSafe").
+						put(LogMessage.MESSAGE, String.format("Failed to get NTid for [%s]", newOwnerEmail)).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid email provided for new owner\"]}");
+			}
+
+			if (newOwnerNtid.equalsIgnoreCase(currentOwnerNtid)) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "transferSafe").
+						put(LogMessage.MESSAGE, String.format("New owner email id [%s] should not be same as current owner email id [%s]", newOwnerEmail, currentOwnerNtid)).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"New owner email id should not be same as current owner email id\"]}");
+			}
+
+			boolean hasCurrentOwner = true;
+			if (StringUtils.isEmpty(currentOwnerNtid) || TVaultConstants.NULL_STRING.equalsIgnoreCase(currentOwnerNtid) || currentOwnerNtid.equalsIgnoreCase(TVaultConstants.APPROLE)) {
+				hasCurrentOwner = false;
+			}
+			if (hasCurrentOwner) {
+				// remove current owner sudo permission from safe
+				SafeUser safeUser = new SafeUser(path, currentOwnerNtid, TVaultConstants.SUDO_POLICY);
+				ResponseEntity<String> removeUserResponse = removeSudoUserFromSafe(powerToken, safeUser, userDetails);
+				if (!HttpStatus.OK.equals(removeUserResponse.getStatusCode())) {
+					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "transferSafe").
+							put(LogMessage.MESSAGE, String.format("Failed to remove current owner [%s] from safe [%s]", currentOwnerNtid, path)).
+							put(LogMessage.STATUS, removeUserResponse.getStatusCode().toString()).
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to remove current owner from safe\"]}");
+				}
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "transferSafe").
+						put(LogMessage.MESSAGE, String.format("Removed current owner [%s] from safe [%s]", currentOwnerNtid, path)).
+						put(LogMessage.STATUS, removeUserResponse.getStatusCode().toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+			} else {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "transferSafe").
+						put(LogMessage.MESSAGE, String.format("Current owner NTid not available in safe metadata for [%s]", path)).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+			}
+
+			// add sudo permission to new user to this safe
+			SafeUser safeUser = new SafeUser(path, newOwnerNtid, TVaultConstants.SUDO_POLICY);
+			ResponseEntity<String> addUserResponse = safesService.addUserToSafe(powerToken, safeUser, userDetails, true);
+			if (!HttpStatus.OK.equals(addUserResponse.getStatusCode())) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "transferSafe").
+						put(LogMessage.MESSAGE, String.format("Failed to add new owner [%s] to safe [%s]", newOwnerNtid, path)).
+						put(LogMessage.STATUS, addUserResponse.getStatusCode().toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to add new owner to the safe\"]}");
+			}
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "transferSafe").
+					put(LogMessage.MESSAGE, String.format("New owner added to the safe [%s]", path)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+
+
+			// Update metadata with new owner information
+			String safeMetadataPath = "metadata/" + path;
+			Response response = reqProcessor.process("/read", "{\"path\":\"" + safeMetadataPath + "\"}", powerToken);
+			Map<String, Object> responseMap = null;
+			if (HttpStatus.OK.equals(response.getHttpstatus())) {
+				responseMap = ControllerUtil.parseJson(response.getResponse());
+				if (responseMap.isEmpty()) {
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error fetching safe metadata\"]}");
+				}
+
+				responseMap.put("path", safeMetadataPath);
+				((Map<String, Object>) responseMap.get("data")).put("ownerid", newOwnerNtid);
+				((Map<String, Object>) responseMap.get("data")).put("owner", newOwnerEmail);
+
+				String metadataJson = ControllerUtil.convetToJson(responseMap);
+				response = reqProcessor.process("/sdb/update", metadataJson, powerToken);
+				if (response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "transferSafe").
+							put(LogMessage.MESSAGE, "Safe transfer successful").
+							put(LogMessage.STATUS, response.getHttpstatus().toString()).
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+					return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe transfer successful \"]}");
+				} else {
+					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "transferSafe").
+							put(LogMessage.MESSAGE, "Safe transfer failed").
+							put(LogMessage.RESPONSE, response.getResponse()).
+							put(LogMessage.STATUS, response.getHttpstatus().toString()).
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Safe transfer failed\"]}");
+				}
+			}
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Safe transfer failed. Error fetching safe metadata\"]}");
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "transferSafe").
+					put(LogMessage.MESSAGE, String.format("Access denied to transfer this safe [%s]", path)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Access denied: No permission to transfer this safe. Only Owner and admin users can transfer safes\"]}");
+		}
+	}
+
+	/**
 	 * Removes an sudo user from Safe
 	 * @param token
 	 * @param safeUser

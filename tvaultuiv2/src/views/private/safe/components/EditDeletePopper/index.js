@@ -50,6 +50,10 @@ const EditDeletePopper = (props) => {
             horizontal: 'right',
           }}
         >
+          <PopperItem onClick={onEditClicked}>
+            <IconEdit />
+            <span>Edit</span>
+          </PopperItem>
           <PopperItem onClick={onDeleteClicked}>
             <IconDeleteActive />
             <span> Delete</span>

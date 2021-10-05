@@ -18,7 +18,7 @@ const PopperWrap = styled.div`
   top: 50%;
   right: 0%;
   z-index: 1;
-  width: 4.5rem;
+  width: 5.5rem;
   transform: translate(-50%, -50%);
   display: none;
 `;
