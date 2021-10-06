@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
@@ -193,29 +194,6 @@ const File = (props) => {
                     </PopperItem>
                   </CopyToClipboard>
                 ))}
-              {userHavePermission?.type === 'write' && (
-                <PopperItem onClick={() => editNode()}>
-                  <IconEdit />
-                  <span>Edit</span>
-                </PopperItem>
-              )}
-              {userHavePermission?.type === 'write' && (
-                <PopperItem
-                  onClick={
-                    () =>
-                      deleteNode({
-                        id,
-                        type,
-                        key: Object.keys(secret)[0],
-                        parentId,
-                      })
-                    // eslint-disable-next-line react/jsx-curly-newline
-                  }
-                >
-                  <IconDeleteActive />
-                  <span>Delete</span>
-                </PopperItem>
-              )}
             </PopperElement>
           </FolderIconWrap>
         </StyledFile>

@@ -2,6 +2,7 @@
 /* eslint-disable no-return-assign */
 /* eslint-disable react/jsx-wrap-multilines */
 /* eslint-disable no-param-reassign */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback, lazy } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {

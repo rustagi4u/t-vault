@@ -349,53 +349,6 @@ public class  SelfSupportService {
 	}
 
 	/**
-	 * Update a safe by the user with least privileges, Requires an AppRole which can perform Safe updation
-	 * (Sufficient access to the paths such as shared or metadata/shared, etc)
-	 * @param userToken
-	 * @param safe
-	 * @return
-	 */
-	public ResponseEntity<String> updateSafe(UserDetails userDetails, Safe safe) {
-		String token = userDetails.getClientToken();
-		if (userDetails.isAdmin()) {
-			return safesService.updateSafe(token, safe);
-		}
-		else {
-			ResponseEntity<String> isAuthorized = isAuthorized(userDetails, safe.getPath());
-			if(!safe.getSafeBasicDetails().getOwner().equalsIgnoreCase(userDetails.getEmail())){
-				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-						put(LogMessage.ACTION, "updateSafe").
-						put(LogMessage.MESSAGE, "Validating owner email").
-						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-						build()));
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body("{\"errors\":[\"Invalid owner email\"]}");
-			}
-			if (!isAuthorized.getStatusCode().equals(HttpStatus.OK)) {
-				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-						put(LogMessage.ACTION, "updateSafe").
-						put(LogMessage.MESSAGE, "Checking user permission").
-						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-						build()));
-				return isAuthorized.getStatusCode().equals(HttpStatus.BAD_REQUEST)?isAuthorized:ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error checking user permission\"]}");
-			}
-			if (isAuthorized.getBody().equals(TVaultConstants.FALSE)) {
-				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
-						put(LogMessage.ACTION, "updateSafe").
-						put(LogMessage.MESSAGE, "Access denied: no permission to update this safe").
-						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
-						build()));
-				return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Access denied: no permission to update this safe\"]}");
-			}
-			token = userDetails.getSelfSupportToken();
-			ResponseEntity<String> safe_creation_response = safesService.updateSafe(token, safe);
-			return safe_creation_response;
-		}
-	}
-	/**
 	 * Delete a safe by the user with least privileges, Requires an AppRole which can perform Safe Deletion
 	 * (Sufficient access to the paths such as shared or metadata/shared, etc)
 	 * @param userDetails

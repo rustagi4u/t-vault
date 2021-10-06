@@ -1,5 +1,6 @@
 /* eslint-disable no-inner-declarations */
 /* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import styled, { css } from 'styled-components';
@@ -287,14 +288,6 @@ const SelectionTabs = (props) => {
               <Tab label="Permissions" {...a11yProps(1)} />
             )}
           </Tabs>
-          {value === 0 && safeDetail?.access === 'write' && (
-            <NamedButton
-              label="Add Folder"
-              onClick={addSecretsFolder}
-              customStyle={customBtnStyles}
-              iconSrc={addFolderPlus}
-            />
-          )}
         </AppBar>
         <TabContentsWrap>
           <TabPanel value={value} index={0}>

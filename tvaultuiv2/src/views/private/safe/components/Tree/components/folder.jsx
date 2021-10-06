@@ -1,6 +1,8 @@
 /* eslint-disable react/jsx-curly-newline */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable no-unused-vars */
+
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
@@ -174,56 +176,6 @@ const Folder = (props) => {
                 modifiedBy={modifiedBy}
               />
             </LabelWrap>
-
-            {userHavePermission?.type === 'write' && (
-              <FolderIconWrap>
-                <PopperElement
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                  }}
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                >
-                  <PopperItem
-                    onClick={() =>
-                      handlePopperClick(true, {
-                        type: 'folder',
-                        currentNode: folderInfo.value,
-                      })
-                    }
-                  >
-                    <IconAddFolder />
-                    <span>Create Folder</span>
-                  </PopperItem>
-                  <PopperItem
-                    onClick={() =>
-                      handlePopperClick(true, {
-                        type: 'secret',
-                        currentNode: folderInfo.value,
-                      })
-                    }
-                  >
-                    <IconAddSecret />
-                    <span>Create Secret</span>
-                  </PopperItem>
-                  <PopperItem
-                    onClick={() =>
-                      deleteNode({
-                        id: folderInfo.id,
-                        type: folderInfo.type,
-                        parentId: folderInfo.parentId,
-                      })
-                    }
-                  >
-                    <IconDeleteActive />
-                    <span> Delete</span>
-                  </PopperItem>
-                </PopperElement>
-              </FolderIconWrap>
-            )}
           </div>
         </StyledFolder>
         <Collapsible isOpen={isOpen}>{children}</Collapsible>
