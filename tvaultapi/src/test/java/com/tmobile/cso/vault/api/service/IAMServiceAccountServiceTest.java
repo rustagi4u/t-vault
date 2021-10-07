@@ -1370,7 +1370,8 @@ public class IAMServiceAccountServiceTest {
 		Response userResponseOk = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 		Response responseBadRequest = getMockResponse(HttpStatus.BAD_REQUEST, true, "{\"policies\":null}");
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponseOk).thenReturn(userResponseBadRequest);
+		when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponseOk).
+				thenReturn(userResponseOk).thenReturn(userResponseBadRequest);
 
 		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseBadRequest);
 		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent).thenReturn(responseBadRequest);
@@ -1561,9 +1562,9 @@ public class IAMServiceAccountServiceTest {
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"errors\":[\"Failed to add user to the IAM Service Account\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+		String expectedResponse = "{\"errors\":[\"Failed to configure policies for user newowner\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
 
