@@ -554,9 +554,8 @@ const AzureSecrets = (props) => {
           </AccessDeniedWrap>
         )}
         {!azureMetaData.isActivated &&
-          (azureMetaData?.owner_email?.toLowerCase() ===
-            sessionStorage.getItem('owner')?.toLowerCase() ||
-            isAdmin) &&
+          azureMetaData?.owner_email?.toLowerCase() ===
+            sessionStorage.getItem('owner')?.toLowerCase() &&
           response.status === 'success' &&
           azureDetail.name && (
             <UserList>
@@ -570,6 +569,20 @@ const AzureSecrets = (props) => {
               <FolderIconWrap onClick={() => activateServiceAccount()}>
                 <Icon src={refreshIcon} alt="refresh" />
               </FolderIconWrap>
+            </UserList>
+          )}
+        {!azureMetaData.isActivated &&
+          isAdmin &&
+          response.status === 'success' &&
+          azureDetail.name && (
+            <UserList>
+              <LabelWrap>
+                <ReportProblemOutlinedIcon />
+                <Span>
+                  Azure Service Principal not activated. Secrets will be
+                  available once activated by the owner.
+                </Span>
+              </LabelWrap>
             </UserList>
           )}
         {responseType === 1 && (
