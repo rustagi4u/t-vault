@@ -60,4 +60,9 @@ public class AzureServiceAccountConstants {
 	public static final String AZURE_SP_SECRET_FOLDER_PREFIX = "secret_";
 	public static final String AZURE_AUTH_TOKEN_PREFIX = "cloud-iam";
 	public static final String DELETE_AWSROLE_ASSOCIATION = "Remove AwsRole Association On Azure Service Principal Offboard";
+	public static final String TRANSFER_ASP_METHOD_NAME = "transferAzureServicePrincipal";
+	public static final String ASP_TRANSFER_EMAIL_SUBJECT="Azure Service Principal %s has been successfully transferred";
+	public static final String AZURE_TRANSFER_EMAIL_TEMPLATE_NAME = "AzureTransferEmailTemplate";
+
+
 }
