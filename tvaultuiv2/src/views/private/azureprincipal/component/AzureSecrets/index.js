@@ -573,6 +573,8 @@ const AzureSecrets = (props) => {
           )}
         {!azureMetaData.isActivated &&
           isAdmin &&
+          azureMetaData?.owner_email?.toLowerCase() !==
+            sessionStorage.getItem('owner')?.toLowerCase() &&
           response.status === 'success' &&
           azureDetail.name && (
             <UserList>
