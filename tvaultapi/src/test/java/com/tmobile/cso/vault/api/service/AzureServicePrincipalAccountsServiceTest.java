@@ -1503,6 +1503,18 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(token, userDetails);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		}
+
+		@Test
+		public void test_getOnboardedAzureServiceAccounts_successfully_admin() throws IOException {
+			String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+			UserDetails userDetails = getMockUser(true);
+			when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+					HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
+			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(token, userDetails);
+			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		}
+
+
 		@Test
 	    public void test_addAwsRoleToAzureSvcacc_succssfully_iam() throws Exception {
 

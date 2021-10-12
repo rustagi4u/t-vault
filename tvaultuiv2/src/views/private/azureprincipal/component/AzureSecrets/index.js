@@ -254,6 +254,7 @@ const AzureSecrets = (props) => {
   });
   const isMobileScreen = useMediaQuery(mediaBreakpoints.small);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -311,6 +312,10 @@ const AzureSecrets = (props) => {
       setSecretsData({});
     }
     setShowSecret(false);
+    const admin = sessionStorage.getItem('isAdmin');
+    if (admin) {
+      setIsAdmin(JSON.parse(admin));
+    }
   }, [secretResponse, azureDetail]);
 
   /**
@@ -564,6 +569,20 @@ const AzureSecrets = (props) => {
               <FolderIconWrap onClick={() => activateServiceAccount()}>
                 <Icon src={refreshIcon} alt="refresh" />
               </FolderIconWrap>
+            </UserList>
+          )}
+        {!azureMetaData.isActivated &&
+          isAdmin &&
+          response.status === 'success' &&
+          azureDetail.name && (
+            <UserList>
+              <LabelWrap>
+                <ReportProblemOutlinedIcon />
+                <Span>
+                  Azure Service Principal not activated. Secrets will be
+                  available once activated by the owner.
+                </Span>
+              </LabelWrap>
             </UserList>
           )}
         {responseType === 1 && (

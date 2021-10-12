@@ -2275,13 +2275,18 @@ public class AzureServicePrincipalAccountsService {
 				.put(LogMessage.MESSAGE, "Trying to get list of onboaded Azure service accounts")
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
-		String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
-				userDetails.getUsername(), userDetails);
 		List<String> onboardedlist = new ArrayList<>();
-		for (String policy : latestPolicies) {
-			
-			if (policy.startsWith("o_azuresvcacc")) {
-				onboardedlist.add(policy.substring(14));
+		if (userDetails.isAdmin()) {
+			onboardedlist = getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
+		}
+		else {
+			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
+					userDetails.getUsername(), userDetails);
+			for (String policy : latestPolicies) {
+
+				if (policy.startsWith("o_azuresvcacc")) {
+					onboardedlist.add(policy.substring(14));
+				}
 			}
 		}
 		response = new Response();
