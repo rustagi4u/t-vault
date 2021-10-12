@@ -18,12 +18,7 @@
 package com.tmobile.cso.vault.api.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.collections.CollectionUtils;
@@ -103,7 +98,8 @@ public class  AppRoleService {
 	 * Create AppRole
 	 * @param token
 	 * @param appRole
-	 * @return
+	 * @param userDetails
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> createAppRole(String token, AppRole appRole, UserDetails userDetails){
 		String jsonStr = JSONUtil.getJSON(appRole);
@@ -122,7 +118,6 @@ public class  AppRoleService {
 				      build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values for AppRole creation\"]}");
 		}
-
 		
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(appRole.getRole_name())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -134,12 +129,9 @@ public class  AppRoleService {
 		
 		if (!isDuplicate) {
 			Response response = reqProcessor.process(CREATEPATH, jsonStr,token);
-			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT) || response.getHttpstatus().equals(HttpStatus.OK)) {
-				String metadataJson = ControllerUtil.populateAppRoleMetaJson(appRole.getRole_name(), userDetails.getUsername());
-				boolean appRoleMetaDataCreationStatus = ControllerUtil.createMetadata(metadataJson, token);
-				String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole.getRole_name(), userDetails.getUsername());
-				boolean appRoleUserMetaDataCreationStatus = ControllerUtil.createMetadata(appRoleUsermetadataJson, token);
-				if(appRoleMetaDataCreationStatus && appRoleUserMetaDataCreationStatus) {
+			if (response.getHttpstatus().equals(HttpStatus.NO_CONTENT) || response.getHttpstatus().equals(HttpStatus.OK)) {
+				boolean metadataCreatedSuccessfully = createAppRoleMetaData(token, userDetails, appRole);
+				if(metadataCreatedSuccessfully) {
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 							put(LogMessage.ACTION, CREATE_APPROLE).
@@ -175,10 +167,35 @@ public class  AppRoleService {
 	}
 
 	/**
-	 * Checks for duplicated AppRole
-	 * @param jsonStr
+	 * Creates metadata for app role in the following order - <br><br>
+	 * 1. General AppRole metadata in path metadata/approle<br>
+	 * 2. User metadata in path metadata/approle_users (for quick search of AppRoles for user)<br>
+	 * 3. Metadata for sharedTo users (if any exist), who will have access to read and delete keys.<br>
 	 * @param token
-	 * @return
+	 * @param userDetails
+	 * @param appRole
+	 * @return boolean
+	 */
+	private boolean createAppRoleMetaData(String token, UserDetails userDetails, AppRole appRole) {
+		String metadataJson = ControllerUtil.populateAppRoleMetaJson(appRole, userDetails.getUsername());
+		boolean appRoleMetaDataCreationStatus = ControllerUtil.createMetadata(metadataJson, token);
+		String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole, userDetails.getUsername());
+		boolean appRoleUserMetaDataCreationStatus = ControllerUtil.createMetadata(appRoleUsermetadataJson, token);
+		boolean appRoleSharedToUserMetaDataCreationStatus = true;
+		if (appRole.getShared_to() != null) {
+			for (String sharedToUser : appRole.getShared_to()) {
+				String appRoleSharedToMetadataJson = ControllerUtil.populateSharedToUserMetaJson(userDetails.getUsername(), sharedToUser, appRole);
+				appRoleSharedToUserMetaDataCreationStatus = ControllerUtil.createMetadata(appRoleSharedToMetadataJson, token);
+			}
+		}
+		return appRoleMetaDataCreationStatus && appRoleUserMetaDataCreationStatus && appRoleSharedToUserMetaDataCreationStatus;
+	}
+
+	/**
+	 * Checks for duplicated AppRole
+	 * @param appRoleName
+	 * @param token
+	 * @return boolean
 	 */
 	private boolean isAppRoleDuplicate(String appRoleName, String token) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -212,7 +229,7 @@ public class  AppRoleService {
 	 * Reads approle information
 	 * @param token
 	 * @param rolename
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRole(String token, String rolename){
 
@@ -234,6 +251,9 @@ public class  AppRoleService {
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
 				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
 				      build()));
+
+			populateResponseWithSharedTo(token, rolename, response);
+
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 		}
 		else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
@@ -257,10 +277,42 @@ public class  AppRoleService {
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 		}
 	}
+
+	/**
+	 * Populates response with sharedTo users so they can be displayed when the AppRole is read
+	 * @param token
+	 * @param roleName
+	 * @param response
+	 * @return void
+	 */
+	private void populateResponseWithSharedTo(String token, String roleName, Response response) {
+		AppRoleMetadata appRoleMetadata = readAppRoleMetadata(token, roleName);
+		List<String> sharedTo = null;
+		if (appRoleMetadata != null) {
+			sharedTo = appRoleMetadata.getAppRoleMetadataDetails().getSharedTo();
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				put(LogMessage.ACTION, "populateResponseWithSharedTo").
+				put(LogMessage.MESSAGE, "Failed to populate response with sharedTo users because unable fetch metadata.").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				build()));
+		}
+
+		if (!CollectionUtils.isEmpty(sharedTo)) {
+			String newResponse = response.getResponse().replace("}}", ",\"shared_to\":[");
+			for (String sharedToUser : sharedTo) {
+				newResponse += "\"" + sharedToUser + "\",";
+			}
+			newResponse = newResponse.substring(0, newResponse.length() - 1) + "]}}";
+			response.setResponse(newResponse);
+		}
+	}
+
 	/**
 	 * Reads the list of AppRoles
 	 * @param token
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoles(String token) {
 		Integer offset = null , limit = null;
@@ -286,7 +338,10 @@ public class  AppRoleService {
 	/**
 	 * Reads the list of AppRoles
 	 * @param token
-	 * @return
+	 * @param userDetails
+	 * @param limit
+	 * @param offset
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> listAppRoles(String token,  UserDetails userDetails, Integer limit, Integer offset) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -321,11 +376,12 @@ public class  AppRoleService {
 		}
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
+
 	/**
 	 * Gets roleid for approle
 	 * @param token
 	 * @param rolename
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoleRoleId(String token, String rolename){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -351,7 +407,7 @@ public class  AppRoleService {
 	 * Gets roleid for approle
 	 * @param token
 	 * @param rolename
-	 * @return
+	 * @return String
 	 */
 	public String readRoleId(String token, String rolename){
 		String roleId = null;
@@ -401,8 +457,7 @@ public class  AppRoleService {
 	 * Read accessors of all the SecretIDs issued against the AppRole.
 	 * @param token
 	 * @param rolename
-	 * @param userDetails
-	 * @return
+	 * @return List<String>
 	 */
 	public List<String> readAccessorIds(String token, String rolename) {
 		ArrayList<String> accessorIds = null;
@@ -446,6 +501,7 @@ public class  AppRoleService {
 			      build()));
 		return accessorIds;	
 	}
+
 	/**
 	 * Reads the metadata associated with an AppRole
 	 * @param token
@@ -481,6 +537,7 @@ public class  AppRoleService {
 				AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
 				appRoleMetadataDetails.setCreatedBy((String)appRoleMetadataMap.get("createdBy"));
 				appRoleMetadataDetails.setName(rolename);
+				appRoleMetadataDetails.setSharedTo((List<String>) appRoleMetadataMap.get("sharedTo"));
 				appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
 				appRoleMetadata.setPath(_path);
 			}
@@ -514,7 +571,7 @@ public class  AppRoleService {
 	 * Reads the AppRole
 	 * @param token
 	 * @param rolename
-	 * @return
+	 * @return AppRole
 	 */
 	public AppRole readAppRoleBasicDetails(String token, String rolename) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -593,16 +650,24 @@ public class  AppRoleService {
 				appRoleOwner = appRoleMetadata.getAppRoleMetadataDetails().getCreatedBy();
 			}
 			
-				if ( (Objects.equals(userDetails.getUsername(), appRoleOwner)) && (TVaultConstants.APPROLE_READ_OPERATION.equals(operation)
-						|| TVaultConstants.APPROLE_DELETE_OPERATION.equals(operation)
-						|| TVaultConstants.APPROLE_UPDATE_OPERATION.equals(operation)
-						)) {
-					// As a owner of the AppRole, I can read, delete, update my AppRole
-					isAllowed = true;
+			if ((Objects.equals(userDetails.getUsername(), appRoleOwner)) && (TVaultConstants.APPROLE_READ_OPERATION.equals(operation) ||
+					TVaultConstants.APPROLE_DELETE_OPERATION.equals(operation) || TVaultConstants.APPROLE_UPDATE_OPERATION.equals(operation))) {
+				// As a owner of the AppRole, I can read, delete, update my AppRole
+				isAllowed = true;
+			} else {
+				List<String> sharedTo;
+				if (appRoleMetadata != null && appRoleMetadata.getAppRoleMetadataDetails() != null) {
+					sharedTo = appRoleMetadata.getAppRoleMetadataDetails().getSharedTo();
+					for (String sharedUser : sharedTo) {
+						if (sharedUser.equals(userDetails.getUsername())) {
+							isAllowed = true;
+							break;
+						}
+					}
 				}
-				
-			
+			}
 		}
+
 		return isAllowed;
 	}
 	/**
@@ -1193,9 +1258,9 @@ public class  AppRoleService {
 				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
 				      build()));
 			// delete metadata
-			String jsonstr = ControllerUtil.populateAppRoleMetaJson(appRole.getRole_name(), userDetails.getUsername());
+			String jsonstr = ControllerUtil.populateAppRoleMetaJson(appRole, userDetails.getUsername());
 			Response resp = reqProcessor.process("/delete",jsonstr,token);
-			String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole.getRole_name(),approleCreatedBy);
+			String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole, approleCreatedBy);
 			Response appRoleUserMetaDataDeletionResponse = reqProcessor.process("/delete",appRoleUsermetadataJson,token);
 			
 			if (HttpStatus.NO_CONTENT.equals(resp.getHttpstatus()) && HttpStatus.NO_CONTENT.equals(appRoleUserMetaDataDeletionResponse.getHttpstatus())) {
@@ -1223,8 +1288,9 @@ public class  AppRoleService {
 	/**
 	 * Deletes the SecretIds generated for the given AppRole
 	 * @param token
-	 * @param rolename
-	 * @return
+	 * @param appRoleAccessorIds
+	 * @param userDetails
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> deleteSecretIds(String token, AppRoleAccessorIds appRoleAccessorIds, UserDetails userDetails){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -1604,6 +1670,22 @@ public class  AppRoleService {
 			// Non owners, who created AppRoles using SelfService feature, need to use SelfSupportToken in order to read secret_id
 			token = userDetails.getSelfSupportToken();
 		}
+
+		AppRoleMetadataDetails appRoleMetadataDetails = readAppRoleMetadata(token, rolename).getAppRoleMetadataDetails();
+		boolean isSharedToChanged = isSharedToChanged(appRoleMetadataDetails, appRole.getShared_to());
+		boolean isAppRoleOwner = isAppRoleOwner(userDetails, appRoleMetadataDetails);
+		if (isSharedToChanged && !isAppRoleOwner) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, UPDATE_APPROLE).
+					put(LogMessage.MESSAGE, String.format("Unable to update shared_to on AppRole [%s] because [%s] is not the owner",
+							rolename, userDetails.getUsername())).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+					String.format("Unable to update shared_to on AppRole [%s] because you are not the owner", rolename));
+		}
+
 		AppRole existingAppRole = readAppRoleBasicDetails(token, rolename);
 		if (existingAppRole == null) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -1613,9 +1695,8 @@ public class  AppRoleService {
 				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body(APPROLENONEXISTSTR);
-
 		}
-		
+
 		appRole.setPolicies(existingAppRole.getPolicies());
 		appRole.setBind_secret_id(existingAppRole.isBind_secret_id());
 		String jsonStr = JSONUtil.getJSON(appRole);
@@ -1628,7 +1709,39 @@ public class  AppRoleService {
 				      put(LogMessage.MESSAGE, "AppRole updated successfully").
 				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
 				      build()));
-				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AppRole updated successfully.\"]}");
+
+			if (isSharedToChanged) {
+				createAppRoleMetaData(token, userDetails, appRole);
+
+				List<String> usersToBeRemovedFromSharedList = appRoleMetadataDetails.getSharedTo();
+				if (!CollectionUtils.isEmpty(usersToBeRemovedFromSharedList)) {
+					usersToBeRemovedFromSharedList.removeAll(appRole.getShared_to());
+
+					for (String userToBeRemoved : usersToBeRemovedFromSharedList) {
+						String path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + userToBeRemoved + "/" + appRole.getRole_name();
+						Response deleteResponse = reqProcessor.process("/delete", "{\"path\":\"" + path + "\"}", token);
+						if (HttpStatus.NO_CONTENT.equals(deleteResponse.getHttpstatus())) {
+							log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+									put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+									put(LogMessage.ACTION, SSLCertificateConstants.DELETE_METADATA_PERMISSIONS).
+									put(LogMessage.MESSAGE, String.format("Successfully deleted metadata for user [%s]", userToBeRemoved)).
+									put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+									build()));
+						} else {
+							log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+									put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+									put(LogMessage.ACTION, SSLCertificateConstants.DELETE_METADATA_PERMISSIONS).
+									put(LogMessage.MESSAGE, String.format("Failed to delete metadata for user [%s]", userToBeRemoved)).
+									put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+									build()));
+							return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+									String.format("{\"errors\":[\"Failed to delete metadata for user %s\"]}", userToBeRemoved));
+						}
+					}
+				}
+			}
+
+			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AppRole updated successfully.\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
@@ -1640,6 +1753,51 @@ public class  AppRoleService {
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	
+	}
+
+	/**
+	 * Determines whether user is the creator of the approle
+	 * @param userDetails
+	 * @param appRoleMetadataDetails
+	 * @return boolean
+	 */
+	boolean isAppRoleOwner(UserDetails userDetails, AppRoleMetadataDetails appRoleMetadataDetails) {
+		if (appRoleMetadataDetails == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "isAppRoleOwner").
+					put(LogMessage.MESSAGE, "Check to see if user is owner of approle failed because appRoleMetadataDetails was null").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			return false;
+		}
+		return appRoleMetadataDetails.getCreatedBy().equals(userDetails.getUsername());
+	}
+
+	/**
+	 * Determines whether user is the creator of the approle
+	 * @param appRoleMetadataDetails
+	 * @param newSharedTo
+	 * @return boolean
+	 */
+	private boolean isSharedToChanged(AppRoleMetadataDetails appRoleMetadataDetails, List<String> newSharedTo) {
+		if (appRoleMetadataDetails == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, "isSharedToChanged").
+				put(LogMessage.MESSAGE, "Check to see if sharedTo array changed failed because appRoleMetadataDetails was null").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+			return false;
+		}
+		List<String> oldSharedTo = appRoleMetadataDetails.getSharedTo();
+		if (CollectionUtils.isEmpty(oldSharedTo)) {
+			return !CollectionUtils.isEmpty(newSharedTo);
+		}
+		if (CollectionUtils.isEmpty(newSharedTo)) {
+			return true;
+		}
+		return !(oldSharedTo.containsAll(newSharedTo) && newSharedTo.containsAll(oldSharedTo));
 	}
 
 	/**

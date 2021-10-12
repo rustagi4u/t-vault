@@ -4,6 +4,7 @@ const getAppRole = () => api.get('/ss/approle');
 const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/role/${appRole}`);
 const getAccessors = (appRole) => api.get(`/ss/approle/${appRole}/accessors`);
 const getRoleId = (appRole) => api.get(`/ss/approle/${appRole}/role_id`);
+const getIsAppRoleOwner = (appRole) => api.get(`/ss/approle/${appRole}/owner`);
 
 // put calls
 const updateAppRole = (payload) => api.put('/ss/approle', payload);
@@ -28,4 +29,5 @@ export default {
   deleteSecretIds,
   getRoleId,
   deleteAppRole,
+  getIsAppRoleOwner,
 };

@@ -192,9 +192,7 @@ const AppRolesDashboard = () => {
   const [response, setResponse] = useState({});
   const [responseType, setResponseType] = useState(null);
   const [deleteAppRoleName, setDeleteAppRoleName] = useState('');
-  const [deleteAppRoleConfirmation, setDeleteAppRoleConfirmation] = useState(
-    false
-  );
+  const [deleteAppRoleConfirmation, setDeleteAppRoleConfirmation] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [state, dispatch] = useStateValue();
   let scrollParentRef = null;
@@ -204,6 +202,7 @@ const AppRolesDashboard = () => {
   const history = useHistory();
   const location = useLocation();
   const introduction = Strings.Resources.appRoles;
+  const [canDeleteSharedTo, setCanDeleteSharedTo] = useState(true);
 
   const admin = Boolean(state.isAdmin);
   /**
@@ -336,8 +335,11 @@ const AppRolesDashboard = () => {
    * @param {string} name app role  name to be deleted.
    */
   const onDeleteClicked = (name) => {
-    setDeleteAppRoleConfirmation(true);
-    setDeleteAppRoleName(name);
+    validateCanDeleteSharedTo(name).then((res) => {
+      setCanDeleteSharedTo(res);
+      setDeleteAppRoleConfirmation(true);
+      setDeleteAppRoleName(name);
+    });
   };
 
   const onApproleEdit = (name) => {
@@ -359,6 +361,7 @@ const AppRolesDashboard = () => {
    * @description delete app role
    */
   const onAppRoleDelete = () => {
+    setCanDeleteSharedTo(true);
     setDeleteAppRoleConfirmation(false);
     setResponse({ status: 'loading' });
     apiService
@@ -376,6 +379,23 @@ const AppRolesDashboard = () => {
           setToastMessage(err?.response?.data?.errors[0]);
         }
       });
+  };
+
+  const validateCanDeleteSharedTo = (appRoleName) => {
+    return new Promise((resolve, reject) =>
+      apiService
+        .getIsAppRoleOwner(appRoleName)
+        .then((res) => {
+          resolve(res.data);
+        })
+        .catch((err) => {
+          if (err.response && err.response.data?.errors[0]) {
+            setToastMessage({ status: 'failed', message: err.response.data.errors[0] });
+          }
+          setResponseType(-1);
+          reject(err.data);
+        })
+    );
   };
 
   /**
@@ -433,28 +453,45 @@ const AppRolesDashboard = () => {
   return (
     <ComponentError>
       <>
-        <ConfirmationModal
-          open={deleteAppRoleConfirmation}
-          handleClose={handleConfirmationModalClose}
-          title="Confirmation"
-          description={`<p>Are you sure you want to delete the AppRole ${deleteAppRoleName} ?</p>`}
-          cancelButton={
-            <ButtonComponent
-              label="Cancel"
-              color="primary"
-              onClick={() => handleConfirmationModalClose()}
-              width={isMobileScreen ? '44%' : ''}
-            />
-          }
-          confirmButton={
-            <ButtonComponent
-              label="Delete"
-              color="secondary"
-              onClick={() => onAppRoleDelete()}
-              width={isMobileScreen ? '44%' : ''}
-            />
-          }
-        />
+        {canDeleteSharedTo ? (
+          <ConfirmationModal
+            open={deleteAppRoleConfirmation}
+            handleClose={handleConfirmationModalClose}
+            title="Confirmation"
+            description={`<p>Are you sure you want to delete the AppRole ${deleteAppRoleName}?</p>`}
+            cancelButton={
+              <ButtonComponent
+                label="Cancel"
+                color="primary"
+                onClick={() => handleConfirmationModalClose()}
+                width={isMobileScreen ? '44%' : ''}
+              />
+            }
+            confirmButton={
+              <ButtonComponent
+                label="Delete"
+                color="secondary"
+                onClick={() => onAppRoleDelete()}
+                width={isMobileScreen ? '44%' : ''}
+              />
+            }
+          />
+         ) : 
+           <ConfirmationModal
+             open={deleteAppRoleConfirmation}
+             handleClose={handleConfirmationModalClose}
+             title="Confirmation"
+             description={`<p>You are not the owner of AppRole ${deleteAppRoleName} so you cannot delete it.</p>`}
+             cancelButton={
+               <ButtonComponent
+                 label="Cancel"
+                 color="primary"
+                 onClick={() => handleConfirmationModalClose()}
+                 width={isMobileScreen ? '44%' : ''}
+               />
+             }
+           />
+         } 
         <SectionPreview>
           <LeftColumnSection isAccountDetailsOpen={appRoleClicked}>
             <ColumnHeader>

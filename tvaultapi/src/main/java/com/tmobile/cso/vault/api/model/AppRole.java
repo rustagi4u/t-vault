@@ -18,6 +18,7 @@
 package com.tmobile.cso.vault.api.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -49,6 +50,7 @@ public class AppRole implements Serializable {
 	@Min(0)
 	@Max(999999999)
 	private Integer token_max_ttl;
+	private List<String> shared_to;
 
 	public AppRole() {
 	}
@@ -75,6 +77,20 @@ public class AppRole implements Serializable {
 		this.token_num_uses = token_num_uses;
 		this.token_ttl = token_ttl;
 		this.token_max_ttl = token_max_ttl;
+	}
+
+	public AppRole(String role_name, String[] policies, boolean bind_secret_id, Integer secret_id_num_uses,
+				   Integer secret_id_ttl, Integer token_num_uses, Integer token_ttl, Integer token_max_ttl, List<String> sharedTo) {
+		super();
+		this.role_name = role_name;
+		this.policies = policies;
+		this.bind_secret_id = bind_secret_id;
+		this.secret_id_num_uses = secret_id_num_uses;
+		this.secret_id_ttl = secret_id_ttl;
+		this.token_num_uses = token_num_uses;
+		this.token_ttl = token_ttl;
+		this.token_max_ttl = token_max_ttl;
+		this.shared_to = sharedTo;
 	}
 
 	/**
@@ -197,5 +213,12 @@ public class AppRole implements Serializable {
 	public void setToken_max_ttl(Integer token_max_ttl) {
 		this.token_max_ttl = token_max_ttl;
 	}
-	
+
+	public List<String> getShared_to() {
+		return shared_to;
+	}
+
+	public void setShared_to(List<String> shared_to) {
+		this.shared_to = shared_to;
+	}
 }

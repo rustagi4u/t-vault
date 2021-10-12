@@ -18,6 +18,8 @@
 package com.tmobile.cso.vault.api.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AppRoleMetadataDetails implements Serializable {
 
@@ -29,6 +31,8 @@ public class AppRoleMetadataDetails implements Serializable {
     private String name;
 
     private String createdBy;
+
+    private List<String> sharedTo;
 
     /**
      *
@@ -69,4 +73,11 @@ public class AppRoleMetadataDetails implements Serializable {
         this.createdBy = createdBy;
     }
 
+    public List<String> getSharedTo() {
+        return sharedTo;
+    }
+
+    public void setSharedTo(List<String> sharedTo) {
+        this.sharedTo = sharedTo;
+    }
 }
