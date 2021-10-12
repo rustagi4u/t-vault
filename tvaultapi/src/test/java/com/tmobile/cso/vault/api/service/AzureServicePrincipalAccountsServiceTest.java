@@ -2907,4 +2907,379 @@ public class AzureServicePrincipalAccountsServiceTest {
         assertEquals(responseEntityExpected, responseEntityActual);
 
     }
+
+	@Test
+	public void test_transferAzureServicePrincipal_failure_ASP_not_onboarded() throws Exception {
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Unable to transfer Azure Service Principal. svc_cce_usertestrr1 not found. \"]}");
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		UserDetails userDetails = getMockUser(false);
+		String servicePrincipalName = "svc_cce_usertestrr1";
+		String newOwner = "user2";
+		String ownerEmail = "user@abc.com";
+		String applicationId = "app1";
+		String applicationName = "appname1";
+		String applicationTag = "appTag1";
+		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
+				applicationName, applicationTag);
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr2\"]}"));
+		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntityActual);
+	}
+
+	@Test
+	public void test_transferAzureServicePrincipal_failure_403() throws Exception {
+
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: No permission to transfer this Azure Service Principal\"]}");
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		UserDetails userDetails = getMockUser(false);
+		String servicePrincipalName = "svc_cce_usertestrr1";
+		String newOwner = "user2";
+		String ownerEmail = "user@abc.com";
+		String applicationId = "app1";
+		String applicationName = "appname1";
+		String applicationTag = "appTag1";
+		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
+				applicationName, applicationTag);
+
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"default \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup", "{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("default");
+		try {
+			when(azureServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntityActual);
+	}
+
+	@Test
+	public void test_transferAzureServicePrincipal_failure_metadata_not_found() throws Exception {
+
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Failed to read metadata for this Azure Service Principal\"]}");
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		UserDetails userDetails = getMockUser(false);
+		String servicePrincipalName = "svc_cce_usertestrr1";
+		String newOwner = "user2";
+		String ownerEmail = "user@abc.com";
+		String applicationId = "app1";
+		String applicationName = "appname1";
+		String applicationTag = "appTag1";
+		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
+				applicationName, applicationTag);
+
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup", "{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("azure_admin_policy");
+		try {
+			when(azureServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, ""));
+		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntityActual);
+	}
+
+	@Test
+	public void test_transferAzureServicePrincipal_failure_same_owner() throws Exception {
+
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Failed to transfer Azure Service Principal owner. The owner given is already the current owner.\"]}");
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		UserDetails userDetails = getMockUser(false);
+		String servicePrincipalName = "svc_cce_usertestrr1";
+		String newOwner = "user1";
+		String ownerEmail = "user@abc.com";
+		String applicationId = "app1";
+		String applicationName = "appname1";
+		String applicationTag = "appTag1";
+		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
+				applicationName, applicationTag);
+
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup", "{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("azure_admin_policy");
+		try {
+			when(azureServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+				"\"data\": {\n" +
+				"  \"application_id\": \"app2\",\n" +
+				"  \"application_name\": \"app2\",\n" +
+				"  \"application_tag\": \"apptag2\",\n" +
+				"  \"createdAtEpoch\": 604800000,\n" +
+				"  \"isActivated\": false,\n" +
+				"  \"owner_email\": \"user1@abc.xom\",\n" +
+				"  \"owner_ntid\": \"user1\",\n" +
+				"  \"secret\": [\n" +
+				"    {\n" +
+				"      \"expiryDuration\": 7776000000,\n" +
+				"      \"secretKeyId\": \"1234-eb2a-4ce9-b7f5-123123\"\n" +
+				"    }\n" +
+				"  ],\n" +
+				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
+				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
+				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"tenantId\": \"testtenantid\",\n" +
+				"  \"users\": {\n" +
+				"    \"User1\": \"sudo\"\n" +
+				"  }\n" +
+				"}\n" +
+				"}"));
+		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntityActual);
+	}
+
+	@Test
+	public void test_transferAzureServicePrincipal_succssfully() throws Exception {
+
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Owner has been successfully transferred for Azure Service Principal\"]}");
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		UserDetails userDetails = getMockUser(false);
+		String servicePrincipalName = "svc_cce_usertestrr1";
+		String newOwner = "user2";
+		String ownerEmail = "user@abc.com";
+		String applicationId = "app1";
+		String applicationName = "appname1";
+		String applicationTag = "appTag1";
+		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
+				applicationName, applicationTag);
+
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("azure_admin_policy");
+		try {
+			when(azureServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+				"\"data\": {\n" +
+				"  \"application_id\": \"app2\",\n" +
+				"  \"application_name\": \"app2\",\n" +
+				"  \"application_tag\": \"apptag2\",\n" +
+				"  \"createdAtEpoch\": 604800000,\n" +
+				"  \"isActivated\": false,\n" +
+				"  \"owner_email\": \"user1@abc.xom\",\n" +
+				"  \"owner_ntid\": \"user1\",\n" +
+				"  \"secret\": [\n" +
+				"    {\n" +
+				"      \"expiryDuration\": 7776000000,\n" +
+				"      \"secretKeyId\": \"1234-eb2a-4ce9-b7f5-123123\"\n" +
+				"    }\n" +
+				"  ],\n" +
+				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
+				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
+				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"tenantId\": \"testtenantid\",\n" +
+				"  \"users\": {\n" +
+				"    \"User1\": \"sudo\"\n" +
+				"  }\n" +
+				"}\n" +
+				"}"));
+
+		String [] policies = {"o_azuresvcacc_svc_cce_usertestrr1"};
+		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
+
+		// oidc mock
+		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+		oidcEntityResponse.setEntityName("entity");
+		List<String> policiesList = new ArrayList<>();
+		policiesList.add("safeadmin");
+		oidcEntityResponse.setPolicies(policiesList);
+		ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
+		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+
+		// delete policy mock
+		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+		when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
+
+
+		// CreateIAMServiceAccountPolicies
+		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+		when(accessService.createPolicy(Mockito.anyString(), Mockito.any())).thenReturn(createPolicyResponse);
+
+		Response userResponse = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response successResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+				.thenReturn(successResponse);
+
+		when(ControllerUtil.configureLDAPUser(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(successResponse);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(successResponse);
+		when(ControllerUtil.updateMetadataOnASPUpdate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true, ""));
+		DirectoryUser directoryUser = new DirectoryUser();
+		directoryUser.setDisplayName("name,user1");
+		directoryUser.setGivenName("user1");
+		directoryUser.setUserEmail("user1@abccom");
+		directoryUser.setUserId("user1");
+		directoryUser.setUserName("user1");
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
+
+		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+
+		assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntityActual);
+	}
+
+	@Test
+	public void test_transferAzureServicePrincipal_failure_metadata_udpate_failure() throws Exception {
+
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body("{\"errors\":[\"Metadata updating failed for Azure Service Account.\"]}");
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		UserDetails userDetails = getMockUser(false);
+		String servicePrincipalName = "svc_cce_usertestrr1";
+		String newOwner = "user2";
+		String ownerEmail = "user@abc.com";
+		String applicationId = "app1";
+		String applicationName = "appname1";
+		String applicationTag = "appTag1";
+		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
+				applicationName, applicationTag);
+
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("azure_admin_policy");
+		try {
+			when(azureServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+				"\"data\": {\n" +
+				"  \"application_id\": \"app2\",\n" +
+				"  \"application_name\": \"app2\",\n" +
+				"  \"application_tag\": \"apptag2\",\n" +
+				"  \"createdAtEpoch\": 604800000,\n" +
+				"  \"isActivated\": false,\n" +
+				"  \"owner_email\": \"user1@abc.xom\",\n" +
+				"  \"owner_ntid\": \"user1\",\n" +
+				"  \"secret\": [\n" +
+				"    {\n" +
+				"      \"expiryDuration\": 7776000000,\n" +
+				"      \"secretKeyId\": \"1234-eb2a-4ce9-b7f5-123123\"\n" +
+				"    }\n" +
+				"  ],\n" +
+				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
+				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
+				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"tenantId\": \"testtenantid\",\n" +
+				"  \"users\": {\n" +
+				"    \"User1\": \"sudo\"\n" +
+				"  }\n" +
+				"}\n" +
+				"}"));
+
+		String [] policies = {"o_azuresvcacc_svc_cce_usertestrr1"};
+		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
+
+		// oidc mock
+		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+		oidcEntityResponse.setEntityName("entity");
+		List<String> policiesList = new ArrayList<>();
+		policiesList.add("safeadmin");
+		oidcEntityResponse.setPolicies(policiesList);
+		ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
+		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+
+		// delete policy mock
+		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+		when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
+
+
+		// CreateIAMServiceAccountPolicies
+		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+		when(accessService.createPolicy(Mockito.anyString(), Mockito.any())).thenReturn(createPolicyResponse);
+
+		Response userResponse = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response successResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process(eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+				.thenReturn(successResponse);
+
+		when(ControllerUtil.configureLDAPUser(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(successResponse);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(successResponse);
+		when(ControllerUtil.updateMetadataOnASPUpdate(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, ""));
+		DirectoryUser directoryUser = new DirectoryUser();
+		directoryUser.setDisplayName("name,user1");
+		directoryUser.setGivenName("user1");
+		directoryUser.setUserEmail("user1@abccom");
+		directoryUser.setUserId("user1");
+		directoryUser.setUserName("user1");
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
+
+		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+
+		assertEquals(HttpStatus.MULTI_STATUS, responseEntityActual.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntityActual);
+	}
 }
