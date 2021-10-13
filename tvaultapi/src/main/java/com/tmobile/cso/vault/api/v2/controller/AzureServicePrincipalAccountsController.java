@@ -334,4 +334,18 @@ public class AzureServicePrincipalAccountsController {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
 		return azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, azureServiceAccountApprole);
 	}
+
+	/**
+	 * Transfers an Azure service principal from one owner to another
+	 * @param request
+	 * @param token
+	 * @return
+	 */
+	@ApiOperation(value = "${AzureServicePrincipalAccountsController.transferAzureServicePrincipal.value}", notes = "${AzureServicePrincipalAccountsController.transferAzureServicePrincipal.notes}")
+	@PostMapping(value="/v2/azureserviceaccounts/transfer", produces="application/json")
+	public ResponseEntity<String> transferIAMServiceAccountOwner( HttpServletRequest request, @RequestHeader(value="vault-token") String token,
+																  @RequestBody @Valid ASPTransferRequest aspTransferRequest) throws IOException {
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
+	}
 }

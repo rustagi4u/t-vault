@@ -378,15 +378,17 @@ public class EmailUtils {
 	 * @param subject
 	 * @param variables
 	 */
-	public void sendAzureSvcAccHtmlEmalFromTemplate(String from, List<String> to, String subject, Map<String, String> variables) {
+	public void sendAzureSvcAccHtmlEmalFromTemplate(String from, List<String> to, List<String> cc, String subject, Map<String, String> variables, String templateFileName) {
 		MimeMessage message = javaMailSender.createMimeMessage();
 		MimeMessageHelper helper = null;
 		try {
 			helper = new MimeMessageHelper(message,true, "UTF-8");
 			helper.setFrom(from);
 			helper.setTo(to.toArray(new String[to.size()]));
+			if (cc != null) {
+				helper.setCc(cc.toArray(new String[cc.size()]));
+			}
 			helper.setSubject(subject);
-			String templateFileName = AzureServiceAccountConstants.AZURE_EMAIL_TEMPLATE_NAME;
 
 			// inline image content identifies
 			for (Map.Entry<String, String> entry : AzureServiceAccountConstants.AZURE_EMAIL_TEMPLATE_IMAGE_IDS.entrySet()) {
