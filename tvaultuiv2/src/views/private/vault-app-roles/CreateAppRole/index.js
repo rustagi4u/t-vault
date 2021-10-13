@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
+import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn';
 import { useHistory } from 'react-router-dom';
 import Modal from '@material-ui/core/Modal';
 import { Backdrop, Typography, InputLabel } from '@material-ui/core';
@@ -13,6 +14,7 @@ import useMediaQuery from '@material-ui/core/useMediaQuery';
 import TextFieldComponent from '../../../../components/FormFields/TextField';
 import ButtonComponent from '../../../../components/FormFields/ActionButton';
 import infoIcon from '../../../../assets/info.svg';
+import removeIcon from '../../../../assets/close.svg';
 import ComponentError from '../../../../errorBoundaries/ComponentError/component-error';
 import ApproleIcon from '../../../../assets/icon-approle.svg';
 import leftArrowIcon from '../../../../assets/left-arrow.svg';
@@ -27,6 +29,8 @@ import {
   RequiredText,
   TitleThree,
 } from '../../../../styles/GlobalStyles';
+import { resolveConfig } from 'prettier';
+import { reject } from 'lodash';
 
 const { small } = mediaBreakpoints;
 
@@ -131,6 +135,51 @@ const InputLabelWithInfo = styled(InputLabel)`
   cursor: pointer;
 `;
 
+const InputEndWrap = styled.div`
+  display: flex;
+`;
+
+const EndingBox = styled.div`
+  background-color: ${(props) =>
+    props.theme.customColor.primary.backgroundColor};
+  color: ${(props) => props.theme.customColor.primary.color};
+  width: ${(props) => props.width};
+  display: flex;
+  align-items: center;
+  height: 5rem;
+`;
+
+const ReturnIcon = styled.span`
+  margin-left: auto;
+  margin-right: 1rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+`;
+
+const ArrayList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+`;
+
+const RemoveIcon = styled.img`
+  width: 1.5rem;
+  margin-left: 1rem;
+  cursor: pointer;
+`;
+
+const EachItem = styled.div`
+  background-color: #454c5e;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  margin: 0.3rem 0.5rem 0.3rem 0;
+`;
+
+const Name = styled.span`
+  font-size: 1.4rem;
+`;
+
 const useStyles = makeStyles((theme) => ({
   modal: {
     display: 'flex',
@@ -173,6 +222,11 @@ const CreateAppRole = (props) => {
   const history = useHistory();
   const [stateVal] = useStateValue();
   const { trackPageView, trackEvent } = useMatomo();
+  const [sharedToArray, setSharedToArray] = useState([]);
+  const [sharedTo, setSharedTo] = useState('');
+  const [sharedToError, setSharedToError] = useState(false);
+  const [sharedToErrorMessage, setSharedToErrorMessage] = useState('');
+  const [canEditSharedTo, setCanEditSharedTo] = useState(true);
 
   const admin = Boolean(stateVal.isAdmin);
 
@@ -240,6 +294,15 @@ const CreateAppRole = (props) => {
       });
   }, [admin]);
 
+  useEffect(() => {
+    if (history.location.pathname === '/vault-app-roles/edit-vault-app-role' &&
+        history.location.state.appRoleDetails.isEdit) {
+      validateCanUpdateSharedTo().then((res) => {
+        setCanEditSharedTo(res);
+      })
+    }
+  }, [canEditSharedTo]);
+
   const handleClose = () => {
     setOpen(false);
     history.goBack();
@@ -270,6 +333,23 @@ const CreateAppRole = (props) => {
     setNameAvailable(true);
   };
 
+  const validateCanUpdateSharedTo = () => {
+    return new Promise((resolve, reject) =>
+      apiService
+        .getIsAppRoleOwner(history.location.state.appRoleDetails.name)
+        .then((res) => {
+          resolve(res.data);
+        })
+        .catch((err) => {
+          if (err.response && err.response.data?.errors[0]) {
+            setStatus({ status: 'failed', message: err.response.data.errors[0] });
+          }
+          setResponseType(-1);
+          reject(err.data);
+        })
+    );
+  };
+
   const onRoleNameChange = (e) => {
     setApproleError(false);
     validateRoleName(e.target.value);
@@ -282,6 +362,71 @@ const CreateAppRole = (props) => {
       if (e?.target?.value === '' || re.test(e?.target?.value)) {
         onChange(e);
       }
+    }
+  };
+
+  const onAddSharedToEnterClicked = (e) => {
+    if (e.keyCode === 13 && e?.target?.value && !sharedToError) {
+      e.preventDefault();
+      const val = `${e.target.value}`;
+      if (!checkSharedToAlreadyIncluded(val)) {
+        setSharedToArray((prev) => [...prev, val.toLowerCase()]);
+        setSharedTo('');
+        setSharedToError(false);
+        setSharedToErrorMessage('');
+      }
+    }
+  };
+
+  const onAddSharedToKeyClicked = () => {
+    if (sharedTo && !sharedToError) {
+      if (!checkSharedToAlreadyIncluded(sharedTo)) {
+        setSharedToArray((prev) => [...prev, sharedTo.toLowerCase()]);
+        setSharedTo('');
+        setSharedToError(false);
+        setSharedToErrorMessage('');
+      } 
+    }
+  };
+
+  const checkSharedToAlreadyIncluded = (val) => {
+    let alreadyContains = false;
+    if (sharedToArray?.includes(val)) {
+      setSharedToError(true);
+      setSharedToErrorMessage('Name already added!');
+      alreadyContains = true;
+    }
+    return alreadyContains;
+  };
+
+  const onSharedToChange = (e) => {
+    setSharedTo(e.target.value);
+    const { value } = e.target;
+    if (value && !validateSharedTo(value)) {
+      setSharedToError(true);
+      setSharedToErrorMessage(
+        'Shared to name can have alphanumeric, . and - characters only, and it should not start or end with special characters(-.)'
+      );
+    } else {
+      setSharedToError(false);
+      setSharedToErrorMessage('');
+    }
+  };
+
+  const validateSharedTo = (text) => {
+    if (text) {
+      const res = /^[a-z0-9]+$/i;
+      return (
+        res.test(text)
+      );
+    }
+    return null;
+  };
+
+  const onRemoveClicked = (sharedTo) => {
+    if (canEditSharedTo) {
+      const array = sharedToArray.filter((item) => item !== sharedTo);
+      setSharedToArray([...array]);
     }
   };
 
@@ -312,6 +457,11 @@ const CreateAppRole = (props) => {
                 return array.push(str);
               });
             }
+            if (res.data.data.shared_to != null) {
+              setSharedToArray(res.data.data.shared_to);
+            } else {
+              setSharedToArray([]);
+            }
             dispatch({
               type: 'UPDATE_FORM_FIELDS',
               payload: {
@@ -321,6 +471,7 @@ const CreateAppRole = (props) => {
                 sectetIdNumUses: res.data.data.secret_id_num_uses,
                 tokenNumUses: res.data.data.token_num_uses,
                 secretIdTtl: res.data.data.secret_id_ttl,
+                sharedToArray: res.data.data.shared_to,
                 tokenPolicies: array.join(','),
               },
             });
@@ -343,6 +494,7 @@ const CreateAppRole = (props) => {
       token_max_ttl: maxTokenTtl,
       token_num_uses: tokenNumUses,
       token_ttl: tokenTtl,
+      shared_to: sharedToArray,
     };
 
     return data;
@@ -414,6 +566,20 @@ const CreateAppRole = (props) => {
     setResponseType(null);
     setStatus({});
   };
+
+  const renderReturnSymbol = () => {
+    if (canEditSharedTo) {
+      return (
+        <EndingBox width="17rem">
+          <ReturnIcon onClick={() => onAddSharedToKeyClicked()}>
+            <KeyboardReturnIcon />
+          </ReturnIcon>
+        </EndingBox>
+      )
+    }
+
+    return null;
+  }
 
   const getDisabledState = () => {
     return (
@@ -607,6 +773,51 @@ const CreateAppRole = (props) => {
                     name="secretIdTtl"
                     onChange={(e) => onInputNumberChange(e)}
                   />
+                </InputFieldLabelWrapper>
+              </Tooltip>
+              <Tooltip
+                classes={tooltipClasses}
+                arrow
+                title="Users this approle will be shared with. These users will have access to read from the approle, as well as delete keys"
+                placement="top"
+              >
+                <InputFieldLabelWrapper>
+                  <InputLabelWrap>
+                    <InputLabelWithInfo>Shared To</InputLabelWithInfo>
+                    <InfoIcon src={infoIcon} alt="info-icon-token-uses" />
+                  </InputLabelWrap>
+                
+                  <InputEndWrap>
+                    <TextFieldComponent
+                      value={sharedTo}
+                      placeholder="shared_to"
+                      fullWidth
+                      name="sharedTo"
+                      readOnly={!canEditSharedTo}
+                      onChange={(e) => {
+                        onSharedToChange(e);
+                      }}
+                      error={sharedToError}
+                      helperText={sharedToError ? sharedToErrorMessage : ''}
+                      onKeyDown={(e) => onAddSharedToEnterClicked(e)}
+                    />
+                    {renderReturnSymbol()}
+                  </InputEndWrap>
+                  <ArrayList>
+                    {sharedToArray.map((item) => {
+                      return (
+                        <EachItem key={item}>
+                          <Name>{item}</Name>
+                          {canEditSharedTo ? 
+                          <RemoveIcon
+                            src={removeIcon}
+                            alt="remove"
+                            onClick={() => onRemoveClicked(item)}
+                          /> : null}
+                        </EachItem>
+                      );
+                    })}
+                  </ArrayList>
                 </InputFieldLabelWrapper>
               </Tooltip>
               {tokenPolicies && (

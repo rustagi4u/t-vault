@@ -305,7 +305,7 @@ const AppRoleDetails = (props) => {
           open={createSecretIdModal}
           handleClose={() => setCreateSecretIdModal(false)}
           title="Confirmation"
-          description={`Are you sure you want to create new Secret ID for the AppRole ${appRoleDetail?.name} ?`}
+          description={`Are you sure you want to create new Secret ID for the AppRole ${appRoleDetail?.name}?`}
           cancelButton={
             // eslint-disable-next-line react/jsx-wrap-multilines
             <ButtonComponent

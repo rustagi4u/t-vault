@@ -24,6 +24,7 @@ import com.tmobile.cso.vault.api.exception.TVaultValidationException;
 import com.tmobile.cso.vault.api.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -341,7 +342,7 @@ public class SelfSupportController {
 	 * Delete Secret_Ids
 	 * @param request
 	 * @param token
-	 * @param rolename
+	 * @param appRoleAccessorIds
 	 * @return
 	 */
 	@ApiOperation(value = "${SelfSupportController.deleteSecretIds.value}", notes = "${SelfSupportController.deleteSecretIds.notes}")
@@ -359,7 +360,7 @@ public class SelfSupportController {
 	 */
 	@ApiOperation(value = "${SelfSupportController.readAppRoleRoleId.value}", notes = "${SelfSupportController.readAppRoleRoleId.notes}")
 	@GetMapping(value="/v2/ss/approle/{role_name}/role_id",produces="application/json")
-	public ResponseEntity<String> readAppRoleRoleId(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name" ) String rolename){
+	public ResponseEntity<String> readAppRoleRoleId(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String rolename){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.readAppRoleRoleId(token, rolename, userDetails);
 	}
@@ -467,6 +468,20 @@ public class SelfSupportController {
 	public ResponseEntity<String> updateAppRole(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @Valid @RequestBody AppRole appRole){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.updateAppRole(token, appRole, userDetails);
+	}
+
+	/**
+	 * Returns whether the user is the owner of the approle
+	 * @param request
+	 * @param token
+	 * @param roleName
+	 * @return ResponseEntity<Boolean>
+	 */
+	@ApiOperation(value = "${SelfSupportController.isApproleOwner.value}", notes = "${SelfSupportController.isApproleOwner.notes}")
+	@GetMapping(value="/v2/ss/approle/{role_name}/owner", produces="application/json")
+	public ResponseEntity<Boolean> isApproleOwner(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
+		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
+		return ResponseEntity.status(HttpStatus.OK).body(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
 	}
 
 	/**

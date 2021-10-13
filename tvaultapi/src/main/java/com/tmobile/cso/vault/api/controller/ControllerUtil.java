@@ -2566,6 +2566,7 @@ public final class ControllerUtil {
 		rqstParams.put("path",_path);
 		return ControllerUtil.convetToJson(rqstParams);
     }
+
 	/**
 	 * Create metadata
 	 * @param metadataJson
@@ -2602,16 +2603,6 @@ public final class ControllerUtil {
 		}
 		return isMetaDataUpdated;
 	}
-
-	/**
-	 * createSSLCertificateMetadata
-	 * @param sslCertificateRequest
-	 * @param userDetails
-	 * @param token
-	 * @return boolean
-	 */
-
-
 
 	/**
 	 * Check whether the current user can delete a role
@@ -2668,20 +2659,21 @@ public final class ControllerUtil {
 
     /**
      * Populate approle metadata json
-     * @param appRoleName
+     * @param appRole
      * @param username
      * @return
      */
-    public static  String populateAppRoleMetaJson(String appRoleName, String username) {
+    public static String populateAppRoleMetaJson(AppRole appRole, String username) {
     	log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "populateAppRoleMetaJson").
 			      put(LogMessage.MESSAGE,"Start populate approle metadata json.").
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-        String _path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + appRoleName;
-        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRoleName);
+        String _path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + appRole.getRole_name();
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
         appRoleMetadataDetails.setCreatedBy(username);
+        appRoleMetadataDetails.setSharedTo(appRole.getShared_to());
         AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
         String jsonStr = JSONUtil.getJSON(appRoleMetadata);
         Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
@@ -2690,26 +2682,55 @@ public final class ControllerUtil {
     }
     /**
      * Populate approle metadata json with the user information
-     * @param appRoleName
+     * @param appRole
      * @param username
-     * @return
+     * @return String
      */
-    public static  String populateUserMetaJson(String appRoleName, String username) {
+    public static  String populateUserMetaJson(AppRole appRole, String username) {
     	log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "populateUserMetaJson").
 			      put(LogMessage.MESSAGE,"Start populating approle metadata json with the user information.").
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-        String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + username +"/" + appRoleName;
-        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRoleName);
+        String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + username +"/" + appRole.getRole_name();
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
         appRoleMetadataDetails.setCreatedBy(username);
+        appRoleMetadataDetails.setSharedTo(appRole.getShared_to());
         AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
         String jsonStr = JSONUtil.getJSON(appRoleMetadata);
         Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
         rqstParams.put("path",_path);
         return ControllerUtil.convetToJson(rqstParams);
     }
+
+	/**
+	 * Populate approle metadata json with the sharedTo user information
+	 * @param ownerUsername
+	 * @param sharedToUser
+	 * @param appRole
+	 * @return String
+	 */
+	public static String populateSharedToUserMetaJson(String ownerUsername, String sharedToUser, AppRole appRole) {
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, "populateSharedToUserMetaJson").
+				put(LogMessage.MESSAGE,"Start populating approle metadata json with the shared to user information.").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+
+		String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + sharedToUser +"/" + appRole.getRole_name();
+		AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
+		appRoleMetadataDetails.setCreatedBy(ownerUsername);
+		appRoleMetadataDetails.setSharedTo(appRole.getShared_to());
+		AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
+		String jsonStr = JSONUtil.getJSON(appRoleMetadata);
+		Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
+		rqstParams.put("path", _path);
+
+		return ControllerUtil.convetToJson(rqstParams);
+	}
+
 	/**
 	 * Reads the SSCred from the location
 	 * @param fileLocation

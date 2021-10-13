@@ -52,7 +52,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -1618,6 +1618,55 @@ public class SelfSupportServiceTest {
         ResponseEntity<String> responseEntity = selfSupportService.deleteAppRole( appRole, userDetails);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void test_isAppRoleOwner_successfully_as_admin() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        UserDetails userDetails = getMockUser(true);
+        String roleName = "myvaultapprole42";
+
+        AppRoleMetadata appRoleMetadata = new AppRoleMetadata();
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy("normaluser");
+        appRoleMetadataDetails.setName("something");
+        List<String> sharedToList = new ArrayList<>();
+        sharedToList.add("anotherguy");
+        appRoleMetadataDetails.setSharedTo(sharedToList);
+        appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
+        when(appRoleService.readAppRoleMetadata(token, roleName)).thenReturn(appRoleMetadata);
+        when(appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails)).thenReturn(true);
+
+        assertTrue(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
+    }
+
+    @Test
+    public void test_isAppRoleOwner_metadata_failure() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        UserDetails userDetails = getMockUser(false);
+        String roleName = "myvaultapprole42";
+
+        assertFalse(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
+    }
+
+    @Test
+    public void test_isAppRoleOwner_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        UserDetails userDetails = getMockUser(false);
+        String roleName = "myvaultapprole42";
+
+        AppRoleMetadata appRoleMetadata = new AppRoleMetadata();
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy("normaluser");
+        appRoleMetadataDetails.setName("something");
+        List<String> sharedToList = new ArrayList<>();
+        sharedToList.add("anotherguy");
+        appRoleMetadataDetails.setSharedTo(sharedToList);
+        appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
+        when(appRoleService.readAppRoleMetadata(token, roleName)).thenReturn(appRoleMetadata);
+        when(appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails)).thenReturn(true);
+
+        assertTrue(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
     }
 
     @Test
