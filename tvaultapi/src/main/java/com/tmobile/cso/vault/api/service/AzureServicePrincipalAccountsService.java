@@ -508,18 +508,18 @@ public class AzureServicePrincipalAccountsService {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "createAzureServiceAccountPolicies")
-					.put(LogMessage.MESSAGE, "Successfully created policies for Azure service account.")
+					.put(LogMessage.MESSAGE, "Successfully created policies for Azure Service Principal.")
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.OK)
-					.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+					.body("{\"messages\":[\"Successfully created policies for Azure Service Principal\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, "createAzureServiceAccountPolicies")
-				.put(LogMessage.MESSAGE, "Failed to create some of the policies for Azure service account.")
+				.put(LogMessage.MESSAGE, "Failed to create some of the policies for Azure Service Principal.")
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		return ResponseEntity.status(HttpStatus.MULTI_STATUS)
-				.body("{\"messages\":[\"Failed to create some of the policies for Azure service account\"]}");
+				.body("{\"messages\":[\"Failed to create some of the policies for Azure Service Principal\"]}");
 	}
 
 	/**
@@ -4490,7 +4490,7 @@ public class AzureServicePrincipalAccountsService {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
-					.put(LogMessage.MESSAGE, String.format("Failed to transfer Azure Service Principal. Could not find account [%s]", servicePrincipalName))
+					.put(LogMessage.MESSAGE, String.format("Failed to transfer Azure Service Principal. Could not find Azure Service Principal [%s]", servicePrincipalName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{\"errors\":[\"Unable to transfer Azure Service Principal. "+ servicePrincipalName + " not found. \"]}");
@@ -4583,7 +4583,7 @@ public class AzureServicePrincipalAccountsService {
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
 					.put(LogMessage.MESSAGE, String.format("Successfully removed old owner [%s] from " +
-									"account [%s]",
+									"Azure Service Principal [%s]",
 							currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		} else {
@@ -4591,7 +4591,7 @@ public class AzureServicePrincipalAccountsService {
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
 					.put(LogMessage.MESSAGE,
-							String.format("Failed to remove old owner [%s] from account [%s]",
+							String.format("Failed to remove old owner [%s] from Azure Service Principal [%s]",
 									currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			revertTransferOnFailure(newAzureServiceAccount, servicePrincipalName, userDetails, tokenUtils.getSelfServiceToken());
@@ -4606,14 +4606,14 @@ public class AzureServicePrincipalAccountsService {
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
 					.put(LogMessage.MESSAGE,
-							String.format("Successfully updated Metadata for the Azure Service Account [%s] on transfer",
+							String.format("Successfully updated Metadata for the Azure Service Principal [%s] on transfer",
 									servicePrincipalName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
-					.put(LogMessage.MESSAGE, String.format("Updating metadata for Azure Service Account on transfer [%s] failed.", servicePrincipalName))
+					.put(LogMessage.MESSAGE, String.format("Updating metadata for Azure Service Principal on transfer [%s] failed.", servicePrincipalName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.MULTI_STATUS)
 					.body("{\"errors\":[\"Metadata updating failed for Azure Service Account.\"]}");
@@ -4770,7 +4770,7 @@ public class AzureServicePrincipalAccountsService {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						put(LogMessage.ACTION, "constructAzureServiceAccountFromMetadata").
-						put(LogMessage.MESSAGE, String.format("Failed to parse Azure Serivice Principal metadata for [%s]", azureServiceAccount.getServicePrincipalName())).
+						put(LogMessage.MESSAGE, String.format("Failed to parse Azure Service Principal metadata for [%s]", azureServiceAccount.getServicePrincipalName())).
 						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						build()));
 				return null;
