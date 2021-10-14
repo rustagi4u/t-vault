@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-curly-newline */
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn';
@@ -23,14 +23,15 @@ import SnackbarComponent from '../../../../components/Snackbar';
 import { useStateValue } from '../../../../contexts/globalState';
 import BackdropLoader from '../../../../components/Loaders/BackdropLoader';
 import apiService from '../apiService';
+import { debounce } from 'lodash';
+import TypeAheadComponent from '../../../../components/TypeAheadComponent';
+import LoaderSpinner from '../../../../components/Loaders/LoaderSpinner';
 import {
   GlobalModalWrapper,
   RequiredCircle,
   RequiredText,
   TitleThree,
 } from '../../../../styles/GlobalStyles';
-import { resolveConfig } from 'prettier';
-import { reject } from 'lodash';
 
 const { small } = mediaBreakpoints;
 
@@ -135,10 +136,6 @@ const InputLabelWithInfo = styled(InputLabel)`
   cursor: pointer;
 `;
 
-const InputEndWrap = styled.div`
-  display: flex;
-`;
-
 const EndingBox = styled.div`
   background-color: ${(props) =>
     props.theme.customColor.primary.backgroundColor};
@@ -178,6 +175,29 @@ const EachItem = styled.div`
 
 const Name = styled.span`
   font-size: 1.4rem;
+`;
+
+const SharedToAutoWrap = styled.div`
+  display: flex;
+`;
+
+const AutoInputFieldLabelWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  .MuiTextField-root {
+    width: 100%;
+  }
+`;
+
+const autoLoaderStyle = css`
+  position: absolute;
+  top: 1rem;
+  right: 4rem;
+`;
+
+const TypeAheadWrap = styled.div`
+  width: 100%;
 `;
 
 const useStyles = makeStyles((theme) => ({
@@ -227,6 +247,9 @@ const CreateAppRole = (props) => {
   const [sharedToError, setSharedToError] = useState(false);
   const [sharedToErrorMessage, setSharedToErrorMessage] = useState('');
   const [canEditSharedTo, setCanEditSharedTo] = useState(true);
+  const [options, setOptions] = useState([]);
+  const [autoLoader, setAutoLoader] = useState(false);
+  const [sharedToUserSelected, setSharedToUserSelected] = useState(false);
 
   const admin = Boolean(stateVal.isAdmin);
 
@@ -366,26 +389,20 @@ const CreateAppRole = (props) => {
   };
 
   const onAddSharedToEnterClicked = (e) => {
-    if (e.keyCode === 13 && e?.target?.value && !sharedToError) {
+    if (e.keyCode === 13 && e?.target?.value) {
       e.preventDefault();
-      const val = `${e.target.value}`;
-      if (!checkSharedToAlreadyIncluded(val)) {
-        setSharedToArray((prev) => [...prev, val.toLowerCase()]);
-        setSharedTo('');
-        setSharedToError(false);
-        setSharedToErrorMessage('');
-      }
+      onAddSharedToKeyClicked();
     }
   };
 
   const onAddSharedToKeyClicked = () => {
-    if (sharedTo && !sharedToError) {
+    if (sharedTo && !sharedToError && sharedToUserSelected) {
       if (!checkSharedToAlreadyIncluded(sharedTo)) {
         setSharedToArray((prev) => [...prev, sharedTo.toLowerCase()]);
         setSharedTo('');
         setSharedToError(false);
         setSharedToErrorMessage('');
-      } 
+      }
     }
   };
 
@@ -401,26 +418,10 @@ const CreateAppRole = (props) => {
 
   const onSharedToChange = (e) => {
     setSharedTo(e.target.value);
-    const { value } = e.target;
-    if (value && !validateSharedTo(value)) {
-      setSharedToError(true);
-      setSharedToErrorMessage(
-        'Shared to name can have alphanumeric, . and - characters only, and it should not start or end with special characters(-.)'
-      );
-    } else {
-      setSharedToError(false);
-      setSharedToErrorMessage('');
-    }
-  };
-
-  const validateSharedTo = (text) => {
-    if (text) {
-      const res = /^[a-z0-9]+$/i;
-      return (
-        res.test(text)
-      );
-    }
-    return null;
+    setSharedToUserSelected(false);
+    callSearchApi(e.target.value);
+    setSharedToError(false);
+    setSharedToErrorMessage('');
   };
 
   const onRemoveClicked = (sharedTo) => {
@@ -517,9 +518,10 @@ const CreateAppRole = (props) => {
         }
       })
       .catch((err) => {
-        if (err.response && err.response.data?.errors[0]) {
+        if (err.response && err.response?.data?.errors) {
           setStatus({ status: 'failed', message: err.response.data.errors[0] });
         }
+      
         setResponseType(-1);
       });
   };
@@ -552,7 +554,7 @@ const CreateAppRole = (props) => {
         }
       })
       .catch((err) => {
-        if (err.response && err.response.data?.errors[0]) {
+        if (err.response && err.response.data?.errors) {
           setStatus({ status: 'failed', message: err.response.data.errors[0] });
         }
         setResponseType(-1);
@@ -567,19 +569,65 @@ const CreateAppRole = (props) => {
     setStatus({});
   };
 
-  const renderReturnSymbol = () => {
-    if (canEditSharedTo) {
-      return (
-        <EndingBox width="17rem">
-          <ReturnIcon onClick={() => onAddSharedToKeyClicked()}>
-            <KeyboardReturnIcon />
-          </ReturnIcon>
-        </EndingBox>
-      )
-    }
+  const onSelected = (e, val) => {
+    const sharedToUserNTID = val?.split(', ')[2];
+    setSharedToUserSelected(true);
+    setSharedTo(sharedToUserNTID);
+  };
 
-    return null;
-  }
+  const callSearchApi = useCallback(
+    debounce(
+      (value) => {
+        setAutoLoader(true);
+        const userNameSearch = apiService.getUserName(value);
+        const tmoUser = apiService.getTmoUsers(value);
+        Promise.all([userNameSearch, tmoUser])
+          .then((responses) => {
+            setOptions([]);
+            const array = new Set([]);
+            if (responses[0]?.data?.data?.values?.length > 0) {
+              responses[0].data.data.values.map((item) => {
+                if (item.userName) {
+                  return array.add(item);
+                }
+                return null;
+              });
+            }
+            if (responses[1]?.data?.data?.values?.length > 0) {
+              responses[1].data.data.values.map((item) => {
+                if (item.userName) {
+                  return array.add(item);
+                }
+                return null;
+              });
+            }
+            setOptions([...array]);
+            setAutoLoader(false);
+          })
+          .catch(() => {
+            setAutoLoader(false);
+          });
+      },
+      1000,
+      true
+    ),
+    []
+  );
+
+  const getName = (displayName) => {
+    if (displayName?.match(/(.*)\[(.*)\]/)) {
+      const lastFirstName = displayName?.match(/(.*)\[(.*)\]/)[1].split(', ');
+      const name = `${lastFirstName[1]} ${lastFirstName[0]}`;
+      const optionalDetail = displayName?.match(/(.*)\[(.*)\]/)[2];
+      return `${name}, ${optionalDetail}`;
+    }
+    if (displayName?.match(/(.*), (.*)/)) {
+      const lastFirstName = displayName?.split(', ');
+      const name = `${lastFirstName[1]} ${lastFirstName[0]}`;
+      return name;
+    }
+    return displayName;
+  };
 
   const getDisabledState = () => {
     return (
@@ -775,74 +823,81 @@ const CreateAppRole = (props) => {
                   />
                 </InputFieldLabelWrapper>
               </Tooltip>
-              <Tooltip
-                classes={tooltipClasses}
-                arrow
-                title="Users this approle will be shared with. These users will have access to read from the approle, as well as delete keys"
-                placement="top"
-              >
-                <InputFieldLabelWrapper>
-                  <InputLabelWrap>
-                    <InputLabelWithInfo>Shared To</InputLabelWithInfo>
-                    <InfoIcon src={infoIcon} alt="info-icon-token-uses" />
-                  </InputLabelWrap>
-                
-                  <InputEndWrap>
-                    <TextFieldComponent
-                      value={sharedTo}
-                      placeholder="shared_to"
-                      fullWidth
-                      name="sharedTo"
-                      readOnly={!canEditSharedTo}
-                      onChange={(e) => {
-                        onSharedToChange(e);
-                      }}
-                      error={sharedToError}
-                      helperText={sharedToError ? sharedToErrorMessage : ''}
-                      onKeyDown={(e) => onAddSharedToEnterClicked(e)}
-                    />
-                    {renderReturnSymbol()}
-                  </InputEndWrap>
-                  <ArrayList>
-                    {sharedToArray.map((item) => {
-                      return (
-                        <EachItem key={item}>
-                          <Name>{item}</Name>
-                          {canEditSharedTo ? 
+              <InputFieldLabelWrapper>
+                <>
+                  <Tooltip
+                    classes={tooltipClasses}
+                    arrow
+                    title="Shared To List"
+                    placement="top"
+                  >
+                    <InputLabel>
+                      Add Users to Share This AppRole With
+                    </InputLabel>
+                  </Tooltip>
+                </>   
+                <SharedToAutoWrap>
+                  <AutoInputFieldLabelWrapper>
+                    <TypeAheadWrap>
+                      <TypeAheadComponent
+                        options = { 
+                          options.map(
+                            (item) =>
+                              `${item?.userEmail?.toLowerCase()}, ${
+                                item?.displayName &&
+                                item?.displayName !== '' &&
+                                getName(item?.displayName?.toLowerCase()) !== ' '
+                                  ? `${getName(item?.displayName?.toLowerCase())}, `: ''
+                              }${item?.userName?.toLowerCase()}`
+                          )
+                          }
+                        loader={autoLoader}
+                        userInput={sharedTo}
+                        icon="search"
+                        name="notifyUser"
+                        onSelected={(e, val) => onSelected(e, val)}
+                        onKeyDownClick={(e) => onAddSharedToEnterClicked(e)}
+                        onChange={(e) => {
+                          onSharedToChange(e);
+                        }}
+                        placeholder={'Search by NTID, Email or Name'}
+                        error={sharedToError}
+                        helperText={
+                          sharedToError ? sharedToErrorMessage : ''
+                        }
+                        disabled={!canEditSharedTo}
+                        styling={{ bottom: '5rem' }}
+                      />
+                      {autoLoader && sharedTo.length > 2 && (
+                        <LoaderSpinner customStyle={autoLoaderStyle} />
+                      )}
+                    </TypeAheadWrap>
+                    {canEditSharedTo && (
+                      <EndingBox width="4rem">
+                        <ReturnIcon onClick={() => onAddSharedToKeyClicked()}>
+                          <KeyboardReturnIcon />
+                        </ReturnIcon>
+                      </EndingBox>
+                    )}
+                  </AutoInputFieldLabelWrapper>
+                </SharedToAutoWrap>
+                <ArrayList>
+                  {sharedToArray.map((item) => {
+                    return (
+                      <EachItem key={item}>
+                        <Name>{item}</Name>
+                        {canEditSharedTo && (
                           <RemoveIcon
                             src={removeIcon}
                             alt="remove"
                             onClick={() => onRemoveClicked(item)}
-                          /> : null}
-                        </EachItem>
-                      );
-                    })}
-                  </ArrayList>
-                </InputFieldLabelWrapper>
-              </Tooltip>
-              {tokenPolicies && (
-                <Tooltip
-                  classes={tooltipClasses}
-                  arrow
-                  title="List of permission allowed for this approle to access secrets and passwords"
-                  placement="top"
-                >
-                  <InputFieldLabelWrapper>
-                    <InputLabelWrap>
-                      <InputLabelWithInfo>Permissions</InputLabelWithInfo>
-
-                      <InfoIcon src={infoIcon} alt="info-icon-secret-id" />
-                    </InputLabelWrap>
-                    <TextFieldComponent
-                      value={tokenPolicies}
-                      placeholder=""
-                      fullWidth
-                      readOnly
-                      name="tokenPolicies"
-                    />
-                  </InputFieldLabelWrapper>
-                </Tooltip>
-              )}
+                          />
+                        )}
+                      </EachItem>
+                    );
+                  })}
+                </ArrayList>
+              </InputFieldLabelWrapper>  
             </CreateSafeForm>
             <CancelSaveWrapper>
               <CancelButton>

@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 
 import com.tmobile.cso.vault.api.model.*;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -2673,7 +2674,11 @@ public final class ControllerUtil {
         String _path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + appRole.getRole_name();
         AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
         appRoleMetadataDetails.setCreatedBy(username);
-        appRoleMetadataDetails.setSharedTo(appRole.getShared_to());
+        List<String> sharedTo = appRole.getShared_to();
+        if (CollectionUtils.isNotEmpty(appRole.getShared_to())) {
+			sharedTo.removeIf(StringUtils::isEmpty);
+		}
+        appRoleMetadataDetails.setSharedTo(sharedTo);
         AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
         String jsonStr = JSONUtil.getJSON(appRoleMetadata);
         Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
