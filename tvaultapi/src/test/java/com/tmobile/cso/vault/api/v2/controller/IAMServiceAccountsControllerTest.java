@@ -163,19 +163,16 @@ public class IAMServiceAccountsControllerTest {
 	}
 
 	@Test
-	public void testTransferIAMServiceAccountOwnerSuccess() throws Exception {
+	public void test_transferIAMServiceAccountOwner_successful() throws Exception {
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
-		IAMServiceAccountGroup iamSvcAccGroup = new IAMServiceAccountGroup("testaccount", "group1", "write", "1234567");
-		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
-				"newowner", "normaluser2@gmail.com", null, "newappname", null, iamSvcAccGroup.getGroupname());
 
 		String expected = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expected);
-		when(iamServiceAccountsService.transferIAMServiceAccountOwner(Mockito.anyString(), Mockito.any(), Mockito.any()))
+		when(iamServiceAccountsService.updateIAMServiceAccount(Mockito.anyString(), Mockito.any(), Mockito.any()))
 				.thenReturn(responseEntityExpected);
 		String inputJson = getJSON(serviceAccount);
 		MvcResult result = mockMvc
-				.perform(MockMvcRequestBuilders.post("/v2/iamserviceaccounts/transfer").header(VAULT_TOKEN_STRING, token)
+				.perform(MockMvcRequestBuilders.post("/v2/iamserviceaccounts/update").header(VAULT_TOKEN_STRING, token)
 						.header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)
 						.requestAttr(USER_DETAILS_STRING, userDetails).content(inputJson))
 				.andExpect(status().isOk()).andReturn();

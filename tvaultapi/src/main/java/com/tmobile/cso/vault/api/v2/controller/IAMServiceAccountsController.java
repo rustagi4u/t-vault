@@ -71,12 +71,12 @@ public class IAMServiceAccountsController {
 	 * @param token
 	 * @return
 	 */
-	@ApiOperation(value = "${IAMServiceAccountsController.transferIAMServiceAccountOwner.value}", notes = "${IAMServiceAccountsController.transferIAMServiceAccountOwner.notes}")
-	@PostMapping(value="/v2/iamserviceaccounts/transfer", produces="application/json")
-	public ResponseEntity<String> transferIAMServiceAccountOwner( HttpServletRequest request, @RequestHeader(value="vault-token") String token,
+	@ApiOperation(value = "${IAMServiceAccountsController.updateIAMServiceAccount.value}", notes = "${IAMServiceAccountsController.updateIAMServiceAccount.notes}")
+	@PostMapping(value="/v2/iamserviceaccounts/update", produces="application/json")
+	public ResponseEntity<String> updateIAMServiceAccount( HttpServletRequest request, @RequestHeader(value="vault-token") String token,
 																  @RequestBody @Valid IAMServiceAccountTransfer iamServiceAccountTransfer) throws IOException {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return iamServiceAccountsService.transferIAMServiceAccountOwner(token, userDetails, iamServiceAccountTransfer);
+		return iamServiceAccountsService.updateIAMServiceAccount(token, userDetails, iamServiceAccountTransfer);
 	}
 
 	/**
