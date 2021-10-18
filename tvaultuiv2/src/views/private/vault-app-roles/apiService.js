@@ -5,6 +5,8 @@ const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/role/${appRole}`);
 const getAccessors = (appRole) => api.get(`/ss/approle/${appRole}/accessors`);
 const getRoleId = (appRole) => api.get(`/ss/approle/${appRole}/role_id`);
 const getIsAppRoleOwner = (appRole) => api.get(`/ss/approle/${appRole}/owner`);
+const getUserName = (user) => api.get(`/ldap/ntusers?displayName=${user}`);
+const getTmoUsers = (user) => api.get(`/tmo/users?UserPrincipalName=${user}`);
 
 // put calls
 const updateAppRole = (payload) => api.put('/ss/approle', payload);
@@ -30,4 +32,6 @@ export default {
   getRoleId,
   deleteAppRole,
   getIsAppRoleOwner,
+  getUserName,
+  getTmoUsers,
 };

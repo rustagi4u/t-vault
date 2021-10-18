@@ -1035,7 +1035,7 @@ public class  SelfSupportService {
 					build()));
 			return false;
 		}
-		return appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails);
+		return appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails);
 	}
 
 	/**

@@ -503,7 +503,7 @@ public class AppRoleServiceTest {
         sharedTo.add("shareduser");
         appRoleMetadataDetails.setSharedTo(sharedTo);
         appRoleMetadataDetails.setCreatedBy("normaluser");
-        assertTrue(appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails));
+        assertTrue(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails));
     }
 
     @Test
@@ -514,13 +514,13 @@ public class AppRoleServiceTest {
         sharedTo.add("shareduser");
         appRoleMetadataDetails.setSharedTo(sharedTo);
         appRoleMetadataDetails.setCreatedBy("someotheruser");
-        assertFalse(appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails));
+        assertFalse(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails));
     }
 
     @Test
     public void test_isAppRoleOwner_failure_null_metadata_details() {
         UserDetails userDetails = getMockUser(false);
-        assertFalse(appRoleService.isAppRoleOwner(userDetails, null));
+        assertFalse(appRoleService.isAppRoleOwner(userDetails.getUsername(), null));
     }
 
     @Test

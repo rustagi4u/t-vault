@@ -1635,7 +1635,7 @@ public class SelfSupportServiceTest {
         appRoleMetadataDetails.setSharedTo(sharedToList);
         appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
         when(appRoleService.readAppRoleMetadata(token, roleName)).thenReturn(appRoleMetadata);
-        when(appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails)).thenReturn(true);
+        when(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails)).thenReturn(true);
 
         assertTrue(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
     }
@@ -1664,7 +1664,7 @@ public class SelfSupportServiceTest {
         appRoleMetadataDetails.setSharedTo(sharedToList);
         appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
         when(appRoleService.readAppRoleMetadata(token, roleName)).thenReturn(appRoleMetadata);
-        when(appRoleService.isAppRoleOwner(userDetails, appRoleMetadataDetails)).thenReturn(true);
+        when(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails)).thenReturn(true);
 
         assertTrue(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
     }
