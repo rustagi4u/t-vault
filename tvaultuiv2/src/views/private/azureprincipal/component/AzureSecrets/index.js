@@ -266,6 +266,7 @@ const AzureSecrets = (props) => {
    * @description function to call the secret details api , which fetch the secrets details
    */
   const onViewSecretDetails = useCallback(() => {
+    setIsOpen(false);
     setSecretsData({});
     setResponse({ status: 'loading' });
     setShowSecret(false);
