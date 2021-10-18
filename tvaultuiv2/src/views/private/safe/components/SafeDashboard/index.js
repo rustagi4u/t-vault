@@ -827,7 +827,7 @@ const SafeDashboard = () => {
                 )}
               </>
             )}
-            {false && safeList?.length > 0 && (
+            {false.false && safeList?.length > 0 && (
               <FloatBtnWrapper>
                 <FloatingActionButtonComponent />
               </FloatBtnWrapper>
