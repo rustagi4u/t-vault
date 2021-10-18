@@ -14,7 +14,6 @@ import mediaBreakpoints from '../../../../../breakpoints';
 import ComponentError from '../../../../../errorBoundaries/ComponentError/component-error';
 import NoData from '../../../../../components/NoData';
 import noCertificateIcon from '../../../../../assets/nocertificate.svg';
-import FloatingActionButtonComponent from '../../../../../components/FormFields/FloatingActionButton';
 import Error from '../../../../../components/Error';
 import ScaledLoader from '../../../../../components/Loaders/ScaledLoader';
 import CertificatesReviewDetails from '../CertificatesReviewDetails';
@@ -86,13 +85,6 @@ const NoDataWrapper = styled.div`
 
 const NoListWrap = styled.div`
   width: 35%;
-`;
-
-const FloatBtnWrapper = styled('div')`
-  position: absolute;
-  bottom: 1rem;
-  right: 2.5rem;
-  z-index: 1;
 `;
 
 const SearchWrap = styled.div`
@@ -1125,16 +1117,7 @@ const CertificatesDashboard = () => {
                         <NoListWrap>
                           <NoData
                             imageSrc={noCertificateIcon}
-                            description="Create a certificate to get started!"
-                            actionButton={
-                              <FloatingActionButtonComponent
-                                href="/certificates/create-ceritificate"
-                                color="secondary"
-                                icon="add"
-                                tooltipTitle="Create New Certificate"
-                                tooltipPos="bottom"
-                              />
-                            }
+                            description="No certificates available!"
                             customStyle={customStyle}
                           />
                         </NoListWrap>
