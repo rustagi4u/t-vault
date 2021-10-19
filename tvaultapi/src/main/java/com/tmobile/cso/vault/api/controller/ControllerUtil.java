@@ -3431,4 +3431,12 @@ public final class ControllerUtil {
 			return false;
 		}
 	}
+	
+	public static boolean isFolderExisting(String path,String token){
+		Response response = reqProcessor.process("/read","{\"path\":\""+path+"\"}",token);
+				if(HttpStatus.OK.equals(response.getHttpstatus())){
+					return true;
+				}
+		return false;
+	}
 }

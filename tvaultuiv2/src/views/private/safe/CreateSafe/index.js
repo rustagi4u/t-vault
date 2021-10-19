@@ -246,7 +246,7 @@ const CreateModal = (props) => {
         applicationName
       ) &&
         applicationName !== '') ||
-      (safeDetails.owner === owner &&
+      (safeDetails.owner?.toLowerCase() === owner.toLowerCase() &&
         safeDetails.description === description &&
         safeDetails.appName === applicationName)
     ) {
