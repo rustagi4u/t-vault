@@ -444,7 +444,7 @@ const CreateAppRole = (props) => {
       setResponseType(0);
       setAllAppRoles([...history.location.state.appRoleDetails.allAppRoles]);
       apiService
-        .fetchAppRoleDetails(history.location.state.appRoleDetails.name)
+        .fetchAppRole(history.location.state.appRoleDetails.name)
         .then((res) => {
           setResponseType(null);
           if (res?.data?.data) {

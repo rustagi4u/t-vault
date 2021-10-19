@@ -1,7 +1,8 @@
 import api from '../../../services';
 // get calls
 const getAppRole = () => api.get('/ss/approle');
-const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/role/${appRole}`);
+const fetchAppRole = (appRole) => api.get(`/ss/approle/role/${appRole}`);
+const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/${appRole}`);
 const getAccessors = (appRole) => api.get(`/ss/approle/${appRole}/accessors`);
 const getRoleId = (appRole) => api.get(`/ss/approle/${appRole}/role_id`);
 const getIsAppRoleOwner = (appRole) => api.get(`/ss/approle/${appRole}/owner`);
@@ -23,6 +24,7 @@ const deleteSecretIds = (payload) =>
 
 export default {
   getAppRole,
+  fetchAppRole,
   fetchAppRoleDetails,
   updateAppRole,
   createAppRole,
