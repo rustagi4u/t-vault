@@ -5640,7 +5640,7 @@ public class  IAMServiceAccountsService {
 						.put(LogMessage.MESSAGE, "Failed to update IAM Service Account because owner_ntid was given but owner_email was not")
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-						"{\"errors\":[\"Updated Failed. Owner_email is required when owner_ntid is given.\"]}");
+						"{\"errors\":[\"Update failed. Owner_email is required when owner_ntid is given.\"]}");
 			}
 		}
 		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getApplicationName())) {
