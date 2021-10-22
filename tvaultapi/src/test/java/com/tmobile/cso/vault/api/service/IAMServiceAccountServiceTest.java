@@ -1417,9 +1417,9 @@ public class IAMServiceAccountServiceTest {
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"errors\":[\"Removing permissions from the old owner failed.\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
-		assertEquals(HttpStatus.MULTI_STATUS, responseEntity.getStatusCode());
+		String expectedResponse = "{\"errors\":[\"Failed to remove the user from the IAM Service Account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
 
@@ -1561,9 +1561,9 @@ public class IAMServiceAccountServiceTest {
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.transferIAMServiceAccountOwner(token,
 				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"errors\":[\"Failed to add sudo permission to owner.\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
-		assertEquals(HttpStatus.MULTI_STATUS, responseEntity.getStatusCode());
+		String expectedResponse = "{\"errors\":[\"Failed to add user to the IAM Service Account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
 
@@ -1895,7 +1895,7 @@ public class IAMServiceAccountServiceTest {
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body("{\"errors\":[\"Group configuration failed.Try Again\"]}");
+				.body("{\"errors\":[\"Unable to update group policies for group group1\"]}");
 		Response response404 = getMockResponse(HttpStatus.NOT_FOUND, true, "");
 
 		Response groupResp = getMockResponse(HttpStatus.OK, true,

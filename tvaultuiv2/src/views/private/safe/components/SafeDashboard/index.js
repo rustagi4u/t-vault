@@ -471,7 +471,6 @@ const SafeDashboard = () => {
       const safeName = val[val.length - 1];
       if (safeName !== 'create-safe' && safeName !== 'edit-safe') {
         const obj = safeList.find((safe) => safe.name === safeName);
-        setOwnerOfSafes(false);
         if (obj) {
           setSelectedSafeDetails({ ...obj });
         } else {
@@ -675,12 +674,24 @@ const SafeDashboard = () => {
       if (ele === value.path) {
         data[ele].map((item) => {
           if (Object.keys(item)[0] === value.name) {
+            let manage = false;
+            const safesListArray = JSON.parse(
+              sessionStorage.getItem('safesList')
+            );
+            const notAvailableVal = safesListArray?.find(
+              (listItem) =>
+                listItem.name === value.name && listItem?.manage === true
+            );
+            if (notAvailableVal) {
+              manage = true;
+              setOwnerOfSafes(true);
+            }
             dataObj = {
               name: value.name,
               access: Object.values(item)[0],
               path: `${value.path}/${value.name}`,
               safeType: value.type,
-              manage: !!isAdmin,
+              manage,
             };
           }
           return null;
