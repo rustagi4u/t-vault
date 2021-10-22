@@ -3468,8 +3468,8 @@ public final class ControllerUtil {
 	public static Response updateMetadataOnASPUpdate(String path, AzureServiceAccount azureServiceAccount, String token) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-				put(LogMessage.ACTION, "updateMetadataOnIAMSvcUpdate").
-				put(LogMessage.MESSAGE, "Trying to update metadata on IAM service account.").
+				put(LogMessage.ACTION, "updateMetadataOnASPUpdate").
+				put(LogMessage.MESSAGE, "Trying to update metadata on Azure service principal transfer.").
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
 		String _path = METADATASTR + path;
