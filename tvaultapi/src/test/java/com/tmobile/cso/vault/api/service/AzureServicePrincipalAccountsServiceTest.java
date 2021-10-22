@@ -3282,4 +3282,129 @@ public class AzureServicePrincipalAccountsServiceTest {
 		assertEquals(HttpStatus.MULTI_STATUS, responseEntityActual.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntityActual);
 	}
+	@Test
+	public void testOnboardAzureServiceAccountFailure() {
+		userDetails = getMockUser(true);
+		token = userDetails.getClientToken();
+		AzureServiceAccount serviceAccount = generateAzureServiceAccount("svc_cce_usertestrr16");
+		String azureSvcAccName = serviceAccount.getServicePrincipalName();
+		String azureSvccAccPath = AzureServiceAccountConstants.AZURE_SVCC_ACC_PATH + azureSvcAccName;
+
+		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
+
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+		Map<String, Object> iamSvcAccPolicyMap = new HashMap<>();
+		iamSvcAccPolicyMap.put("isActivated", false);
+
+		AzureServiceAccountMetadataDetails azureServiceAccountMetadataDetails = populateAzureSvcAccMetaData(serviceAccount);
+		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,azureServiceAccountMetadataDetails);
+
+		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
+
+		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
+		when(ControllerUtil.parseJson(metaDataStr)).thenReturn(iamSvcAccPolicyMap);
+		when(ControllerUtil.convetToJson(iamSvcAccPolicyMap)).thenReturn(metadatajson);
+		when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
+
+		// create metadata
+		when(JSONUtil.getJSON(iamSvccAccMetadata)).thenReturn(iamMetaDataStr);
+		Map<String, Object> rqstParams = new HashMap<>();
+		rqstParams.put("isActivated", false);
+		rqstParams.put("servicePrincipalName", "svc_cce_usertestrr16");
+		rqstParams.put("servicePrincipalId", "c865a078-a5a7-44d8-9e43-0764c545b76d");
+		rqstParams.put("servicePrincipalClientId", "c865a078-a5a7-44d8-9e43-0764c545b76d");
+		rqstParams.put("tenantId", "c865a078-a5a7-44d8-9e43-0764c545b76d");
+		rqstParams.put("createdAtEpoch", 12345L);
+		rqstParams.put("owner_ntid", "normaluser");
+		rqstParams.put("owner_email", "normaluser@testmail.com");
+		rqstParams.put("application_id", "app1");
+		rqstParams.put("application_name", "App1");
+
+		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
+		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
+		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+
+		// CreateIAMServiceAccountPolicies
+		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+		when(accessService.createPolicy(Mockito.anyString(), Mockito.any())).thenReturn(createPolicyResponse);
+
+		// Add User to Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true,"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"testuser\"}", token)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		// System under test
+		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
+
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
+		DirectoryUser directoryUser = new DirectoryUser();
+		List<DirectoryUser> persons = new ArrayList<>();
+		persons.add(directoryUser);
+		DirectoryObjects users = new DirectoryObjects();
+		DirectoryObjectsList usersList = new DirectoryObjectsList();
+		usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+		users.setData(usersList);
+
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+
+		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
+		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
+
+		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
+		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
+				Mockito.any());
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("azure_admin_policy");
+		try {
+			when(azureServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,serviceAccount, userDetails);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+	@Test
+	public void test_readFolders_forbidden() throws IOException {
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String path = "testiamsvcacc01";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
+
+		when(reqProcessor.process(eq("/azure/list"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.FORBIDDEN, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
+		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+
+	}
+	@Test
+	public void test_readFolders_internalservererror() throws IOException {
+		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String path = "testiamsvcacc01";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
+
+		when(reqProcessor.process(eq("/azure/list"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+
+	}
 }
