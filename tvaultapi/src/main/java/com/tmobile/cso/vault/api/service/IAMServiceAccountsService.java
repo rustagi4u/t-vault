@@ -5491,54 +5491,100 @@ public class  IAMServiceAccountsService {
     }
 
 	/**
-	 * Transfer an IAM service account from one owner to another
+	 * Update IAM Service Account. Includes ability to -<br><br>
+	 * 1. Transfer an IAM service account from one owner to another<br>
+	 * 2. Update application details<br>
+	 * 3. Add group to IAM service account<br>
 	 *
 	 * @param token
 	 * @param userDetails
 	 * @param iamServiceAccountTransfer
 	 * @return ResponseEntity<String>
 	 */
-	public ResponseEntity<String> transferIAMServiceAccountOwner(String token, UserDetails userDetails, IAMServiceAccountTransfer iamServiceAccountTransfer) throws IOException {
+	public ResponseEntity<String> updateIAMServiceAccount(String token, UserDetails userDetails, IAMServiceAccountTransfer iamServiceAccountTransfer) throws IOException {
 		String iamSvcAccName = iamServiceAccountTransfer.getAwsAccountId() + "_" +
 				iamServiceAccountTransfer.getUserName();
 		String iamSvccAccPath = IAMServiceAccountConstants.IAM_SVCC_ACC_PATH + iamSvcAccName;
 		String iamSvccAccMetaPath = IAMServiceAccountConstants.IAM_SVCC_ACC_META_PATH + iamSvcAccName;
 
+		if (!isAuthorizedIAMAdminApprole(token)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+					.put(LogMessage.MESSAGE,
+							"Access denied. IAM admin approle not authorized.")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+					"{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}");
+		}
+
 		List<String> onboardedList = getOnboardedIAMServiceAccountList(token, userDetails);
 		if (!onboardedList.contains(iamSvcAccName)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-					.put(LogMessage.MESSAGE, String.format("Failed to transfer IAM Service Account. Could not find account [%s]", iamSvcAccName))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Failed to update IAM Service Account. Could not find account [%s]", iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{\"errors\":[\"Invalid username or awsAccountId\"]}");
+					"{\"errors\":[\"Invalid username or awsAccountId.\"]}");
 		}
 
 		Response metaResponse = getMetadata(token, userDetails, iamSvccAccPath);
 		IAMServiceAccount iamSvcAcc = constructIAMSvcAccObjectFromMetadata(metaResponse);
 		IAMServiceAccount originalIAMSvcAcc = (IAMServiceAccount) SerializationUtils.clone(iamSvcAcc);
 
-		ResponseEntity<String> validationErrors = validateAbilityToTransfer(token, iamSvcAcc, iamSvcAccName, iamServiceAccountTransfer);
-		if (validationErrors != null) {
-			return validationErrors;
-		}
-
-		IAMServiceAccountUser oldOwner;
-		if (iamSvcAcc != null) {
-			oldOwner = new IAMServiceAccountUser(iamSvcAcc.getUserName().toLowerCase(),
-					iamSvcAcc.getOwnerNtid(), TVaultConstants.SUDO_POLICY, iamSvcAcc.getAwsAccountId());
-		} else {
+		 if (iamSvcAcc == null) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
 					.put(LogMessage.MESSAGE, String.format("Failed constructing metadata object for account [%s]", iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{\"errors\":[\"Failed to get metadata for this IAM Service Account.\"]}");
 		}
-		iamSvcAcc.setOwnerEmail(iamServiceAccountTransfer.getOwnerEmail());
-		iamSvcAcc.setOwnerNtid(iamServiceAccountTransfer.getOwnerNtid());
+
+		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerNtid())) {
+			if (iamServiceAccountTransfer.getOwnerNtid().equals(iamSvcAcc.getOwnerNtid())) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+						.put(LogMessage.MESSAGE, String.format("Failed to transfer IAM Service Account owner. " +
+								"The owner given is already the current owner on account [%s]", iamSvcAccName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+						"{\"errors\":[\"Failed to transfer IAM Service Account owner. The owner given is already the current owner.\"]}");
+			}
+		}
+
+		boolean isOwnerBeingTransferred = !StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerNtid());
+
+		IAMServiceAccountUser oldOwner = new IAMServiceAccountUser(iamSvcAcc.getUserName().toLowerCase(),
+					iamSvcAcc.getOwnerNtid(), TVaultConstants.SUDO_POLICY, iamSvcAcc.getAwsAccountId());
+
+		if (!isOwnerBeingTransferred && !StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerEmail())) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+					.put(LogMessage.MESSAGE, "Failed to update IAM Service Account because owner_email was given but owner_ntid was not")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"Update Failed. Owner_ntid is required when owner_email is given.\"]}");
+		}
+
+		if (isOwnerBeingTransferred) {
+			iamSvcAcc.setOwnerNtid(iamServiceAccountTransfer.getOwnerNtid());
+			if (!StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerEmail())) {
+				iamSvcAcc.setOwnerEmail(iamServiceAccountTransfer.getOwnerEmail());
+			} else {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+						.put(LogMessage.MESSAGE, "Failed to update IAM Service Account because owner_ntid was given but owner_email was not")
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+						"{\"errors\":[\"Update Failed. Owner_email is required when owner_ntid is given.\"]}");
+			}
+		}
 
 		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getApplicationName())) {
 			iamSvcAcc.setApplicationName(iamServiceAccountTransfer.getApplicationName());
@@ -5550,25 +5596,27 @@ public class  IAMServiceAccountsService {
 			iamSvcAcc.setApplicationTag(iamServiceAccountTransfer.getApplicationTag());
 		}
 
-		ResponseEntity<String> addSudoPermissionToOwnerResponse = addSudoPermissionToOwner(token, iamSvcAcc, userDetails, iamSvcAccName);
+		if (isOwnerBeingTransferred) {
+			ResponseEntity<String> addSudoPermissionToOwnerResponse = addSudoPermissionToOwner(token, iamSvcAcc, userDetails, iamSvcAccName);
 
-		if (HttpStatus.OK.equals(addSudoPermissionToOwnerResponse.getStatusCode())) {
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
-					.put(LogMessage.MESSAGE, String.format("Successfully added sudo permission for owner [%s] on account [%s]",
-							iamSvcAcc.getOwnerNtid(), iamSvcAccName))
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-		} else {
-			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
-					.put(LogMessage.MESSAGE,
-							String.format("Failed to add sudo permission to owner [%s] on account [%s]",
-									iamSvcAcc.getOwnerNtid(), iamSvcAccName))
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-			revertTransferOnTransferPermissionFailure(iamSvcAcc, iamSvcAccName, userDetails, token);
-			return addSudoPermissionToOwnerResponse;
+			if (HttpStatus.OK.equals(addSudoPermissionToOwnerResponse.getStatusCode())) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+						.put(LogMessage.MESSAGE, String.format("Successfully added sudo permission for owner [%s] on account [%s]",
+								iamSvcAcc.getOwnerNtid(), iamSvcAccName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			} else {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+						.put(LogMessage.MESSAGE,
+								String.format("Failed to add sudo permission to owner [%s] on account [%s]",
+										iamSvcAcc.getOwnerNtid(), iamSvcAccName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				revertTransferOnTransferPermissionFailure(iamSvcAcc, iamSvcAccName, userDetails, token);
+				return addSudoPermissionToOwnerResponse;
+			}
 		}
 
 		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getAdSelfSupportGroup())) {
@@ -5582,14 +5630,14 @@ public class  IAMServiceAccountsService {
 			if (HttpStatus.OK.equals(addGroupResponse.getStatusCode())) {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
 						.put(LogMessage.MESSAGE, String.format("Successfully added group [%s] to the IAM Service Account [%s]",
 								iamServiceAccountTransfer.getAdSelfSupportGroup(), iamSvcAcc))
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			} else {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
 						.put(LogMessage.MESSAGE, String.format("Adding group [%s] to the IAM Service Account [%s] failed",
 								iamServiceAccountTransfer.getAdSelfSupportGroup(), iamSvcAcc))
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
@@ -5597,37 +5645,39 @@ public class  IAMServiceAccountsService {
 			}
 		}
 
-		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
-		String ownerPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
-				.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(iamSvcAccName).toString();
-		String writePolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.WRITE_POLICY))
-				.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(iamSvcAccName).toString();
+		if (isOwnerBeingTransferred) {
+			OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+			String ownerPolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
+					.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(iamSvcAccName).toString();
+			String writePolicy = new StringBuffer().append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.WRITE_POLICY))
+					.append(IAMServiceAccountConstants.IAMSVCACC_POLICY_PREFIX).append(iamSvcAccName).toString();
 
-		List<String> policiesToRemove = new ArrayList<>();
-		policiesToRemove.add(ownerPolicy);
-		policiesToRemove.add(writePolicy);
+			List<String> policiesToRemove = new ArrayList<>();
+			policiesToRemove.add(ownerPolicy);
+			policiesToRemove.add(writePolicy);
 
-		if (!userDetails.isAdmin()) {
-			token = tokenUtils.getSelfServiceToken();
-		}
-		ResponseEntity<String> removeOldPermissionResponse = processAndRemoveUserPermissionFromIAMSvcAcc(token, oldOwner, userDetails,
-				oidcEntityResponse, iamSvcAccName, policiesToRemove);
+			if (!userDetails.isAdmin()) {
+				token = tokenUtils.getSelfServiceToken();
+			}
+			ResponseEntity<String> removeOldPermissionResponse = processAndRemoveUserPermissionFromIAMSvcAcc(token, oldOwner, userDetails,
+					oidcEntityResponse, iamSvcAccName, policiesToRemove);
 
-		if (HttpStatus.OK.equals(removeOldPermissionResponse.getStatusCode())) {
-			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-					.put(LogMessage.MESSAGE, String.format("Successfully removed permission from old owner [%s] on account [%s]",
-							oldOwner.getUsername(), iamSvcAccName))
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-		} else {
-			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-					.put(LogMessage.MESSAGE, String.format("Failed to remove permission from old owner [%s] on account [%s]",
-							oldOwner.getUsername(), iamSvcAccName))
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-			return removeOldPermissionResponse;
+			if (HttpStatus.OK.equals(removeOldPermissionResponse.getStatusCode())) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+						.put(LogMessage.MESSAGE, String.format("Successfully removed permission from old owner [%s] on account [%s]",
+								oldOwner.getUsername(), iamSvcAccName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			} else {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
+						.put(LogMessage.MESSAGE, String.format("Failed to remove permission from old owner [%s] on account [%s]",
+								oldOwner.getUsername(), iamSvcAccName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return removeOldPermissionResponse;
+			}
 		}
 
 		boolean metadataCreatedForNewOwner = updateMetadata(token, iamSvcAcc, iamSvcAccName, iamSvccAccPath);
@@ -5635,14 +5685,14 @@ public class  IAMServiceAccountsService {
 		if (metadataCreatedForNewOwner) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
 					.put(LogMessage.MESSAGE, String.format("Successfully updated Metadata [%s] for the IAM Service Account [%s]",
 							iamSvccAccMetaPath, iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
+					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
 					.put(LogMessage.MESSAGE,
 							String.format("Updating metadata [%s] for IAM Service Account [%s] failed.", iamSvccAccMetaPath, iamSvcAccName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
@@ -5650,18 +5700,20 @@ public class  IAMServiceAccountsService {
 					"{\"errors\":[\"Metadata update failed for IAM Service Account.\"]}");
 		}
 
-		DirectoryUser oldOwnerObj = getUserDetails(originalIAMSvcAcc.getOwnerNtid());
-		Map<String, String> mailTemplateVariables = new HashMap<>();
-		mailTemplateVariables.put("iamSvcAccName", iamSvcAcc.getUserName());
-		mailTemplateVariables.put("oldOwnerName", oldOwnerObj!=null?oldOwnerObj.getDisplayName():"");
-		mailTemplateVariables.put("contactLink", supportEmail);
-		List<String> cc = new ArrayList<>();
-		cc.add(originalIAMSvcAcc.getOwnerEmail());
-		sendMailToIAMSvcAccOwner(iamSvcAcc, iamSvcAccName, IAMServiceAccountConstants.IAM_TRANSFER_EMAIL_SUBJECT,
-				IAMServiceAccountConstants.IAM_TRANSFER_TEMPLATE_NAME, mailTemplateVariables, cc);
+		if (isOwnerBeingTransferred) {
+			DirectoryUser oldOwnerObj = getUserDetails(originalIAMSvcAcc.getOwnerNtid());
+			Map<String, String> mailTemplateVariables = new HashMap<>();
+			mailTemplateVariables.put("iamSvcAccName", iamSvcAcc.getUserName());
+			mailTemplateVariables.put("oldOwnerName", oldOwnerObj != null ? oldOwnerObj.getDisplayName() : "");
+			mailTemplateVariables.put("contactLink", supportEmail);
+			List<String> cc = new ArrayList<>();
+			cc.add(originalIAMSvcAcc.getOwnerEmail());
+			sendMailToIAMSvcAccOwner(iamSvcAcc, iamSvcAccName, IAMServiceAccountConstants.IAM_TRANSFER_EMAIL_SUBJECT,
+					IAMServiceAccountConstants.IAM_TRANSFER_TEMPLATE_NAME, mailTemplateVariables, cc);
+		}
 
 		return ResponseEntity.status(HttpStatus.OK)
-				.body("{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}");
+				.body("{\"messages\":[\"IAM Service Account has been successfully updated.\"]}");
 	}
 
 	private ResponseEntity<String> revertTransferOnTransferPermissionFailure(IAMServiceAccount iamSvcAcc, String iamSvcAccName,
@@ -5704,43 +5756,6 @@ public class  IAMServiceAccountsService {
 
 		return ResponseEntity.status(HttpStatus.OK).body(
 				"{\"errors\":[\"Successfully reverted transfer of IAM Service Account.\"]}");
-	}
-
-	/**
-	 * Checks the user's authorization as well as validates
-	 * that the Service Account is not null and the new owner
-	 * is not the same as the existing owner.
-	 *
-	 * @param token
-	 * @param iamSvcAcc
-	 * @param iamSvcAccName
-	 * @param iamSvcAccTransfer
-	 * @return ResponseEntity<String>
-	 */
-	private ResponseEntity<String> validateAbilityToTransfer(String token, IAMServiceAccount iamSvcAcc, String iamSvcAccName,
-															  IAMServiceAccountTransfer iamSvcAccTransfer) {
-		if (iamSvcAccTransfer.getOwnerNtid().equals(iamSvcAcc.getOwnerNtid())) {
-			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
-					.put(LogMessage.MESSAGE, String.format("Failed to transfer IAM Service Account owner. " +
-							"The owner given is already the current owner on account [%s]", iamSvcAccName))
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{\"errors\":[\"Failed to transfer IAM Service Account owner. The owner given is already the current owner.\"]}");
-		}
-
-		if (!isAuthorizedIAMAdminApprole(token)) {
-			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-					.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_TRANSFER_TITLE)
-					.put(LogMessage.MESSAGE,
-							"Access denied. IAM admin approle not authorized.")
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-					"{\"errors\":[\"Access denied. IAM admin approle not authorized.\"]}");
-		}
-		return null;
 	}
 
 	/**

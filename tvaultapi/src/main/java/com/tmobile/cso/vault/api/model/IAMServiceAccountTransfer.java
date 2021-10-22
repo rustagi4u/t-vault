@@ -25,15 +25,11 @@ public class IAMServiceAccountTransfer {
     @Size(min = 1, max = 12, message = "AWSAccountId specified should be maximum 12 characters only")
     private String awsAccountId;
 
-    @NotBlank
     @Pattern(regexp = "^$|^[a-zA-Z0-9_-]+$", message = "Owner can have alphabets, numbers, _ and - characters only")
     @JsonProperty("owner_ntid")
     private String ownerNtid;
 
-    @NotBlank
     @Email
-    @Size(min = 1, message = "Owner Email can not be null or empty")
-    @Pattern(regexp = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$", message = "Owner Email is not valid")
     @JsonProperty("owner_email")
     private String ownerEmail;
 
