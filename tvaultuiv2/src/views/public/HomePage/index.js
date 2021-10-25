@@ -473,7 +473,7 @@ const LoginPage = () => {
   }, []);
 
   useEffect(() => {
-    axios.get(`${configUrl.baseUrl}/safes/message`).then(async (res) => {
+    axios.get(`${configUrl.baseUrl}/bannermessage`).then(async (res) => {
       setBannerMessageSafe(res.data.data.message1);
     });
   }, []);

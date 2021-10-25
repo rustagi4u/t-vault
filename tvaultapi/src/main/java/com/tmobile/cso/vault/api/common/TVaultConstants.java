@@ -191,7 +191,7 @@ public class TVaultConstants {
     public static final String CLOUD_SECURITY_IAM_ADMIN_APPROLE = "cloudsecurity_iam_admin_approle";
     public static final String CLOUD_SECURITY_AZURE_AD_MANAGER_ROLE = "AzureADRoleManager";
     public static final String NEW_SPRINT_EMAIL_FORMAT = "@tmobileusa.onmicrosoft.com";
-    public static final String UIMES_SAFES_METADATA = "metadata/users/message";
-    public static final String WRITE_MESSAGE_POLICY="writemessage";
+    public static final String UI_BANNER_MESSAGE_PATH = "metadata/users/message";
+    public static final String WRITE_MESSAGE_POLICY="uibannermessage";
 
 }
