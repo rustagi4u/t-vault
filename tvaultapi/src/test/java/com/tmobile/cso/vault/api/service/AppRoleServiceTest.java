@@ -496,6 +496,166 @@ public class AppRoleServiceTest {
     }
 
     @Test
+    public void test_listAppRoleEntityAssociations_with_safe_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true, "{\"data\": {\"policies\":[\"r_shared_funsafe\"," +
+                "\"w_shared_funsafe\"]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        List<String> policies = new ArrayList<>();
+        policies.add("r_shared_funsafe");
+        policies.add("w_shared_funsafe");
+        appRoleMetadataMap.put("policies", policies);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[{\"safes\":\"[funsafe]\"}," +
+                "{\"iamsvcaccs\":\"[]\"},{\"adsvcaccs\":\"[]\"},{\"azuresvcaccs\":\"[]\"},{\"certs\":\"[]\"}]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_with_iamsvcacc_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true,
+                "{\"data\": {\"policies\":[\"r_iamsvcacc_323456859_svc_tvt_test4\"]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        List<String> policies = new ArrayList<>();
+        policies.add("r_iamsvcacc_323456859_svc_tvt_test4");
+        appRoleMetadataMap.put("policies", policies);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[{\"safes\":\"[]\"}," +
+                "{\"iamsvcaccs\":\"[svc_tvt_test4]\"},{\"adsvcaccs\":\"[]\"},{\"azuresvcaccs\":\"[]\"},{\"certs\":\"[]\"}]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_with_adsvcacc_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true,
+                "{\"data\": {\"policies\":[\"o_svcacct_svc_acc_multiple_underscores\"]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        List<String> policies = new ArrayList<>();
+        policies.add("o_svcacct_svc_acc_multiple_underscores");
+        appRoleMetadataMap.put("policies", policies);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[{\"safes\":\"[]\"}," +
+                "{\"iamsvcaccs\":\"[]\"},{\"adsvcaccs\":\"[svc_acc_multiple_underscores]\"},{\"azuresvcaccs\":\"[]\"},{\"certs\":\"[]\"}]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_with_azuresvcacc_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true,
+                "{\"data\": {\"policies\":[\"o_svcacct_svc_acc_multiple_underscores\"]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        List<String> policies = new ArrayList<>();
+        policies.add("o_svcacct_svc_acc_multiple_underscores");
+        appRoleMetadataMap.put("policies", policies);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[{\"safes\":\"[]\"}," +
+                "{\"iamsvcaccs\":\"[]\"},{\"adsvcaccs\":\"[svc_acc_multiple_underscores]\"},{\"azuresvcaccs\":\"[]\"},{\"certs\":\"[]\"}]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_with_cert_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true,
+                "{\"data\": {\"policies\":[\"r_cert_CertificateName.t-mobile.com\"]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        List<String> policies = new ArrayList<>();
+        policies.add("r_cert_CertificateName.t-mobile.com");
+        appRoleMetadataMap.put("policies", policies);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[{\"safes\":\"[]\"}," +
+                "{\"iamsvcaccs\":\"[]\"},{\"adsvcaccs\":\"[]\"},{\"azuresvcaccs\":\"[]\"},{\"certs\":\"[CertificateName.t-mobile.com]\"}]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_approle_not_found_failure() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.NOT_FOUND, false, "{}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("{\"errors\":[\"AppRole doesn't exist\"]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_empty_response_map_failure() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true, "{\"data\": {\"policies\":[\"r_shared_funsafe\"," +
+                "\"w_shared_funsafe\"]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("{\"errors\":[\"AppRole doesn't exist\"]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
+    public void test_listAppRoleEntityAssociations_no_policies_success() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true, "{\"data\": {\"policies\":[]}}");
+        when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"" + roleName + "\"}", token))
+                .thenReturn(appRoleResponse);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        appRoleMetadataMap.put("token_max_ttl", 100);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(responseMap);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":" +
+                "[{\"safes\":\"[]\"},{\"iamsvcaccs\":\"[]\"},{\"adsvcaccs\":\"[]\"},{\"azuresvcaccs\":\"[]\"},{\"certs\":\"[]\"}]}");
+        assertEquals(expectedResponse, appRoleService.listAppRoleEntityAssociations(roleName, token));
+    }
+
+    @Test
     public void test_isAppRoleOwner_successfully() {
         UserDetails userDetails = getMockUser(false);
         AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();

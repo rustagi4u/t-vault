@@ -14,7 +14,7 @@ import {
   Redirect,
   useLocation,
 } from 'react-router-dom';
-
+import ReactDOMServer from 'react-dom/server';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useStateValue } from '../../../../../contexts/globalState';
 import sectionHeaderBg from '../../../../../assets/approle_banner_img.png';
@@ -203,6 +203,12 @@ const AppRolesDashboard = () => {
   const location = useLocation();
   const introduction = Strings.Resources.appRoles;
   const [canDeleteSharedTo, setCanDeleteSharedTo] = useState(true);
+  const [associatedSafes, setAssociatedSafes] = useState('');
+  const [associatedIAMSvcAccs, setAssociatedIAMSvcAccs] = useState('');
+  const [associatedADSvcAccs, setAssociatedADSvcAccs] = useState('');
+  const [associatedAzureSvcAccs, setAssociatedAzureSvcAccs] = useState('');
+  const [associatedCerts, setAssociatedCerts] = useState('');
+  const [entitiesAreAssociatedWithAppRole, setEntitiesAreAssociatedWithAppRole] = useState(false);
 
   const admin = Boolean(state.isAdmin);
   /**
@@ -335,12 +341,30 @@ const AppRolesDashboard = () => {
    * @param {string} name app role  name to be deleted.
    */
   const onDeleteClicked = (name) => {
-    validateCanDeleteSharedTo(name).then((res) => {
-      setCanDeleteSharedTo(res);
+    validateCanDeleteSharedTo(name).then((sharedToRes) => {
+      setCanDeleteSharedTo(sharedToRes);
       setDeleteAppRoleConfirmation(true);
       setDeleteAppRoleName(name);
     });
-  };
+    getEntitiesAssociatedToAppRole(name).then((entityRes) => {
+      let safeList = entityRes?.messages[0]?.safes;
+      let iamSvcAccList = entityRes?.messages[1]?.iamsvcaccs;
+      let adSvcAccList = entityRes?.messages[2]?.adsvcaccs;
+      let azureSvcAccList = entityRes?.messages[3]?.azuresvcaccs;
+      let certList = entityRes?.messages[4]?.certs;
+      if (safeList?.length > 2 || iamSvcAccList?.length > 2 || adSvcAccList?.length > 2 ||
+          azureSvcAccList?.length > 2 || certList.length > 2) {
+        setEntitiesAreAssociatedWithAppRole(true);
+      } else {
+        setEntitiesAreAssociatedWithAppRole(false);
+      }
+      setAssociatedSafes(safeList);
+      setAssociatedIAMSvcAccs(iamSvcAccList);
+      setAssociatedADSvcAccs(adSvcAccList);
+      setAssociatedAzureSvcAccs(azureSvcAccList);
+      setAssociatedCerts(certList);
+    });
+  }; 
 
   const onApproleEdit = (name) => {
     history.push({
@@ -381,6 +405,23 @@ const AppRolesDashboard = () => {
       });
   };
 
+  const getEntitiesAssociatedToAppRole = (appRoleName) => {
+    return new Promise((resolve, reject) =>
+      apiService
+        .getEntitiesAssociatedWithAppRole(appRoleName)
+        .then((res) => {
+          resolve(res.data);
+        })
+        .catch((err) => {
+          if (err.response && err.response.data?.errors[0]) {
+            setToastMessage({ status: 'failed', message: err.response.data.errors[0] });
+          }
+          setResponseType(-1);
+          reject(err.data);
+        })
+    );
+  };
+
   const validateCanDeleteSharedTo = (appRoleName) => {
     return new Promise((resolve, reject) =>
       apiService
@@ -404,6 +445,33 @@ const AppRolesDashboard = () => {
    */
   const handleConfirmationModalClose = () => {
     setDeleteAppRoleConfirmation(false);
+  };
+
+  const getDeleteAppRoleConfirmationDescription = () => {
+      return (
+        <>
+          {getConfirmationDescSectionForEntityType("Safes", associatedSafes)}
+          {getConfirmationDescSectionForEntityType("IAM Service Accounts", associatedIAMSvcAccs)}
+          {getConfirmationDescSectionForEntityType("AD Service Accounts", associatedADSvcAccs)}
+          {getConfirmationDescSectionForEntityType("Azure Service Principals", associatedAzureSvcAccs)}
+          {getConfirmationDescSectionForEntityType("Certificates", associatedCerts)}
+        </>
+      );     
+  };
+
+  const getConfirmationDescSectionForEntityType = (entityName, entityObj) => {
+    let entityList = entityObj?.replaceAll('[', '').replaceAll(']', '').split(',');
+
+    return (entityList && entityList[0]?.length > 0) ? (
+        <>
+          <p style={{'color':'white', 'marginBottom':'.2rem'}}>{entityName}</p>
+          <ul style={{'marginTop':'.2rem'}}>
+            {entityList.map((entity) => (
+              <li key="{entity}">{entity}</li>
+            ))}
+          </ul>
+        </>
+      ) : null;
   };
 
   const renderList = () => {
@@ -458,7 +526,13 @@ const AppRolesDashboard = () => {
             open={deleteAppRoleConfirmation}
             handleClose={handleConfirmationModalClose}
             title="Confirmation"
-            description={`<p>Are you sure you want to delete the AppRole ${deleteAppRoleName}?</p>`}
+            description={entitiesAreAssociatedWithAppRole ? `<p>AppRole ${deleteAppRoleName} is associated with the following entities - ` +
+              `<span style="color: #e20074">
+                ${ReactDOMServer.renderToStaticMarkup(getDeleteAppRoleConfirmationDescription())} 
+              </span>` +
+              `Deleting it could impact users this AppRole has been shared with. Do you still want to delete?</p>` 
+              : `Are you sure you want to delete AppRole ${deleteAppRoleName}?` 
+            }
             cancelButton={
               <ButtonComponent
                 label="Cancel"

@@ -20,6 +20,7 @@ package com.tmobile.cso.vault.api.v2.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.exception.TVaultValidationException;
 import com.tmobile.cso.vault.api.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -443,6 +444,21 @@ public class SelfSupportController {
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.readAppRoles( userDetails);
 	}
+
+	/**
+	 * Retrieves the list of entities that are associated to this AppRole.
+	 * Entities include safes, services accounts, and certs.
+	 * @param token
+	 * @param roleName - The name of the AppRole to get the list of associations for
+	 * @return ResponseEntity
+	 */
+	@ApiOperation(value = "${SelfSupportController.listAppRoleEntityAssociations.value}", notes = "${SelfSupportController.listAppRoleEntityAssociations.notes}")
+	@GetMapping(value="/v2/ss/approle/list/associations/{role_name}", produces="application/json")
+	public ResponseEntity<String> listAppRoleEntityAssociations(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
+		UserDetails userDetails = (UserDetails) request.getAttribute(TVaultConstants.USER_DETAILS);
+		return selfSupportService.listAppRoleEntityAssociations(roleName, userDetails);
+	}
+
 	/**
 	 * READ APPROLE
 	 * @param token

@@ -1584,4 +1584,19 @@ public class  SelfSupportService {
 		}
 		return safeList;
 	}
+
+	/**
+	 * Retrieves the list of entities that are associated to this AppRole.
+	 * Entities include safes, services accounts, and certs.
+	 * @param roleName - The name of the AppRole to get the list of associations for
+	 * @param userDetails
+	 * @return ResponseEntity
+	 */
+	public ResponseEntity<String> listAppRoleEntityAssociations(String roleName, UserDetails userDetails) {
+		String token = userDetails.getClientToken();
+		if (!userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
+		}
+		return appRoleService.listAppRoleEntityAssociations(roleName, token);
+	}
 }
