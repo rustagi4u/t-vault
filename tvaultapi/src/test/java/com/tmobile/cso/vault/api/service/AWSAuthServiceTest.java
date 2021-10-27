@@ -277,9 +277,7 @@ public class AWSAuthServiceTest {
         response.setHttpstatus(HttpStatus.OK);
 
         String roleName = "mytestawsrole";
-        String responseBody = "{ \"bound_account_id\": [ \"1234567890123\"],\"bound_ami_id\": [\"ami-fce3c696\" ], \"bound_iam_instance_profile_arn\": [\n" +
-                "  \"arn:aws:iam::877677878:instance-profile/exampleinstanceprofile\" ], \"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\" ], " +
-                "\"bound_vpc_id\": [    \"vpc-2f09a348\"], \"bound_subnet_id\": [ \"subnet-1122aabb\"],\"bound_region\": [\"us-east-2\"]\" ]}";
+        String responseBody="{\n" +"\n" + "\t\"auth_type\": \"ec2\",\n" + "\t\"bound_account_id\": [\"1234567890123\"],\n" + "\t\"bound_ami_id\": [\"ami-fce3c696\"],\n" + "\t\"bound_iam_instance_profile_arn\": [\"arn:aws:am::877677878:instance-profile/exampleinstanceprofile\"],\n" + "\t\"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\"],\n" + "\t\"bound_vpc_id\": [\"vpc-2f09a348\"],\n" + "\t\"bound_subnet_id\": [\"subnet-1122aabb\"],\n" + "\t\"bound_region\": [\"us-east-2\\\"]\"]\n" + "}";
         Response readResponse = getMockResponse(HttpStatus.OK, true, responseBody);
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
