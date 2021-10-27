@@ -1671,27 +1671,27 @@ public class SelfSupportServiceTest {
 
     @Test
     public void test_listSafesAssociatedWithAppRole_successfully() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(false);
         String roleName = "myvaultapprole42";
 
         ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK)
                 .body("{messages\": [\"[sharedsafe, denysafe, coolsafe]\"]}");
 
-        when(appRoleService.listAppRoleEntityAssociations(roleName, token)).thenReturn(expectedResponse);
+        when(appRoleService.listAppRoleEntityAssociations(roleName, tkn)).thenReturn(expectedResponse);
         assertEquals(selfSupportService.listAppRoleEntityAssociations(roleName, userDetails), expectedResponse);
     }
 
     @Test
     public void test_listSafesAssociatedWithAppRole_successfully_as_admin() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(true);
         String roleName = "myvaultapprole42";
 
         ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.OK)
                 .body("{messages\": [\"[sharedsafe, denysafe, coolsafe]\"]}");
 
-        when(appRoleService.listAppRoleEntityAssociations(roleName, token)).thenReturn(expectedResponse);
+        when(appRoleService.listAppRoleEntityAssociations(roleName, tkn)).thenReturn(expectedResponse);
         assertEquals(selfSupportService.listAppRoleEntityAssociations(roleName, userDetails), expectedResponse);
     }
 

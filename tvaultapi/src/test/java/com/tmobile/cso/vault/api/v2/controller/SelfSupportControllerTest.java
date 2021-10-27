@@ -717,8 +717,9 @@ public class SelfSupportControllerTest {
         UserDetails userDetails = getMockUser(false);
         when(selfSupportService.updateAppRole(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AppRole.class), eq(userDetails))).thenReturn(responseEntityExpected);
 
+        String tkn = "vault-token";
         mockMvc.perform(MockMvcRequestBuilders.put("/v2/ss/approle").requestAttr("UserDetails", userDetails)
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
+                .header(tkn, "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8")
                 .content(inputJson))
                 .andExpect(status().isOk())
