@@ -266,16 +266,11 @@ public class AWSIAMAuthServiceTest {
         awsiamRole.setResolve_aws_unique_ids(true);
         awsiamRole.setRole("mytestawsrole");
 
-        String jsonStr = "{\"auth_type\": \"iam\",\"bound_iam_principal_arn\":" +
-                " [\"arn:aws:iam::123456789012:user/tst\"],\"policies\": " +
-                "[\"string\"],\"resolve_aws_unique_ids\": true,\"role\": \"mytestawsrole\"}";
+        String jsonStr = "{\"auth_type\": \"iam\",\"bound_iam_principal_arn\":" + " [\"arn:aws:iam::123456789012:user/tst\"],\"policies\": " + "[\"string\"],\"resolve_aws_unique_ids\": true,\"role\": \"mytestawsrole\"}";
         Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
         Response updateResponse = getMockResponse(HttpStatus.OK, true, "{\"messages\":[\"AWS Role updated \"]}");
 
-        String jsonGetStr = "{\"auth_type\": \"iam\",\"bound_ami_id\": [\"ami-fce3c696\"],\"role_tag\": \"\", " +
-                "[\"\\\"[prod\", \"dev\\\"]\" ],\"bound_iam_principal_arn\": [],\"bound_iam_role_arn\":" +
-                "[ \"arn:aws:iam::8987887:role/test-role\"],\"max_ttl\": 0,\"disallow_reauthentication\": " +
-                "false,\"allow_instance_migration\": false,\"resolve_aws_unique_ids\":false}";
+        String jsonGetStr="{\n" + "\t\"auth_type\": \"iam\",\n" + "\t\"bound_ami_id\": [\"ami-fce3c696\"],\n" + "\t\"role_tag\": [\"\\\\\\\"[prod\\\", \\\"dev\\\\\\\"]\"],\n" + "\t\"bound_iam_principal_arn\": [],\n" + "\t\"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\"],\n" + "\t\"max_ttl\": 0,\n" + "\t\"disallow_reauthentication\": false,\n" + "\t\"allow_instance_migration\": false,\n" + "\t\"resolve_aws_unique_ids\": false\n" + "}";
         Response awsIamResponse = getMockResponse(HttpStatus.OK, true, jsonGetStr);
 
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AWS Role updated \"]}");
@@ -359,5 +354,75 @@ public class AWSIAMAuthServiceTest {
         when(reqProcessor.process(eq("/auth/aws/iam/roles/update"),Mockito.any(),eq(token))).thenReturn(responsemock);
         Response response = awsIamAuthService.configureAWSIAMRole(roleName, policies, token);
         assertEquals(HttpStatus.NO_CONTENT, response.getHttpstatus());
+    }
+    @Test
+    public void test_updateIAMRole_failure() {
+        String sampletok = "5P.DrOhsy4ig8L3EpsJZSLAMg";
+        AWSIAMRole awsiamRole = new AWSIAMRole();
+        awsiamRole.setAuth_type("iam");
+        String[] arns = {"arn:aws:iam::123456789012:user/tst"};
+        awsiamRole.setBound_iam_principal_arn(arns);
+        String[] policies = {"default"};
+        awsiamRole.setPolicies(policies);
+        awsiamRole.setResolve_aws_unique_ids(true);
+        awsiamRole.setRole("mytestawsrole");
+
+        String jsonStr = "{\"auth_type\": \"iam\",\"bound_iam_principal_arn\":" + " [\"arn:aws:iam::123456789012:user/tst\"],\"policies\": " +  "[\"string\"],\"resolve_aws_unique_ids\": true,\"role\": \"mytestawsrole\"}";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response updateResponse = getMockResponse(HttpStatus.OK, true, "{\"messages\":[\"AWS Role updated \"]}");
+
+
+        String jsonGetStr = "{\"auth_type\": \"iam\",\"bound_ami_id\": [\"ami-fce3c696\"],\"role_tag\": \"\", " + "[\"\\\"[prod\", \"dev\\\"]\" ],\"bound_iam_principal_arn\": [],\"bound_iam_role_arn\":" + "[ \"arn:aws:iam::8987887:role/test-role\"],\"max_ttl\": 0,\"disallow_reauthentication\": " + "false,\"allow_instance_migration\": false,\"resolve_aws_unique_ids\":false}";
+        Response awsIamResponse = getMockResponse(HttpStatus.OK, true, jsonGetStr);
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AWS Role updated \"]}");
+
+        when(JSONUtil.getJSON(awsiamRole)).thenReturn(jsonStr);
+        when(reqProcessor.process("/auth/aws/iam/roles","{\"role\":\"mytestawsrole\"}",sampletok)).thenReturn(awsIamResponse);
+        when(reqProcessor.process("/auth/aws/roles/delete",jsonStr,sampletok)).thenReturn(response);
+        when(reqProcessor.process("/auth/aws/iam/roles/update",jsonStr,sampletok)).thenReturn(response);
+        when(ControllerUtil.updateMetaDataOnConfigChanges(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(updateResponse);
+        try {
+            when(ControllerUtil.areAWSIAMRoleInputsValid(awsiamRole)).thenReturn(true);
+            ResponseEntity<String> responseEntity = awsIamAuthService.updateIAMRole(sampletok, awsiamRole);
+        } catch (TVaultValidationException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    @Test
+    public void test_updateIAMRole_failuree() {
+        String sampletok = "5P.DrOhsy4ig8L3EpsJZSLAMg";
+        AWSIAMRole awsiamRole = new AWSIAMRole();
+        awsiamRole.setAuth_type("iam");
+        String[] arns = {"arn:aws:iam::123456789012:user/tst"};
+        awsiamRole.setBound_iam_principal_arn(arns);
+        String[] policies = {"default"};
+        awsiamRole.setPolicies(policies);
+        awsiamRole.setResolve_aws_unique_ids(true);
+        awsiamRole.setRole("mytestawsrole");
+
+        String jsonStr = "{\"auth_type\": \"iam\",\"bound_iam_principal_arn\":" + " [\"arn:aws:iam::123456789012:user/tst\"],\"policies\": " + "[\"string\"],\"resolve_aws_unique_ids\": true,\"role\": \"mytestawsrole\"}";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response updateResponse = getMockResponse(HttpStatus.OK, true, "{\"messages\":[\"AWS Role updated \"]}");
+
+
+        String jsonGetStr = "{\"auth_type\": \"iam\",\"bound_ami_id\": [\"ami-fce3c696\"],\"role_tag\": \"\", " + "[\"\\\"[prod\", \"dev\\\"]\" ],\"bound_iam_principal_arn\": [],\"bound_iam_role_arn\":" + "[ \"arn:aws:iam::8987887:role/test-role\"],\"max_ttl\": 0,\"disallow_reauthentication\": " + "false,\"allow_instance_migration\": false,\"resolve_aws_unique_ids\":false}";
+        Response awsIamResponse = getMockResponse(HttpStatus.OK, true, jsonGetStr);
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AWS Role updated \"]}");
+
+        when(JSONUtil.getJSON(awsiamRole)).thenReturn(jsonStr);
+        when(reqProcessor.process("/auth/aws/iam/roles", "{\"role\":\"mytestawsrole\"}", sampletok)).thenReturn(response);
+        when(reqProcessor.process("/auth/aws/roles/delete", jsonStr, sampletok)).thenReturn(response);
+        when(reqProcessor.process("/auth/aws/iam/roles/update", jsonStr, sampletok)).thenReturn(response);
+        when(ControllerUtil.updateMetaDataOnConfigChanges(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(updateResponse);
+        try {
+            when(ControllerUtil.areAWSIAMRoleInputsValid(awsiamRole)).thenReturn(true);
+            ResponseEntity<String> responseEntity = awsIamAuthService.updateIAMRole(sampletok, awsiamRole);
+        } catch (TVaultValidationException e) {
+            e.printStackTrace();
+        }
     }
 }

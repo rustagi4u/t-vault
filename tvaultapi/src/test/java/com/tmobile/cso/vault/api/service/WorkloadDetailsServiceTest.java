@@ -444,5 +444,17 @@ public class WorkloadDetailsServiceTest {
         Response actualResponse = workloadDetailsService.udpateApplicationMetadata(token, tmoAppMetadataDetails, tmoAppMetadataDetailsCLM);
         assertEquals(expectedResponse.getHttpstatus(), actualResponse.getHttpstatus());
     }
+    @Test
+    public void test_udpateApplicationMetadata_failure() throws Exception {
+        List<String> certList = new ArrayList<>();
+        certList.add("cert1.company.com");
+        TMOAppMetadataDetails tmoAppMetadataDetails = new TMOAppMetadataDetails("other", "owner@company.com", "other", "lead@company.com", certList, new ArrayList<>(), true);
+        TMOAppMetadataDetails tmoAppMetadataDetailsCLM = new TMOAppMetadataDetails("other", "owner1@company.com", "other", "lead@company.com", certList, new ArrayList<>(), true);
 
+        Response expectedResponse = new Response();
+        expectedResponse.setHttpstatus(HttpStatus.NO_CONTENT);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(expectedResponse);
+        Response actualResponse = workloadDetailsService.udpateApplicationMetadata(token, tmoAppMetadataDetails, tmoAppMetadataDetailsCLM);
+        assertEquals(expectedResponse.getHttpstatus(), actualResponse.getHttpstatus());
+    }
 }
