@@ -346,12 +346,41 @@ const ContactUs = styled.p`
     width: 80%;
   }
 `;
+const MessageBannerWrap = styled.div`
+  background-color: #30323f;
+  border-width: 3px;
+  vertical-align: middle;
+  align-items: center;
+  border-radius: 25px;
+  padding: 5px 0 5px 0;
+  width: 100%;
+  margin-bottom: 10px;
+
+  ${small} {
+    width: 100%;
+  }
+`;
+
+const MessageBanner = styled.p`
+  line-height: 0.4rem;
+  font-size: 1.4rem;
+  margin-left: 70px;
+  font-color: #fff;
+  width: 82%;
+  @media (max-width: 1024px) {
+    width: 75%;
+  }
+  ${small} {
+    width: 100%;
+  }
+`;
 
 const LoginPage = () => {
   const [response, setResponse] = useState({ status: 'home' });
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
+  const [bannerMessageSsl, setBannerMessageSsl] = useState('');
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
 
@@ -440,6 +469,12 @@ const LoginPage = () => {
         });
     }
     // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    axios.get(`${configUrl.baseUrl}/safes/message`).then(async (res) => {
+      setBannerMessageSsl(res.data.data.message2);
+    });
   }, []);
 
   const onDashboardClicked = () => {
@@ -557,6 +592,14 @@ const LoginPage = () => {
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
                   <LoginHeaderTextWrap LoginHeaderText={LoginHeaderText} />
+                </SpeakerText>
+              </HeaderWrap>
+              <HeaderWrap>
+                <SpeakerText>
+                  <SpeakerWrap src={Speaker} />
+                  <MessageBannerWrap>
+                    <MessageBanner>{bannerMessageSsl}</MessageBanner>
+                  </MessageBannerWrap>
                 </SpeakerText>
               </HeaderWrap>
               <FirstRow rowCommonCss={rowCommonCss}>
