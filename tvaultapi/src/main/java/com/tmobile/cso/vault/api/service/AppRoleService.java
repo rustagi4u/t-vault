@@ -1888,4 +1888,140 @@ public class  AppRoleService {
 		}
 		return reqProcessor.process(CREATEPATH,approleConfigJson,token);
 	}
+
+	/**
+	 * Retrieves the list of entities that are associated to this AppRole.
+	 * Entities include safes, services accounts, and certs.
+	 * @param roleName - The name of the AppRole to get the list of associations for
+	 * @param token
+	 * @return ResponseEntity
+	 */
+	public ResponseEntity<String> listAppRoleEntityAssociations(String roleName, String token) {
+		Response readResponse = reqProcessor.process(READPATH,ROLENAMESTR + roleName + "\"}",token);
+		Set<String> safes = new HashSet<>();
+		Set<String> iamSvcAccs = new HashSet<>();
+		Set<String> adSvcAccs = new HashSet<>();
+		Set<String> azureSvcAccs = new HashSet<>();
+		Set<String> certs = new HashSet<>();
+		if (HttpStatus.OK.equals(readResponse.getHttpstatus())) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, READ_APPROLE).
+				put(LogMessage.MESSAGE, READCOMPLETESTR).
+				put(LogMessage.STATUS, readResponse.getHttpstatus().toString()).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+
+			Set<String>[] entityResponse = getEntityAssociationsFromResponse(readResponse, roleName, safes,
+					iamSvcAccs, adSvcAccs, azureSvcAccs, certs);
+
+			if (entityResponse == null) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APPROLENONEXISTSTR);
+			} else {
+				safes = entityResponse[0];
+				iamSvcAccs = entityResponse[1];
+				adSvcAccs = entityResponse[2];
+				azureSvcAccs = entityResponse[3];
+				certs = entityResponse[4];
+			}
+		} else if (HttpStatus.NOT_FOUND.equals(readResponse.getHttpstatus())) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, READ_APPROLE).
+				put(LogMessage.MESSAGE, READCOMPLETESTR).
+				put(LogMessage.STATUS, readResponse.getHttpstatus().toString()).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APPROLENONEXISTSTR);
+		}
+		return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[{\"safes\":\"" + safes + "\"}," +
+				"{\"iamsvcaccs\":\"" + iamSvcAccs + "\"},{\"adsvcaccs\":\"" + adSvcAccs +"\"},{\"azuresvcaccs\":\"" + azureSvcAccs + "\"}," +
+				"{\"certs\":\"" + certs + "\"}]}");
+	}
+
+	/**
+	 * Helper method to parse out array of entities from the AppRole read response.
+	 * Includes safes, service accounts, and certs associated to the AppRole.
+	 * @param readResponse - The response obtained by reading the AppRole
+	 * @param roleName - The name of the AppRole
+	 * @param safes
+	 * @param iamSvcAccs
+	 * @param adSvcAccs
+	 * @param azureSvcAccs
+	 * @param certs
+	 * @return Set
+	 */
+	private Set<String>[] getEntityAssociationsFromResponse(Response readResponse, String roleName,
+							Set<String> safes, Set<String> iamSvcAccs, Set<String> adSvcAccs, Set<String> azureSvcAccs, Set<String> certs) {
+		Map<String, Object> responseMap = ControllerUtil.parseJson(readResponse.getResponse());
+
+		if (responseMap.isEmpty()) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, READROLEID).
+				put(LogMessage.MESSAGE, String.format("Reading details for AppRole [%s] failed.", roleName)).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+			return null;
+		}
+
+		Map<String, Object> responseDataMap = (Map<String, Object>) responseMap.get("data");
+		if (!responseDataMap.isEmpty()) {
+			List<String> policies = (ArrayList<String>) responseDataMap.get("policies");
+			if (CollectionUtils.isNotEmpty(policies)) {
+				for (String policy : policies) {
+					if (policy.startsWith(TVaultConstants.USERS, 2)
+							|| policy.startsWith(TVaultConstants.SHARED, 2)
+							|| policy.startsWith(TVaultConstants.APPS, 2)) {
+						safes.add(getPartOfStringAfterCertainCharacter(policy, 2, '_'));
+					} else if (policy.startsWith(TVaultConstants.IAM_SVC_ACC_PATH_PREFIX, 2)) {
+						iamSvcAccs.add(getPartOfStringAfterCertainCharacter(policy, 3, '_'));
+					} else if (policy.startsWith(TVaultConstants.SVC_ACC_PATH_PREFIX, 2)) {
+						adSvcAccs.add(getPartOfStringAfterCertainCharacter(policy, 2, '_'));
+					} else if (policy.startsWith(TVaultConstants.AZURE_SVC_ACC_PREFIX, 2)) {
+						azureSvcAccs.add(getPartOfStringAfterCertainCharacter(policy, 2, '_'));
+					} else if (policy.startsWith(TVaultConstants.CERT_POLICY_PREFIX, 2)) {
+						certs.add(getPartOfStringAfterCertainCharacter(policy, 2, '_'));
+					}
+				}
+			} else {
+				log.warn(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, READROLEID).
+					put(LogMessage.MESSAGE, String.format("No policies were found for AppRole [%s]", roleName)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			}
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, READROLEID).
+				put(LogMessage.MESSAGE, String.format("Response map was empty for AppRole [%s]", roleName)).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+			return null;
+		}
+
+		return new Set[] { safes, iamSvcAccs, adSvcAccs, azureSvcAccs, certs };
+	}
+
+	/**
+	 * Calls recursive method to get the part of a String after n instances of a given character.<br><br>
+	 * Ex: For the String "this_is_a_test" with nOccurencesToSkip = 2 and charToSkip = '_' it returns
+	 * "a_test" because that's the part of the String following the second '_' character.
+	 * @return String
+	 */
+	private String getPartOfStringAfterCertainCharacter(String str, int nOccurrencesToSkip, char charToSkip) {
+		int indexAtNthOccurence = getNthIndexOfGivenCharacterInString(str, nOccurrencesToSkip, charToSkip, 0);
+		return str.substring(indexAtNthOccurence + 1);
+	}
+
+	private int getNthIndexOfGivenCharacterInString(String str, int nOccurrencesToSkip, char charToSkip, int startingIndex) {
+		if (nOccurrencesToSkip == 1) {
+			return str.indexOf(charToSkip) + startingIndex;
+		} else {
+			return getNthIndexOfGivenCharacterInString(str.substring(str.indexOf(charToSkip) + 1),
+					nOccurrencesToSkip - 1, charToSkip, startingIndex + str.indexOf(charToSkip) + 1);
+		}
+	}
 }

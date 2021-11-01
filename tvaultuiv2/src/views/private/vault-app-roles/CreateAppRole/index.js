@@ -570,7 +570,8 @@ const CreateAppRole = (props) => {
   };
 
   const onSelected = (e, val) => {
-    const sharedToUserNTID = val?.split(', ')[2];
+    const splitValues = val?.split(', ');
+    const sharedToUserNTID = (splitValues[0].toLowerCase().includes('@sprint.com')) ? splitValues[1] : splitValues[2];
     setSharedToUserSelected(true);
     setSharedTo(sharedToUserNTID);
   };

@@ -717,13 +717,33 @@ public class SelfSupportControllerTest {
         UserDetails userDetails = getMockUser(false);
         when(selfSupportService.updateAppRole(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AppRole.class), eq(userDetails))).thenReturn(responseEntityExpected);
 
+        String tkn = "vault-token";
         mockMvc.perform(MockMvcRequestBuilders.put("/v2/ss/approle").requestAttr("UserDetails", userDetails)
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
+                .header(tkn, "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8")
                 .content(inputJson))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(responseMessage)));
     }
+
+    @Test
+    public void test_listSafesAssociatedWithAppRole() throws Exception {
+        String responseMessage = "{messages\": [\"[sharedsafe, denysafe, coolsafe]\"]}";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        userDetails.setUsername("testuser");
+        userDetails.setAdmin(false);
+        userDetails.setClientToken(token);
+        userDetails.setSelfSupportToken(token);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+
+        when(selfSupportService.listAppRoleEntityAssociations(roleName, userDetails)).thenReturn(responseEntityExpected);
+        mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle/list/associations/" + roleName)
+                .header("vault-token", token)
+                .header("Content-Type", "application/json;charset=UTF-8"))
+                .andExpect(status().isOk());
+    }
+
     @Test
     public void test_listRoles() throws Exception {
 
