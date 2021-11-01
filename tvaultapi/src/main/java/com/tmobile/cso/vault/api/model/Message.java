@@ -14,7 +14,6 @@ public class Message {
 
 	public Message() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 
@@ -22,9 +21,6 @@ public class Message {
 		super();
 		this.details = details;
 	}
-
-	//@ApiModelProperty(example="{\n" + "     \"message1\":\"value1\",\r\n" +
-	//		  "    \"message2\":\"value2\"\n" + "  }", position=2, required=true)
 
 	  @ApiModelProperty(example="{\r\n" +
 	            "     \"message1\":\"value1\",\r\n" +

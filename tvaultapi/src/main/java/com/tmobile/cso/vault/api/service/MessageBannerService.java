@@ -43,15 +43,15 @@ public class MessageBannerService {
 
 	private static Logger log = LogManager.getLogger(MessageBannerService.class);
 
-	public ResponseEntity<String> write(String token, Message message) {
-		if (!isAuthorizedToGetSecretCount(token)) {
+	public ResponseEntity<String> writeBannerMessage(String token, Message message) {
+		if (!isTokenValid(token)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "getSecretCount")
 					.put(LogMessage.MESSAGE, "Access Denied: No enough permission to access this API")
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
-					.body("{\"errors\":[\"Access Denied: No enough permission to access this API\"]}");
+					.body("{\"errors\":[\"Access Denied: Not enough permission to access this API\"]}");
 		}
 
 		ObjectMapper objMapper = new ObjectMapper();
@@ -63,12 +63,12 @@ public class MessageBannerService {
 		} catch (JsonProcessingException e) {
 		}
 
-		String path = TVaultConstants.UIMES_SAFES_METADATA;
+		String path = TVaultConstants.UI_BANNER_MESSAGE_PATH;
 		String writeJson = "{\"path\":\"" + path + "\",\"data\":" + metadataJson + "}";
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
-				.put(LogMessage.ACTION, "Write message")
+				.put(LogMessage.ACTION, "Write ui banner message")
 				.put(LogMessage.MESSAGE, String.format("Trying to write message [%s]", path))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).build()));
 		System.out.println(path);
@@ -125,10 +125,10 @@ public class MessageBannerService {
 		}
 	}
 
-	public ResponseEntity<String> readFromVault() {
+	public ResponseEntity<String> readBannerMessage() {
 		String token = tokenUtils.getSelfServiceToken();
 
-		String path = TVaultConstants.UIMES_SAFES_METADATA;
+		String path = TVaultConstants.UI_BANNER_MESSAGE_PATH;
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
@@ -145,9 +145,9 @@ public class MessageBannerService {
 
 	}
 	
-	public ResponseEntity<String> updateMessage(String token, Message message){
+	public ResponseEntity<String> updateBannerMessage(String token, Message message){
 		
-		if (!isAuthorizedToGetSecretCount(token)) {
+		if (!isTokenValid(token)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "getSecretCount")
@@ -165,7 +165,7 @@ public class MessageBannerService {
 		} catch (JsonProcessingException e) {
 		}
 
-		String path = TVaultConstants.UIMES_SAFES_METADATA;
+		String path = TVaultConstants.UI_BANNER_MESSAGE_PATH;
 		String writeJson = "{\"path\":\"" + path + "\",\"data\":" + metadataJson + "}";
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
@@ -226,7 +226,7 @@ public class MessageBannerService {
 		}
 	}
 
-	private boolean isAuthorizedToGetSecretCount(String token) {
+	private boolean isTokenValid(String token) {
 		ObjectMapper objectMapper = new ObjectMapper();
 		List<String> currentPolicies;
 		Response response = reqProcessor.process("/auth/tvault/lookup", "{}", token);
