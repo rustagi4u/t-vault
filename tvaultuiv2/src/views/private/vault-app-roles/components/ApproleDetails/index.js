@@ -256,7 +256,7 @@ const AppRoleDetails = (props) => {
               approle: appRoleDetail?.name,
               roleId: res.data.role_id,
               owner: res.data.appRoleMetadata.data.createdBy,
-              sharedTo: res.data.appRoleMetadata.data.sharedTo.toString().replaceAll(/,/g, ' | '),
+              sharedTo: res.data.appRoleMetadata.data.sharedTo?.toString()?.replaceAll(/,/g, ' | '),
               secretID: secretIdInfo?.secret_id,
               accessorID: secretIdInfo?.secret_id_accessor,
             },
