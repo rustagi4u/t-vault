@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -3381,4 +3382,93 @@ public class SafesServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
 
     }
+    @Test
+    public void testcreateSafelengthmorethan3() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01/sampletext",safeBasicDetails);
+        String jsonStr = "{ \"data\": {\"description\": \"My first safe\", \"name\": \"mysafe01\", \"owner\": \"youremail@yourcompany.com\"}, \"path\": \"shared/mysafe01\"}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe03\",\"data\":{\"name\":\"mysafe03\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.converSDBInputsToLowerCase(JSONUtil.getJSON(safe))).thenReturn(jsonStr);
+        when(ControllerUtil.parseJson(jsonStr)).thenReturn(reqparams);
+
+        when(ControllerUtil.areSDBInputsValid(safe)).thenReturn(true);
+        when(JSONUtil.getJSON(safe)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(any())).thenReturn(true);
+        when(reqProcessor.process("/sdb/create",jsonStr,sampletok)).thenReturn(responseNoContent);
+        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/write",metadatajson,sampletok)).thenReturn(responseNoContent);
+        when(reqProcessor.process(eq("/access/update"),any(),eq(sampletok))).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.createSafe(sampletok, safe);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+    }
+    @Test
+    public void testcreateSafeinvalid() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01/sampletext",safeBasicDetails);
+        String jsonStr = "{ \"data\": {\"description\": \"My first safe\", \"name\": \"mysafe01\", \"owner\": \"youremail@yourcompany.com\"}, \"path\": \"shared/mysafe01\"}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe03\",\"data\":{\"name\":\"mysafe03\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        Response responseNoContent = getMockResponse(HttpStatus.OK, true, "");
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.converSDBInputsToLowerCase(JSONUtil.getJSON(safe))).thenReturn(jsonStr);
+        when(ControllerUtil.parseJson(jsonStr)).thenReturn(reqparams);
+
+        when(ControllerUtil.areSDBInputsValid(safe)).thenReturn(true);
+        when(JSONUtil.getJSON(safe)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(any())).thenReturn(true);
+        when(reqProcessor.process("/sdb/create",jsonStr,sampletok)).thenReturn(responseNoContent);
+        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/write",metadatajson,sampletok)).thenReturn(responseNoContent);
+        when(reqProcessor.process(eq("/access/update"),any(),eq(sampletok))).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.createSafe(sampletok, safe);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+    }
+    @Test
+    public void testcreateSafeinputinvalid() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+        String jsonStr = "{ \"data\": {\"description\": \"My first safe\", \"name\": \"mysafe01\", \"owner\": \"youremail@yourcompany.com\"}, \"path\": \"shared/mysafe01\"}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe03\",\"data\":{\"name\":\"mysafe03\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values for creating safe\"]}");
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.converSDBInputsToLowerCase(JSONUtil.getJSON(safe))).thenReturn(jsonStr);
+        when(ControllerUtil.parseJson(jsonStr)).thenReturn(reqparams);
+
+        when(ControllerUtil.areSDBInputsValid(safe)).thenReturn(false);
+        when(JSONUtil.getJSON(safe)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(any())).thenReturn(true);
+        when(reqProcessor.process("/sdb/create",jsonStr,sampletok)).thenReturn(responseNoContent);
+        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/write",metadatajson,sampletok)).thenReturn(responseNoContent);
+        when(reqProcessor.process(eq("/access/update"),any(),eq(sampletok))).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.createSafe(sampletok, safe);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
 }
