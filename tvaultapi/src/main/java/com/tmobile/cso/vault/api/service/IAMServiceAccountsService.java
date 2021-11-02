@@ -5475,8 +5475,7 @@ public class  IAMServiceAccountsService {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
-			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, "getFolderKeyIndexForAccessKey").
 					put(LogMessage.MESSAGE, String.format ("Failed to find the FolderKeyIndex for IAM Service Account [%s] and accessKeyId [%s]", uniqueIAMSvcaccName, accessKeyId)).

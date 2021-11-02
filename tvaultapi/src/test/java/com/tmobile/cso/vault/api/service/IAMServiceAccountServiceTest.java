@@ -5758,4 +5758,134 @@ public class IAMServiceAccountServiceTest {
 
 
 	}
+	@Test
+	public void testAddGroupToIAMSvcAcc_acessinvalid() {
+		IAMServiceAccountGroup iamSvcAccGroup = new IAMServiceAccountGroup("testaccount", "group1", "owner", "1234567");
+		userDetails = getMockUser(false);
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body("{\"errors\":[\"Invalid value specified for access. Valid values are read, write, deny\"]}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+		String[] policies = { "o_iamsvcacc_1234567_testaccount" };
+		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
+		Response groupResp = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"group1\"}", token)).thenReturn(groupResp);
+		ReflectionTestUtils.setField(iamServiceAccountsService, "vaultAuthMethod", "ldap");
+		ObjectMapper objMapper = new ObjectMapper();
+		String responseJson = groupResp.getResponse();
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			resList.add("w_shared_mysafe01");
+			resList.add("w_shared_mysafe02");
+			when(ControllerUtil.getPoliciesAsListFromJson(objMapper, responseJson)).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.addGroupToIAMServiceAccount(token,
+				iamSvcAccGroup, userDetails, false);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+	@Test
+	public void testAddGroupToIAMSvcAcc_userpass() {
+		IAMServiceAccountGroup iamSvcAccGroup = new IAMServiceAccountGroup("testaccount", "group1", "write", "1234567");
+		userDetails = getMockUser(false);
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body("{\"errors\":[\"This operation is not supported for Userpass authentication. \"]}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+		String[] policies = { "o_iamsvcacc_1234567_testaccount" };
+		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
+		Response groupResp = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"group1\"}", token)).thenReturn(groupResp);
+		ReflectionTestUtils.setField(iamServiceAccountsService, "vaultAuthMethod", "userpass");
+		ObjectMapper objMapper = new ObjectMapper();
+		String responseJson = groupResp.getResponse();
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			resList.add("w_shared_mysafe01");
+			resList.add("w_shared_mysafe02");
+			when(ControllerUtil.getPoliciesAsListFromJson(objMapper, responseJson)).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.addGroupToIAMServiceAccount(token,
+				iamSvcAccGroup, userDetails, false);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+	@Test
+	public void test_addUserToIAMServiceAccount_invalid_permission() {
+
+		String iamServiceAccountName = "svc_vault_test5";
+		String sampletok = "123123123123";
+		String awsAccountId = "1234567890";
+		String path = "metadata/iamsvcacc/1234567890_svc_vault_test5";
+		String iamSecret = "abcdefgh";
+		String accessKeyId = "testaccesskey";
+		String [] policies = {"o_iamsvcacc_1234567890_svc_vault_test5"};
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
+		String iamMetaDataStrActivated = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": true, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
+
+		Response metaResponse = getMockResponse(HttpStatus.OK, true, iamMetaDataStr);
+		Response metaActivatedResponse = getMockResponse(HttpStatus.OK, true, iamMetaDataStrActivated);
+		when(tokenUtils.getSelfServiceToken()).thenReturn(sampletok);
+		when(policyUtils.getCurrentPolicies(sampletok, userDetails.getUsername(), userDetails)).thenReturn(policies);
+
+		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(sampletok))).thenReturn(metaActivatedResponse);
+
+		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", sampletok)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		IAMServiceAccountSecret iamServiceAccountSecret = new IAMServiceAccountSecret(iamServiceAccountName, accessKeyId, iamSecret, 1609754282000L, awsAccountId, "", "");
+
+		when(iamServiceAccountUtils.rotateIAMSecret(Mockito.any())).thenReturn(iamServiceAccountSecret);
+		when(iamServiceAccountUtils.writeIAMSvcAccSecret(sampletok, "iamsvcacc/1234567890_svc_vault_test5/secret_1", iamServiceAccountName, iamServiceAccountSecret)).thenReturn(true);
+		when(iamServiceAccountUtils.updateIAMSvcAccNewAccessKeyIdInMetadata(eq(sampletok), eq(awsAccountId), eq(iamServiceAccountName), eq(accessKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(iamServiceAccountUtils.updateActivatedStatusInMetadata(sampletok, iamServiceAccountName, awsAccountId)).thenReturn(responseNoContent);
+
+
+		// Add User to Service Account
+		Response userResponse = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", sampletok)).thenReturn(userResponse);
+
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(sampletok)))
+				.thenReturn(ldapConfigureResponse);
+		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+
+		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid value specified for access. Valid values are read, write, deny\"]}");
+		IAMServiceAccountUser iamServiceAccountUser =  new IAMServiceAccountUser(iamServiceAccountName, "normaluser", "owner",awsAccountId);
+
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/iamsvcacc/1234567_testaccount\"}", sampletok)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
+
+		ResponseEntity<String> actualResponse = iamServiceAccountsService.addUserToIAMServiceAccount(sampletok, userDetails, iamServiceAccountUser, false);
+		assertEquals(expectedResponse, actualResponse);
+	}
+
+
 }
