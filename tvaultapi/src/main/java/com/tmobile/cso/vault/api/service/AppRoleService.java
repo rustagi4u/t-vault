@@ -49,7 +49,6 @@ import com.tmobile.cso.vault.api.model.AppRoleMetadata;
 import com.tmobile.cso.vault.api.model.AppRoleMetadataDetails;
 import com.tmobile.cso.vault.api.model.AppRoleNameSecretId;
 import com.tmobile.cso.vault.api.model.AppRoleSecretData;
-import com.tmobile.cso.vault.api.model.CertificateApprole;
 import com.tmobile.cso.vault.api.model.SafeAppRoleAccess;
 import com.tmobile.cso.vault.api.model.UserDetails;
 import com.tmobile.cso.vault.api.process.RequestProcessor;
@@ -218,7 +217,7 @@ public class  AppRoleService {
 		boolean isDuplicate = false;
 		ResponseEntity<String> appRolesListResponseEntity = readAppRoles(token);
 		String appRolesListRes = appRolesListResponseEntity.getBody();
-		Map<String,Object> appRolesList = (Map<String,Object>) ControllerUtil.parseJson(appRolesListRes);
+		Map<String,Object> appRolesList = ControllerUtil.parseJson(appRolesListRes);
 		ArrayList<String> existingAppRoles = (ArrayList<String>) appRolesList.get("keys");
 		if (!CollectionUtils.isEmpty(existingAppRoles)) {
 			for (String existingAppRole: existingAppRoles) {
@@ -248,19 +247,19 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: no permission to read this AppRole\"]}");
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READ_APPROLE).
 			      put(LogMessage.MESSAGE, String.format("Start trying to read AppRole [%s].", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		Response response = reqProcessor.process(READPATH,ROLENAMESTR+rolename+"\"}",token);
 		if(HttpStatus.OK.equals(response.getHttpstatus())) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READ_APPROLE).
 				      put(LogMessage.MESSAGE, READCOMPLETESTR).
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 
 			populateResponseWithSharedTo(token, rolename, response);
@@ -269,21 +268,21 @@ public class  AppRoleService {
 		}
 		else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READ_APPROLE).
 				      put(LogMessage.MESSAGE, READCOMPLETESTR).
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body(APPROLENONEXISTSTR);
 		}
 		else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION,READ_APPROLE ).
 				      put(LogMessage.MESSAGE, READCOMPLETESTR).
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 		}
@@ -303,20 +302,20 @@ public class  AppRoleService {
 			sharedTo = appRoleMetadata.getAppRoleMetadataDetails().getSharedTo();
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				put(LogMessage.ACTION, "populateResponseWithSharedTo").
 				put(LogMessage.MESSAGE, "Failed to populate response with sharedTo users because unable fetch metadata.").
-				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
 		}
 
 		if (!CollectionUtils.isEmpty(sharedTo)) {
-			String newResponse = response.getResponse().replace("}}", ",\"shared_to\":[");
+			StringBuilder newResponse = new StringBuilder(response.getResponse().replace("}}", ",\"shared_to\":["));
 			for (String sharedToUser : sharedTo) {
-				newResponse += "\"" + sharedToUser + "\",";
+				newResponse.append("\"").append(sharedToUser).append("\",");
 			}
-			newResponse = newResponse.substring(0, newResponse.length() - 1) + "]}}";
-			response.setResponse(newResponse);
+			newResponse = new StringBuilder(newResponse.substring(0, newResponse.length() - 1) + "]}}");
+			response.setResponse(newResponse.toString());
 		}
 	}
 
@@ -326,22 +325,23 @@ public class  AppRoleService {
 	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoles(String token) {
-		Integer offset = null , limit = null;
+		Integer offset = null;
+		Integer limit = null;
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAppRoles").
 			      put(LogMessage.MESSAGE, "Trying to get list of AppRole").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		Response response = reqProcessor.process("/auth/approle/role/list","{}",token);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAppRoles").
 			      put(LogMessage.MESSAGE, "Reading List of AppRoles completed").
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-		if (response!= null && HttpStatus.OK.equals(response.getHttpstatus()) && TVaultConstants.HIDESELFSUPPORTADMINAPPROLE) {
+		if (HttpStatus.OK.equals(response.getHttpstatus()) && TVaultConstants.HIDESELFSUPPORTADMINAPPROLE) {
 			response = ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(response, limit, offset);
 		}
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
@@ -356,25 +356,25 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> listAppRoles(String token,  UserDetails userDetails, Integer limit, Integer offset) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "listAppRoles").
 			      put(LogMessage.MESSAGE, "Trying to get list of AppRole").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-		String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + userDetails.getUsername();
+		String path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + userDetails.getUsername();
 		Response response = null;
 		if (userDetails.isAdmin()) {
-			response = reqProcessor.process("/auth/approle/role/list",PATHSTR+_path+"\"}",token);
+			response = reqProcessor.process("/auth/approle/role/list",PATHSTR+ path +"\"}",token);
 		}
 		else {
-			response = reqProcessor.process("/auth/approles/rolesbyuser/list",PATHSTR+_path+"\"}",userDetails.getSelfSupportToken());
+			response = reqProcessor.process("/auth/approles/rolesbyuser/list",PATHSTR+ path +"\"}",userDetails.getSelfSupportToken());
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "listAppRoles").
 			      put(LogMessage.MESSAGE, "Reading List of AppRoles completed").
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (HttpStatus.OK.equals(response.getHttpstatus())) {
 			if (TVaultConstants.HIDESELFSUPPORTADMINAPPROLE) {
@@ -396,21 +396,21 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> readAppRoleRoleId(String token, String rolename){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION,READ_APPROLE_ID ).
 			      put(LogMessage.MESSAGE, String.format("Trying to read AppRoleId for the role [%s].", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(rolename)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: no permission to read roleID of this AppRole\"]}");
 		}
 		Response response = reqProcessor.process(READPOLEIDPATH,ROLENAMESTR+rolename+"\"}",token);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READ_APPROLE_ID).
 			      put(LogMessage.MESSAGE, "Reading AppRoleId Completed").
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 	}
@@ -424,18 +424,18 @@ public class  AppRoleService {
 		String roleId = null;
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(rolename)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, READROLEID)
 					.put(LogMessage.MESSAGE, "Access denied: no permission to read roleID of this AppRole")
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
 					.build()));
 			return roleId;
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READROLEID).
 			      put(LogMessage.MESSAGE, String.format("Trying to read role_id for [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		Response readResponse = reqProcessor.process(READPOLEIDPATH,ROLENAMESTR+rolename+"\"}",token);
 		Map<String, Object> responseMap = null;
@@ -443,10 +443,10 @@ public class  AppRoleService {
 			responseMap = ControllerUtil.parseJson(readResponse.getResponse());
 			if(responseMap.isEmpty()) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, READROLEID).
 					      put(LogMessage.MESSAGE, READROLEFAILMSG).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return roleId;
 			}
@@ -457,10 +457,10 @@ public class  AppRoleService {
 			return roleId;
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READROLEID).
 			      put(LogMessage.MESSAGE, READROLEFAILMSG).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return roleId;
 	}
@@ -474,18 +474,18 @@ public class  AppRoleService {
 		ArrayList<String> accessorIds = null;
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(rolename)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "readAccessorsId")
 					.put(LogMessage.MESSAGE, "Access denied: no permission to read roleID of this AppRole")
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
 					.build()));
 			return accessorIds;
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAccessorsIds").
 			      put(LogMessage.MESSAGE, String.format("Trying to read accessor_id for [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		Response response = reqProcessor.process("/auth/approle/role/accessors/list",ROLENAMESTR+rolename+"\"}",token);
 		Map<String, Object> responseMap = null;
@@ -493,7 +493,7 @@ public class  AppRoleService {
 			responseMap = ControllerUtil.parseJson(response.getResponse());
 			if(responseMap.isEmpty()) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, "readAccessorsIds").
 					      put(LogMessage.MESSAGE, "Reading accessor_ids for AppRole failed. No accessor_id information available.").
 					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
@@ -504,11 +504,11 @@ public class  AppRoleService {
 			return accessorIds;
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAccessorsOfSecretIds").
 			      put(LogMessage.MESSAGE, READACCESSCOMPLETEMSG).
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return accessorIds;	
 	}
@@ -521,23 +521,23 @@ public class  AppRoleService {
 	 */
 	public AppRoleMetadata readAppRoleMetadata(String token, String rolename) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAppRoleMetadata").
 			      put(LogMessage.MESSAGE,"Reads the metadata associated with an AppRole.").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		AppRoleMetadata appRoleMetadata = null;
-		String _path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + rolename;
-		Response readResponse = reqProcessor.process("/read",PATHSTR+_path+"\"}",token);
+		String path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + rolename;
+		Response readResponse = reqProcessor.process("/read",PATHSTR+ path +"\"}",token);
 		Map<String, Object> responseMap = null;
 		if(HttpStatus.OK.equals(readResponse.getHttpstatus())) {
 			responseMap = ControllerUtil.parseJson(readResponse.getResponse());
 			if(responseMap.isEmpty()) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, "readAppRoleMetadata").
 					      put(LogMessage.MESSAGE, "Reading Metadata for AppRole failed").
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return appRoleMetadata;
 			}
@@ -550,30 +550,30 @@ public class  AppRoleService {
 				appRoleMetadataDetails.setName(rolename);
 				appRoleMetadataDetails.setSharedTo((List<String>) appRoleMetadataMap.get("sharedTo"));
 				appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
-				appRoleMetadata.setPath(_path);
+				appRoleMetadata.setPath(path);
 			}
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, "readAppRoleMetadata").
 				      put(LogMessage.MESSAGE,"Read the metadata associated with an AppRole.").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return appRoleMetadata;
 		}
 		else if (HttpStatus.NOT_FOUND.equals(readResponse.getHttpstatus())) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, "getMetaDataForAppRole").
 				      put(LogMessage.MESSAGE, "Reading Metadata for AppRole failed. AppRole Not found.").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return appRoleMetadata;
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "getMetaDataForAppRole").
 			      put(LogMessage.MESSAGE, "Reading Metadata for AppRole failed").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return appRoleMetadata;
 	}
@@ -586,18 +586,18 @@ public class  AppRoleService {
 	 */
 	public AppRole readAppRoleBasicDetails(String token, String rolename) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAppRoleBasicDetails").
 			      put(LogMessage.MESSAGE,"Start trying  to read AppRole information.").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		AppRole appRole = null;
 		if (TVaultConstants.HIDESELFSUPPORTADMINAPPROLE && Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(rolename)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
-					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "readAppRoleBasicDetails")
 					.put(LogMessage.MESSAGE, "Access denied: Not enough permission to read the AppRole information")
-					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
 					.build()));
 			return appRole;
 		}
@@ -607,10 +607,10 @@ public class  AppRoleService {
 			responseMap = ControllerUtil.parseJson(readResponse.getResponse());
 			if(responseMap.isEmpty()) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, "getAppRole").
 					      put(LogMessage.MESSAGE, "Reading AppRole failed").
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return appRole;
 			}
@@ -635,10 +635,10 @@ public class  AppRoleService {
 			return appRole;
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "getAppRole").
 			      put(LogMessage.MESSAGE, "Reading AppRole failed").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return appRole;
 	}
@@ -669,10 +669,12 @@ public class  AppRoleService {
 				List<String> sharedTo;
 				if (appRoleMetadata != null && appRoleMetadata.getAppRoleMetadataDetails() != null) {
 					sharedTo = appRoleMetadata.getAppRoleMetadataDetails().getSharedTo();
-					for (String sharedUser : sharedTo) {
-						if (sharedUser.equals(userDetails.getUsername())) {
-							isAllowed = true;
-							break;
+					if (sharedTo != null) {
+						for (String sharedUser : sharedTo) {
+							if (sharedUser.equals(userDetails.getUsername())) {
+								isAllowed = true;
+								break;
+							}
 						}
 					}
 				}
@@ -715,10 +717,10 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to read the role_id associated with the AppRole\"]}");
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READAPPROLEROLEID).
 			      put(LogMessage.MESSAGE, String.format("Trying to read role_id for [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (!userDetails.isAdmin()) {
 			// Non admin owners, who created AppRoles using SelfService feature, need to use SelfSupportToken in order to read role_id
@@ -727,10 +729,10 @@ public class  AppRoleService {
 		AppRole appRole = readAppRoleBasicDetails(token, rolename);
 		if (appRole ==null) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READAPPROLEROLEID).
 				      put(LogMessage.MESSAGE, String.format("Unable to read AppRole information. AppRole [%s] doesn't exist", rolename)).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body(APPROLENONEXISTSTR);
 
@@ -739,19 +741,19 @@ public class  AppRoleService {
 		if (isAllowed) {
 			Response response = reqProcessor.process(READPOLEIDPATH,ROLENAMESTR+rolename+"\"}",token);
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READAPPROLEROLEID).
 				      put(LogMessage.MESSAGE, "Reading AppRoleId completed").
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READAPPROLEROLEID).
 			      put(LogMessage.MESSAGE, READROLEFAILMSG).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to read the role_id associated with the AppRole\"]}");
 	}
@@ -767,10 +769,10 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to read the secret_id associated with the AppRole\"]}");
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READAPPROLESECRETID).
 			      put(LogMessage.MESSAGE, String.format("Trying to read secret_id for the Role[%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (!userDetails.isAdmin()) {
 			// Non owners, who created AppRoles using SelfService feature, need to use SelfSupportToken in order to read secret_id
@@ -779,10 +781,10 @@ public class  AppRoleService {
 		AppRole appRole = readAppRoleBasicDetails(token, rolename);
 		if (appRole ==null) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READAPPROLESECRETID).
 				      put(LogMessage.MESSAGE, "Unable to read AppRole. AppRole does not exist.").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body(APPROLENONEXISTSTR);
 
@@ -791,19 +793,19 @@ public class  AppRoleService {
 		if (isAllowed) {
 			Response response = reqProcessor.process("/auth/approle/secretid/lookup",ROLENAMESTR+rolename+"\"}",token);
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READAPPROLESECRETID).
 				      put(LogMessage.MESSAGE, "Reading AppRoleId completed").
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READAPPROLESECRETID).
 			      put(LogMessage.MESSAGE, "Reading secret_id for AppRole failed").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to read the secret_id associated with the AppRole\"]}");
 	}
@@ -821,10 +823,10 @@ public class  AppRoleService {
 					"{\"errors\":[\"Access denied: You don't have enough permission to read the accessors of SecretIds associated with the AppRole\"]}");
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, SECRETIDACCESSORS).
 			      put(LogMessage.MESSAGE, String.format("Trying to read accessors of all the SecretIDs [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (!userDetails.isAdmin()) {
 			// Non owners, who created AppRoles using SelfService feature, need to use SelfSupportToken in order to read secret_id
@@ -832,10 +834,10 @@ public class  AppRoleService {
 		}
 		if (!doesAppRoleExist(rolename, userDetails)) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, SECRETIDACCESSORS).
 				      put(LogMessage.MESSAGE, "Unable to read accessors of all the SecretIDs. AppRole may not exist").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body("{\"errors\":[\"Unable to read AppRole. AppRole does not exist.\"]}");
 		}
@@ -844,41 +846,41 @@ public class  AppRoleService {
 			Response response = reqProcessor.process("/auth/approle/role/accessors/list",ROLENAMESTR+rolename+"\"}",token);
 			if(HttpStatus.OK.equals(response.getHttpstatus())) {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, SECRETIDACCESSORS).
 					      put(LogMessage.MESSAGE, READACCESSCOMPLETEMSG).
 					      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 			}
 			else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, SECRETIDACCESSORS).
 					      put(LogMessage.MESSAGE, "Reading accessors of all the SecretIDs for AppRole completed. There are no accessor_ids.").
 					      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return ResponseEntity.status(HttpStatus.OK).body("{\"keys\":[]}");
 			}
 			else {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, SECRETIDACCESSORS).
 					      put(LogMessage.MESSAGE, READACCESSCOMPLETEMSG).
 					      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Not able to read accessor_ids.\"]}");
 			}
 
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, SECRETIDACCESSORS).
 			      put(LogMessage.MESSAGE, "Reading accessors of all the SecretIDs for AppRole failed").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to read the accessors of SecretIds associated with the AppRole\"]}");
 	}
@@ -896,10 +898,10 @@ public class  AppRoleService {
 					"{\"errors\":[\"Access denied: You don't have enough permission to read the information of the AppRole\"]}");
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "readAppRoleDetails").
 			      put(LogMessage.MESSAGE, String.format("Trying to read AppRole information for [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (!userDetails.isAdmin()) {
 			// Non owners, who created AppRoles using SelfService feature, need to use SelfSupportToken in order to read secret_id
@@ -908,10 +910,10 @@ public class  AppRoleService {
 		AppRole appRole = readAppRoleBasicDetails(token, rolename);
 		if (appRole ==null) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, READAPPROLESECRETID).
 				      put(LogMessage.MESSAGE, String.format("Unable to read AppRole information. AppRole [%s] doesn't exist", rolename)).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APPROLENONEXISTSTR);
 
@@ -937,10 +939,10 @@ public class  AppRoleService {
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, READAPPROLESECRETID).
 			      put(LogMessage.MESSAGE, "Reading secret_id for AppRole failed").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to read the secret_id associated with the AppRole\"]}");
 	}
@@ -952,40 +954,40 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> createsecretId(String token, AppRoleSecretData appRoleSecretData){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "CreateSecretId").
 			      put(LogMessage.MESSAGE, String.format("Trying to create SecretId for  [%s]",appRoleSecretData.getRole_name() )).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(appRoleSecretData.getRole_name())){
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: no permission to create secretID for this AppRole\"]}");
 		}
 		String jsonStr = JSONUtil.getJSON(appRoleSecretData);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "CreateSecretId").
 			      put(LogMessage.MESSAGE, String.format("Trying to create SecretId for the role [%s]", appRoleSecretData.getRole_name())).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		jsonStr = ControllerUtil.convertAppRoleSecretIdToLowerCase(jsonStr);
 		Response response = reqProcessor.process("/auth/approle/secretid/create", jsonStr,token);
 		if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, "Create SecretId").
 				      put(LogMessage.MESSAGE, "Create SecretId completed successfully").
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Secret ID created for AppRole\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "Create SecretId").
 			      put(LogMessage.MESSAGE, "Create SecretId failed").
 			      put(LogMessage.RESPONSE, response.getResponse()).
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 	}
@@ -997,10 +999,10 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> readAppRoleSecretId(String token, String rolename){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "Read SecretId").
 			      put(LogMessage.MESSAGE, String.format("Trying to read SecretId for the role [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(rolename)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -1008,11 +1010,11 @@ public class  AppRoleService {
 		}
 		Response response = reqProcessor.process("/auth/approle/secretid/lookup",ROLENAMESTR+rolename+"\"}",token);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "Read SecretId").
 			      put(LogMessage.MESSAGE, "Read SecretId completed").
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 	}
@@ -1024,10 +1026,10 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> deleteSecretId(String token, AppRoleNameSecretId appRoleNameSecretId){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "DeleteSecretId").
 			      put(LogMessage.MESSAGE, String.format("Trying to delete SecretId for the role [%s].",appRoleNameSecretId.getRole_name())).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(appRoleNameSecretId.getRole_name())){
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: no permission to delete secretId for this approle\"]}");
@@ -1036,21 +1038,21 @@ public class  AppRoleService {
 		Response response = reqProcessor.process("/auth/approle/secret/delete",jsonStr,token);
 		if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, "Delete SecretId").
 				      put(LogMessage.MESSAGE, "Deletion of SecretId completed successfully").
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"SecretId for AppRole deleted\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "Delete SecretId").
 			      put(LogMessage.MESSAGE, "Deletion of SecretId failed").
 			      put(LogMessage.RESPONSE, response.getResponse()).
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());	
 	}
@@ -1069,10 +1071,10 @@ public class  AppRoleService {
 				build()));
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(appRole.getRole_name())){
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, DELETE_APPROLE).
 				      put(LogMessage.MESSAGE, "Access denied: no permission to remove this AppRole").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: no permission to remove this AppRole\"]}");
 		}
@@ -1248,10 +1250,10 @@ public class  AppRoleService {
 		}
 		String jsonStr = JSONUtil.getJSON(appRole);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "Delete AppRoleId").
 			      put(LogMessage.MESSAGE, String.format("Trying to delete AppRoleId [%s]", jsonStr)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		AppRoleMetadata appRoleMetadata = readAppRoleMetadata(token, appRole.getRole_name());
 		
@@ -1262,11 +1264,11 @@ public class  AppRoleService {
 		Response response = reqProcessor.process("/auth/approle/role/delete",jsonStr,token);
 		if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, DELETE_APPROLE).
 				      put(LogMessage.MESSAGE, "Delete AppRole completed").
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			// delete metadata
 			String jsonstr = ControllerUtil.populateAppRoleMetaJson(appRole, userDetails.getUsername());
@@ -1288,23 +1290,23 @@ public class  AppRoleService {
 			if (HttpStatus.NO_CONTENT.equals(resp.getHttpstatus()) && HttpStatus.NO_CONTENT.equals(appRoleUserMetaDataDeletionResponse.getHttpstatus()) &&
 					appRoleSharedToUserMetaDataCreationStatus) {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, DELETE_APPROLE).
 					      put(LogMessage.MESSAGE, "AppRole delete completed").
 					      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AppRole deleted\"]}");
 			}
 			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AppRole deleted, metadata delete failed\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, DELETE_APPROLE).
 			      put(LogMessage.MESSAGE, "Delete AppRole failed").
 			      put(LogMessage.RESPONSE, response.getResponse()).
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
@@ -1317,10 +1319,10 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> deleteSecretIds(String token, AppRoleAccessorIds appRoleAccessorIds, UserDetails userDetails){
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "DeleteSecretId").
 			      put(LogMessage.MESSAGE, String.format("Trying to delete SecretId for the role [%s].",appRoleAccessorIds.getRole_name())).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(appRoleAccessorIds.getRole_name())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -1335,43 +1337,43 @@ public class  AppRoleService {
 		}
 		if (isAllowed) {
 			String[] accessorIds = appRoleAccessorIds.getAccessorIds();
-			ArrayList<String> failedAccessorIds = new ArrayList<String>();
-			ArrayList<String> deletedAccessorIds = new ArrayList<String>();
+			ArrayList<String> failedAccessorIds = new ArrayList<>();
+			ArrayList<String> deletedAccessorIds = new ArrayList<>();
 			for (String accessorId: accessorIds) {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, DELETESECRET).
 					      put(LogMessage.MESSAGE, String.format("Trying to read SecretId for accessorId [%s]", accessorId)).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
 				String jsonStr = JSONUtil.getJSON(new AppRoleAccessorId(appRoleAccessorIds.getRole_name(), accessorId));
 				Response deleteSecretIdResponse = reqProcessor.process("/auth/approle/role/delete/secretids",jsonStr,token);
 				if(HttpStatus.NO_CONTENT.equals(deleteSecretIdResponse.getHttpstatus())) {
 					deletedAccessorIds.add(accessorId);
 					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 							  put(LogMessage.ACTION, DELETESECRET).
 						      put(LogMessage.MESSAGE, String.format("Successfully deleted SecretId for the accessor_id [%s]",accessorId)).
-						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						      build())); 
 				}
 				else if (HttpStatus.INTERNAL_SERVER_ERROR.equals(deleteSecretIdResponse.getHttpstatus()) && 
 					deleteSecretIdResponse.getResponse().contains("failed to find accessor entry for secret_id_accessor")) {
 					failedAccessorIds.add(accessorId);
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 							  put(LogMessage.ACTION, DELETESECRET).
 						      put(LogMessage.MESSAGE, String.format("Unable to delete SecretId for the accessor_id [%s] since accessor_id does not exist",accessorId)).
-						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						      build()));
 				}
 				else {
 					failedAccessorIds.add(accessorId);
 					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 							  put(LogMessage.ACTION, DELETESECRET).
 						      put(LogMessage.MESSAGE, String.format("Unable to delete SecretId for the accessor_id [%s]",accessorId)).
-						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						      build()));
 				}
 			}
@@ -1383,18 +1385,18 @@ public class  AppRoleService {
 				message.append(String.format("Failed to delete the secret_ids for the following accessor_ids: [%s]",StringUtils.join(failedAccessorIds.toArray(), ",")));
 			}
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, DELETESECRET).
 				      put(LogMessage.MESSAGE,"Deletion of SecretId completed successfully").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\""+message+"\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, DELETESECRET).
 			      put(LogMessage.MESSAGE, "Deleting deleteSecretIds for AppRole failed").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to delete the secret_ids associated with the AppRole\"]}");
 
@@ -1407,30 +1409,30 @@ public class  AppRoleService {
 	public ResponseEntity<String> login(AppRoleIdSecretId appRoleIdSecretId){
 		String jsonStr = JSONUtil.getJSON(appRoleIdSecretId);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "AppRoleLogin").
 			      put(LogMessage.MESSAGE, "Start trying to authenticate with AppRole.").
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		Response response = reqProcessor.process("/auth/approle/login",jsonStr,"");
 		if(HttpStatus.OK.equals(response.getHttpstatus())) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, "AppRole Login").
 				      put(LogMessage.MESSAGE, "AppRole Authentication Successful.").
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 		}
 		else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, "AppRole Login").
 				      put(LogMessage.MESSAGE, "AppRole Authentication failed.").
 				      put(LogMessage.RESPONSE, response.getResponse()).
 				      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(response.getHttpstatus()).body("{\"errors\":[\"Approle Login Failed.\"]}" + "HTTP STATUSCODE  :" + response.getHttpstatus());
 		}
@@ -1467,10 +1469,10 @@ public class  AppRoleService {
 	private ResponseEntity<String>associateApproletoSafe(String token,  SafeAppRoleAccess safeAppRoleAccess){
 		String jsonstr = JSONUtil.getJSON(safeAppRoleAccess);
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, ASSOCIATEAPPROLE).
 			      put(LogMessage.MESSAGE, String.format ("Trying to associate AppRole to SDB [%s]", jsonstr)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));		
 		
 		Map<String,Object> requestMap = ControllerUtil.parseJson(jsonstr);
@@ -1485,13 +1487,13 @@ public class  AppRoleService {
 		if(canAddAppRole){
 
 			log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, ASSOCIATEAPPROLE).
 				      put(LogMessage.MESSAGE, String.format ("Associate approle to SDB -  path :  [%s] valid", path)).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));	
 
-			String folders[] = path.split("[/]+");
+			String[] folders = path.split("[/]+");
 			
 			String policy ="";
 			
@@ -1536,23 +1538,23 @@ public class  AppRoleService {
 			String currentpoliciesString = StringUtils.join(currentpolicies, ",");
 
 			log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, ASSOCIATEAPPROLE).
 					put(LogMessage.MESSAGE, "Associate approle to SDB -  policy :" + policiesString + " is being configured" ).
-		  			put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+		  			put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
 			//Call controller to update the policy for approle
 			Response approleControllerResp = configureApprole(approle,policiesString,token);
 			if(HttpStatus.OK.equals(approleControllerResp.getHttpstatus()) || (HttpStatus.NO_CONTENT.equals(approleControllerResp.getHttpstatus()))) {
 
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 						  put(LogMessage.ACTION, ASSOCIATEAPPROLE).
 					      put(LogMessage.MESSAGE, "Associate approle to SDB -  policy :" + policiesString + " is associated").
 					      put(LogMessage.STATUS, approleControllerResp.getHttpstatus().toString()).
-					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					      build()));
-				Map<String,String> params = new HashMap<String,String>();
+				Map<String,String> params = new HashMap<>();
 				params.put("type", "app-roles");
 				params.put("name",approle);
 				params.put("path",path);
@@ -1560,11 +1562,11 @@ public class  AppRoleService {
 				Response metadataResponse = ControllerUtil.updateMetadata(params,token);
 				if(metadataResponse != null && HttpStatus.NO_CONTENT.equals(metadataResponse.getHttpstatus())){
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 							  put(LogMessage.ACTION, "Add AppRole To SDB").
 						      put(LogMessage.MESSAGE, "AppRole is successfully associated").
 						      put(LogMessage.STATUS, metadataResponse.getHttpstatus().toString()).
-						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						      build()));
 					return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Approle :" + approle + " is successfully associated with SDB\"]}");		
 				}else{
@@ -1587,17 +1589,17 @@ public class  AppRoleService {
 					metadataResponse = ControllerUtil.updateMetadata(params,token);
 					if(metadataResponse !=null && HttpStatus.NO_CONTENT.equals(metadataResponse.getHttpstatus())){
 						log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-							      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+							      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 								  put(LogMessage.ACTION, "Add AppRole To SDB").
 							      put(LogMessage.MESSAGE, "AppRole is successfully associated").
 							      put(LogMessage.STATUS, metadataResponse.getHttpstatus().toString()).
-							      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+							      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 							      build()));
 						return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Approle :" + approle + " is successfully associated with SDB\"]}");		
 					}
 					else {
 						log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-							      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+							      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 								  put(LogMessage.ACTION, "Add AppRole To SDB").
 							      put(LogMessage.MESSAGE, "AppRole configuration failed.").
 							      put(LogMessage.RESPONSE, (null!=metadataResponse)?metadataResponse.getResponse():TVaultConstants.EMPTY).
@@ -1608,22 +1610,22 @@ public class  AppRoleService {
 						approleControllerResp = configureApprole(approle,currentpoliciesString,token);
 						if(approleControllerResp.getHttpstatus().equals(HttpStatus.NO_CONTENT)){
 							log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-								      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+								      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 									  put(LogMessage.ACTION, "Add AppRole To SDB").
 								      put(LogMessage.MESSAGE, "Reverting user policy update failed").
 								      put(LogMessage.RESPONSE, (null!=metadataResponse)?metadataResponse.getResponse():TVaultConstants.EMPTY).
 								      put(LogMessage.STATUS, (null!=metadataResponse)?metadataResponse.getHttpstatus().toString():TVaultConstants.EMPTY).
-								      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+								      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 								      build()));
 							return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Role configuration failed.Please try again\"]}");
 						}else{
 							log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-								      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+								      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 									  put(LogMessage.ACTION, "Add AppRole To SDB").
 								      put(LogMessage.MESSAGE, "Reverting user policy update failed").
 								      put(LogMessage.RESPONSE, (null!=metadataResponse)?metadataResponse.getResponse():TVaultConstants.EMPTY).
 								      put(LogMessage.STATUS, (null!=metadataResponse)?metadataResponse.getHttpstatus().toString():TVaultConstants.EMPTY).
-								      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+								      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 								      build()));
 							return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Role configuration failed.Contact Admin \"]}");
 						}
@@ -1632,23 +1634,23 @@ public class  AppRoleService {
 			
 		}else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, ASSOCIATEAPPROLE).
 				      put(LogMessage.MESSAGE, "Association of AppRole to SDB failed").
 				      put(LogMessage.RESPONSE, approleControllerResp.getResponse()).
 				      put(LogMessage.STATUS, approleControllerResp.getHttpstatus().toString()).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 				log.error( "Associate Approle {} to sdb FAILED", approle);
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"messages\":[\"Approle :" + approle + " failed to be associated with SDB\"]}");		
 			}
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, ASSOCIATEAPPROLE).
 				      put(LogMessage.MESSAGE, "Association of AppRole to SDB failed").
 				      put(LogMessage.RESPONSE, "Invalid Path").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"messages\":[\"Approle :" + approle + " failed to be associated with SDB.. Invalid Path specified\"]}");		
 		
@@ -1663,17 +1665,17 @@ public class  AppRoleService {
 	 */
 	public ResponseEntity<String> updateAppRole(String token, AppRole appRole, UserDetails userDetails) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION,UPDATE_APPROLE).
 			      put(LogMessage.MESSAGE, String.format("Start trying to update AppRole [%s]", appRole.getRole_name())).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-		if (Objects.isNull(appRole) || StringUtils.isEmpty(appRole.getRole_name()) ) {
+		if (StringUtils.isEmpty(appRole.getRole_name())) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, UPDATE_APPROLE).
 				      put(LogMessage.MESSAGE, "Not enough information to update AppRole").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"AppRole can't be updated since insufficient information has been provided.\"]}");		
 
@@ -1684,10 +1686,10 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: You don't have enough permission to modify the AppRole information\"]}");
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, UPDATE_APPROLE).
 			      put(LogMessage.MESSAGE, String.format("Trying to update AppRole [%s]", rolename)).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (!userDetails.isAdmin()) {
 			// Non owners, who created AppRoles using SelfService feature, need to use SelfSupportToken in order to read secret_id
@@ -1717,10 +1719,10 @@ public class  AppRoleService {
 		AppRole existingAppRole = readAppRoleBasicDetails(token, rolename);
 		if (existingAppRole == null) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, UPDATE_APPROLE).
 				      put(LogMessage.MESSAGE, String.format("Unable to read AppRole information. AppRole [%s] doesn't exist", rolename)).
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 			return ResponseEntity.status(HttpStatus.OK).body(APPROLENONEXISTSTR);
 		}
@@ -1732,10 +1734,10 @@ public class  AppRoleService {
 		Response response = reqProcessor.process(CREATEPATH, jsonStr,token);
 		if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT) || response.getHttpstatus().equals(HttpStatus.OK)) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, UPDATE_APPROLE).
 				      put(LogMessage.MESSAGE, "AppRole updated successfully").
-				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 
 			if (isSharedToChanged) {
@@ -1774,12 +1776,12 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AppRole updated successfully.\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, UPDATE_APPROLE).
 			      put(LogMessage.MESSAGE, "Update of AppRole failed").
 			      put(LogMessage.RESPONSE, response.getResponse()).
 			      put(LogMessage.STATUS, response.getHttpstatus().toString()).
-			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	
@@ -1864,7 +1866,7 @@ public class  AppRoleService {
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
 		ObjectMapper objMapper = new ObjectMapper();
-		Map<String,String>configureUserMap = new HashMap<String,String>();
+		Map<String,String>configureUserMap = new HashMap<>();
 		configureUserMap.put("role_name", rolename);
 		configureUserMap.put(POLICIESSTR, policies);
 		String approleConfigJson =TVaultConstants.EMPTY;
@@ -1880,10 +1882,10 @@ public class  AppRoleService {
 		} catch (JsonProcessingException e) {
 			log.error(e);
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, "configureApprole").
 					put(LogMessage.MESSAGE, String.format ("Unable to create approleConfigJson  [%s] with rolename [%s] policies [%s] ", e.getMessage(), rolename, policies)).
-					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
 		}
 		return reqProcessor.process(CREATEPATH,approleConfigJson,token);
