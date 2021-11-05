@@ -1082,6 +1082,10 @@ public class  AppRoleService {
 		if (HttpStatus.INTERNAL_SERVER_ERROR.equals(permissionResponse.getHttpstatus()) || HttpStatus.UNAUTHORIZED.equals(permissionResponse.getHttpstatus())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\""+permissionResponse.getResponse()+"\"]}");
 		}
+
+		if (!userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
+		}
 		
 		Response roleResponse = reqProcessor.process(READPATH,ROLENAMESTR+appRole.getRole_name()+"\"}",token);
 		String responseJson="";
@@ -1105,7 +1109,13 @@ public class  AppRoleService {
 		for(String policy :policies) {
 			String name = null;
 			String[] parts = policy.split("_");
-			String type = parts[1]; 
+			String type = "";
+			if (parts.length > 1) {
+				type = parts[1];
+			} else {
+				continue;
+			}
+
 			if(policy.startsWith("r_cert_") || policy.startsWith("w_cert_") || policy.startsWith("d_cert_") || policy.startsWith("o_cert_")) {
 				 name=policy.substring(7);
 			}
@@ -1278,10 +1288,12 @@ public class  AppRoleService {
 			boolean appRoleSharedToUserMetaDataCreationStatus = true;
 			List<String> sharedToList = appRoleMetadata.getAppRoleMetadataDetails().getSharedTo();
 			if (sharedToList != null) {
+				String appRoleSharedToMetadataJson;
+				Response appRoleSharedToUserMetaDataDeletionResponse;
 				for (String sharedToUser : sharedToList) {
 					if (StringUtils.isNotEmpty(sharedToUser)) {
-						String appRoleSharedToMetadataJson = ControllerUtil.populateSharedToUserMetaJson(userDetails.getUsername(), sharedToUser, appRole);
-						Response appRoleSharedToUserMetaDataDeletionResponse = reqProcessor.process("/delete", appRoleSharedToMetadataJson, token);
+						appRoleSharedToMetadataJson = ControllerUtil.populateSharedToUserMetaJson(userDetails.getUsername(), sharedToUser, appRole);
+						appRoleSharedToUserMetaDataDeletionResponse = reqProcessor.process("/delete", appRoleSharedToMetadataJson, token);
 						appRoleSharedToUserMetaDataCreationStatus = appRoleSharedToUserMetaDataDeletionResponse.getHttpstatus().equals(HttpStatus.NO_CONTENT);
 					}
 				}
