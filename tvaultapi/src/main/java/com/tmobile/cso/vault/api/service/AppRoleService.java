@@ -1083,9 +1083,7 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\""+permissionResponse.getResponse()+"\"]}");
 		}
 
-		if (!userDetails.isAdmin()) {
-			token = userDetails.getSelfSupportToken();
-		}
+		token = userDetails.getSelfSupportToken();
 		
 		Response roleResponse = reqProcessor.process(READPATH,ROLENAMESTR+appRole.getRole_name()+"\"}",token);
 		String responseJson="";
