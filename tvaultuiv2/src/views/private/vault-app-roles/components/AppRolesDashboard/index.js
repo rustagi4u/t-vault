@@ -464,7 +464,7 @@ const AppRolesDashboard = () => {
 
     return (entityList && entityList[0]?.length > 0) ? (
         <>
-          <p style={{'color':'white', 'marginBottom':'.2rem'}}>{entityName}</p>
+          <p style={{'marginBottom':'.2rem'}}>{entityName}</p>
           <ul style={{'marginTop':'.2rem'}}>
             {entityList.map((entity) => (
               <li key="{entity}">{entity}</li>
@@ -527,7 +527,7 @@ const AppRolesDashboard = () => {
             handleClose={handleConfirmationModalClose}
             title="Confirmation"
             description={entitiesAreAssociatedWithAppRole ? `<p>AppRole ${deleteAppRoleName} is associated with the following entities - ` +
-              `<span style="color: #e20074">
+              `<span>
                 ${ReactDOMServer.renderToStaticMarkup(getDeleteAppRoleConfirmationDescription())} 
               </span>` +
               `Deleting it could impact users this AppRole has been shared with. Do you still want to delete?</p>` 
