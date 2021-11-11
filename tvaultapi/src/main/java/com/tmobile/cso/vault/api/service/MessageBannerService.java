@@ -95,7 +95,7 @@ public class MessageBannerService {
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
 					.build()));
 
-			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"message saved to vault\"]}");
+			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Message saved to vault\"]}");
 		} else {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
@@ -118,7 +118,7 @@ public class MessageBannerService {
 						.put(LogMessage.STATUS, response1.getHttpstatus().toString())
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
 						.build()));
-				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"message saved to vault\"]}");
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Message saved to vault\"]}");
 			}
 
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
@@ -197,7 +197,7 @@ public class MessageBannerService {
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
 					.build()));
 
-			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"updated message saved to vault\"]}");
+			return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Updated message saved to vault\"]}");
 		} else {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
@@ -220,7 +220,7 @@ public class MessageBannerService {
 						.put(LogMessage.STATUS, response1.getHttpstatus().toString())
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString())
 						.build()));
-				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"updated message saved to vault\"]}");
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Updated message saved to vault\"]}");
 			}
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 		}

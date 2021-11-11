@@ -177,12 +177,11 @@ const Description = styled.p`
 const MessageBannerWrap = styled.div`
   background-color: #30323f;
   border-width: 3px;
-  vertical-align: middle;
-  align-items: center;
   border-radius: 25px;
   padding: 5px 0 5px 0;
   width: 100%;
   margin-bottom: 10px;
+  max-height: 43px;
 
   ${small} {
     width: 100%;
@@ -190,11 +189,14 @@ const MessageBannerWrap = styled.div`
 `;
 
 const MessageBanner = styled.p`
-  line-height: 0.4rem;
-  font-size: 1.4rem;
-  margin-left: 70px;
+  font-size: 1.28rem;
+  margin-left: 63px;
+  margin-bottom: 4px;
+  margin-top: 5px;
   font-color: #fff;
-  width: 82%;
+  width: 89%;
+  height: 33px;
+  overflow: auto;
   @media (max-width: 1024px) {
     width: 75%;
   }
