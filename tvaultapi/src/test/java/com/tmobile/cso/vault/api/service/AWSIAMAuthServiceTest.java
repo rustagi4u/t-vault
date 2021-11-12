@@ -425,4 +425,73 @@ public class AWSIAMAuthServiceTest {
             e.printStackTrace();
         }
     }
+    @Test
+    public void testcreateIAMRole_failure() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        AWSIAMRole awsiamRole = new AWSIAMRole();
+        awsiamRole.setAuth_type("iam");
+        String ROLESTR = "{\"role\":\"";
+        String[] arns = {"arn:aws:iam::123456789012:user/tst"};
+        awsiamRole.setBound_iam_principal_arn(arns);
+        awsiamRole.setResolve_aws_unique_ids(true);
+        awsiamRole.setRole("string");
+
+        String jsonStr = "{\"auth_type\": \"iam\",\"bound_iam_principal_arn\":" +
+                " [\"arn:aws:iam::123456789012:user/tst\"],\"policies\": " +
+                "[\"string\"],\"resolve_aws_unique_ids\": true,\"role\": \"string\"}";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+        when( reqProcessor.process("/auth/aws/iam/roles/delete",ROLESTR+awsiamRole.getRole()+"\"}",sampletok)).thenReturn(response);
+        when(reqProcessor.process("/auth/aws/iam/role/create",jsonStr, sampletok)).thenReturn(response);
+        when(JSONUtil.getJSON(awsiamRole)).thenReturn(jsonStr);
+        UserDetails userDetails = getMockUser(true);
+        when(ControllerUtil.createMetadata(Mockito.any(), eq(sampletok))).thenReturn(false);
+
+        try {
+            when(ControllerUtil.areAWSIAMRoleInputsValid(awsiamRole)).thenReturn(true);
+            when(ControllerUtil.populateUserMetaJson(Mockito.any(), Mockito.any())).thenReturn("awsiamroleUsermetadataJson");
+            ResponseEntity<String> responseEntity = awsIamAuthService.createIAMRole(awsiamRole, sampletok, userDetails);
+            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        } catch (TVaultValidationException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    @Test
+    public void testcreateIAMRole_metafailure() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        AWSIAMRole awsiamRole = new AWSIAMRole();
+        awsiamRole.setAuth_type("iam");
+        String ROLESTR = "{\"role\":\"";
+        String[] arns = {"arn:aws:iam::123456789012:user/tst"};
+        awsiamRole.setBound_iam_principal_arn(arns);
+        awsiamRole.setResolve_aws_unique_ids(true);
+        awsiamRole.setRole("string");
+
+        String jsonStr = "{\"auth_type\": \"iam\",\"bound_iam_principal_arn\":" +
+                " [\"arn:aws:iam::123456789012:user/tst\"],\"policies\": " +
+                "[\"string\"],\"resolve_aws_unique_ids\": true,\"role\": \"string\"}";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response responsedelete = getMockResponse(HttpStatus.OK, true, "");
+
+        when( reqProcessor.process("/auth/aws/iam/roles/delete",ROLESTR+awsiamRole.getRole()+"\"}",sampletok)).thenReturn(responsedelete);
+        when(reqProcessor.process("/auth/aws/iam/role/create",jsonStr, sampletok)).thenReturn(response);
+        when(JSONUtil.getJSON(awsiamRole)).thenReturn(jsonStr);
+        UserDetails userDetails = getMockUser(true);
+        when(ControllerUtil.createMetadata(Mockito.any(), eq(sampletok))).thenReturn(false);
+
+        try {
+            when(ControllerUtil.areAWSIAMRoleInputsValid(awsiamRole)).thenReturn(true);
+            when(ControllerUtil.populateUserMetaJson(Mockito.any(), Mockito.any())).thenReturn("awsiamroleUsermetadataJson");
+            ResponseEntity<String> responseEntity = awsIamAuthService.createIAMRole(awsiamRole, sampletok, userDetails);
+            assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        } catch (TVaultValidationException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
 }
