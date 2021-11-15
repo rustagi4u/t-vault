@@ -189,13 +189,14 @@ const MessageBannerWrap = styled.div`
 `;
 
 const MessageBanner = styled.p`
+  line-height: 1.39rem;
   font-size: 1.28rem;
   margin-left: 63px;
-  margin-bottom: 4px;
+
   margin-top: 5px;
   font-color: #fff;
   width: 89%;
-  height: 33px;
+  height: 28px;
   overflow: auto;
   @media (max-width: 1024px) {
     width: 75%;

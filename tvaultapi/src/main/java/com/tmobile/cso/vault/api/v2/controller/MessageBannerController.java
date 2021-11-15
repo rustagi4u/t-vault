@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @CrossOrigin
-@Api(description = "Manage Ui message", position = 25)
+@Api(description = "Manage UI message", position = 25)
 public class MessageBannerController {
 	@Value("${vault.auth.method}")
 	private String vaultAuthMethod;
