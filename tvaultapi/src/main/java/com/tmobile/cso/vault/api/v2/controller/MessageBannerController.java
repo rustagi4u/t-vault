@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @CrossOrigin
-@Api(description = "Manage Ui message", position = 25)
+@Api(description = "Manage UI message", position = 25)
 public class MessageBannerController {
 	@Value("${vault.auth.method}")
 	private String vaultAuthMethod;
@@ -29,27 +29,27 @@ public class MessageBannerController {
 	private MessageBannerService MessageBanner;
 
 	@ApiOperation(value = "${MessageBannerController.write.value}", notes = "${MessageBannerController.write.notes}")
-	@PostMapping(value = { "v2/safes/message" }, consumes = "application/json", produces = "application/json")
+	@PostMapping(value = { "v2/bannermessage" }, consumes = "application/json", produces = "application/json")
 	public ResponseEntity<String> write(HttpServletRequest request, @RequestHeader(value = "vault-token") String token,
 			@RequestBody Message message) {
 
-		return MessageBanner.write(token, message);
+		return MessageBanner.writeBannerMessage(token, message);
 
 	}
 	
 	@ApiOperation(value = "${MessageBannerController.readFromVault.value}", notes = "${MessageBannerController.readFromVault.notes}")
-	@GetMapping(value = "v2/safes/message", produces = "application/json")
+	@GetMapping(value = "v2/bannermessage", produces = "application/json")
 	public ResponseEntity<String> readFromVault() {
 
-		return MessageBanner.readFromVault();
+		return MessageBanner.readBannerMessage();
 	}
 	
 	@ApiOperation(value = "${MessageBannerController.updateMessage.value}", notes = "${MessageBannerController.updateMessage.notes}")
-	@PutMapping(value = { "v2/safes/message" }, consumes = "application/json", produces = "application/json")
+	@PutMapping(value = { "v2/bannermessage" }, consumes = "application/json", produces = "application/json")
 	public ResponseEntity<String> updateMessage(HttpServletRequest request, @RequestHeader(value = "vault-token") String token,
 			@RequestBody Message message){
 		
-		return MessageBanner.updateMessage(token, message);
+		return MessageBanner.updateBannerMessage(token, message);
 		
 	}
 }
