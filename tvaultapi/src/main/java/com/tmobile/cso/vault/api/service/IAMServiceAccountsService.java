@@ -461,6 +461,48 @@ public class  IAMServiceAccountsService {
 	}
 
 	/**
+	 * To check if the user/token has permission to read access keys for IAM service account.
+	 * @param token
+	 * @param iamSvcAccName
+	 * @param awsAccountId
+	 * @return boolean
+	 */
+	private boolean isAuthorizedToReadAccessKeys(String token, String iamSvcAccName, String awsAccountId) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		Response response = reqProcessor.process("/auth/tvault/lookup","{}", token);
+		if(HttpStatus.OK.equals(response.getHttpstatus())) {
+			String responseJson = response.getResponse();
+			try {
+				List<String> currentPolicies = iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(objectMapper, responseJson);
+				List<String> identityPolicies = iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(objectMapper, responseJson);
+				String readPolicyName = "r_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
+				String writePolicyName = "w_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
+				if (currentPolicies.contains(iamSelfSupportAdminPolicyName) || identityPolicies.stream().anyMatch((a) ->
+						a.startsWith(readPolicyName) || a.startsWith(writePolicyName))) {
+					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+							.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+							.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
+							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+					return true;
+				}
+			} catch (IOException e) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+						.put(LogMessage.MESSAGE, "Failed to parse policies from token")
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			}
+		}
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+				.put(LogMessage.MESSAGE, "The User/Token does not have required policies to read access keys for IAM Service Account.")
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		return false;
+	}
+
+	/**
 	 * Method to create IAM service account policies as part of IAM service account onboarding.
 	 * @param iamServiceAccount
 	 * @param iamSvcAccName
@@ -5048,7 +5090,7 @@ public class  IAMServiceAccountsService {
 				.put(LogMessage.MESSAGE, String.format("Trying to get the list of IAM Service Account [%s] access keys", iamSvcaccName))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 
-		if (!isAuthorizedIAMAdminApprole(token)) {
+		if (!isAuthorizedToReadAccessKeys(token, iamSvcaccName, awsAccountId)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, IAMServiceAccountConstants.GET_IAMSVCACC_ACCESSKEY_LIST_MSG)

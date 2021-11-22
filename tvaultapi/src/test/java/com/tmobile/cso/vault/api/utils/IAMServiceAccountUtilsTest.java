@@ -26,6 +26,7 @@ import com.tmobile.cso.vault.api.process.Response;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.logging.log4j.LogManager;
@@ -60,12 +61,11 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @ComponentScan(basePackages={"com.tmobile.cso.vault.api"})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@PrepareForTest({ JSONUtil.class, ControllerUtil.class, IAMServiceAccountUtils.class })
+@PrepareForTest({ JSONUtil.class, ControllerUtil.class })
 @PowerMockIgnore({"javax.management.*"})
 public class IAMServiceAccountUtilsTest {
 
@@ -177,28 +177,6 @@ public class IAMServiceAccountUtilsTest {
     }
 
     @Test
-    public void test_getIAMApproleToken_unsupported_encoding_exception() throws Exception {
-        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        when(ControllerUtil.getSscred()).thenReturn(new SSCred());
-        when(ControllerUtil.getIamUsername()).thenReturn("M2UyNTA0MGYtODIwNS02ZWM2LTI4Y2ItOGYwZTQ1NDI1YjQ4");
-        when(ControllerUtil.getIamPassword()).thenReturn("MWFjOGM1ZTgtZjE5Ny0yMTVlLTNmODUtZWIwMDc3ZmY3NmQw");
-
-        when(httpUtils.getHttpClient()).thenReturn(httpClient);
-        when(httpClient.execute(any())).thenReturn(httpResponse);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
-
-        String responseString = "{\"auth\": {\"client_token\": \""+ tkn +"\"}}";
-        when(mockHttpEntity.getContent()).thenReturn( new ByteArrayInputStream(responseString.getBytes()));
-
-        whenNew(StringEntity.class).withArguments(Matchers.anyString()).thenThrow(new UnsupportedEncodingException());
-
-        String actualToken = iamServiceAccountUtils.getIAMApproleToken();
-        assertNull(actualToken);
-    }
-
-    @Test
     public void test_getIAMApproleToken_execute_failed() throws IOException {
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         when(ControllerUtil.getSscred()).thenReturn(new SSCred());
@@ -253,47 +231,6 @@ public class IAMServiceAccountUtilsTest {
         IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
         IAMServiceAccountSecret iamServiceAccountSecret = iamServiceAccountUtils.rotateIAMSecret(iamServiceAccountRotateRequest);
         assertEquals(expectedIamServiceAccountSecret.getAccessKeySecret(), iamServiceAccountSecret.getAccessKeySecret());
-    }
-
-    @Test
-    public void test_rotateIAMSecret_unsupported_encoding_exception_failed() throws Exception {
-        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        String iamServiceAccountName = "svc_vault_test5";
-        String awsAccountId = "1234567890";
-        String accessKeyId = "testaccesskey";
-        String iamSecret = "abcdefgh";
-        when(ControllerUtil.getSscred()).thenReturn(new SSCred());
-        when(ControllerUtil.getIamUsername()).thenReturn("M2UyNTA0MGYtODIwNS02ZWM2LTI4Y2ItOGYwZTQ1NDI1YjQ4");
-        when(ControllerUtil.getIamPassword()).thenReturn("MWFjOGM1ZTgtZjE5Ny0yMTVlLTNmODUtZWIwMDc3ZmY3NmQw");
-
-        when(httpUtils.getHttpClient()).thenReturn(httpClient);
-        when(httpClient.execute(any())).thenReturn(httpResponse);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
-
-        String responseString = "{\"accessKeyId\": \"testaccesskey\", \"userName\": \"svc_vault_test5\", " +
-                "\"accessKeySecret\": \"abcdefgh\", \"expiryDateEpoch\": \"1609754282000\"}";
-        String responseStringToken = "{\"auth\": {\"client_token\": \""+ tkn +"\"}}";
-        when(mockHttpEntity.getContent()).thenAnswer(new Answer() {
-            private int count = 0;
-
-            public Object answer(InvocationOnMock invocation) {
-                if (count++ == 1)
-                    return new ByteArrayInputStream(responseString.getBytes());
-
-                return new ByteArrayInputStream(responseStringToken.getBytes());
-            }
-        });
-
-        when(JSONUtil.getJSON(any())).thenReturn("first").thenReturn("second");
-
-        whenNew(StringEntity.class).withArguments("second")
-                .thenThrow(new UnsupportedEncodingException());
-
-        IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
-        IAMServiceAccountSecret iamServiceAccountSecret = iamServiceAccountUtils.rotateIAMSecret(iamServiceAccountRotateRequest);
-        assertNull(iamServiceAccountSecret);
     }
 
     @Test
@@ -888,82 +825,6 @@ public class IAMServiceAccountUtilsTest {
     }
 
     @Test
-    public void test_createAccessKeys_unsupported_encoding_exception_failed() throws Exception {
-        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        String iamServiceAccountName = "svc_vault_test5";
-        String awsAccountId = "1234567890";
-        String accessKeyId = "testaccesskey";
-        String iamSecret = "abcdefgh";
-        when(ControllerUtil.getSscred()).thenReturn(new SSCred());
-        when(ControllerUtil.getIamUsername()).thenReturn("M2UyNTA0MGYtODIwNS02ZWM2LTI4Y2ItOGYwZTQ1NDI1YjQ4");
-        when(ControllerUtil.getIamPassword()).thenReturn("MWFjOGM1ZTgtZjE5Ny0yMTVlLTNmODUtZWIwMDc3ZmY3NmQw");
-
-        when(httpUtils.getHttpClient()).thenReturn(httpClient);
-        when(httpClient.execute(any())).thenReturn(httpResponse);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
-
-        String responseString = "{\"accessKeyId\": \"AKIA2GBSJB3123\",\"accessKeySecret\": \"abcdefgh\",\"awsAccountId\": \"1234567890\",\"createDate\": \"2021-05-03T08:56:42.000+0000\",\"expiryDate\": null,\"expiryDateEpoch\": 1627808202000,\"status\": \"Active\",\"userName\": \"svc_vault_test5\"}";
-        String responseStringToken = "{\"auth\": {\"client_token\": \""+ tkn +"\"}}";
-        when(mockHttpEntity.getContent()).thenAnswer(new Answer() {
-            private int count = 0;
-
-            public Object answer(InvocationOnMock invocation) {
-                if (count++ == 1)
-                    return new ByteArrayInputStream(responseString.getBytes());
-
-                return new ByteArrayInputStream(responseStringToken.getBytes());
-            }
-        });
-
-        whenNew(StringEntity.class).withArguments("{\"userName\": \"svc_vault_test5\",\"accountId\": \"1234567890\"}")
-                .thenThrow(new UnsupportedEncodingException());
-
-        IAMServiceAccountSecretResponse iamServiceAccountSecretResponse = iamServiceAccountUtils.createAccessKeys(awsAccountId, iamServiceAccountName);
-        assertNull(iamServiceAccountSecretResponse.getIamServiceAccountSecret());
-    }
-
-    @Test
-    public void test_createAccessKeys_general_exception_failed() throws Exception {
-        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        String iamServiceAccountName = "svc_vault_test5";
-        String awsAccountId = "1234567890";
-        String accessKeyId = "testaccesskey";
-        String iamSecret = "abcdefgh";
-        when(ControllerUtil.getSscred()).thenReturn(new SSCred());
-        when(ControllerUtil.getIamUsername()).thenReturn("M2UyNTA0MGYtODIwNS02ZWM2LTI4Y2ItOGYwZTQ1NDI1YjQ4");
-        when(ControllerUtil.getIamPassword()).thenReturn("MWFjOGM1ZTgtZjE5Ny0yMTVlLTNmODUtZWIwMDc3ZmY3NmQw");
-
-        when(httpUtils.getHttpClient()).thenReturn(httpClient);
-        when(httpClient.execute(any())).thenReturn(httpResponse);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
-
-        String responseString = "{\"accessKeyId\": \"AKIA2GBSJB3123\",\"accessKeySecret\": \"abcdefgh\",\"awsAccountId\": \"1234567890\",\"createDate\": \"2021-05-03T08:56:42.000+0000\",\"expiryDate\": null,\"expiryDateEpoch\": 1627808202000,\"status\": \"Active\",\"userName\": \"svc_vault_test5\"}";
-        String responseStringToken = "{\"auth\": {\"client_token\": \""+ tkn +"\"}}";
-        when(mockHttpEntity.getContent()).thenAnswer(new Answer() {
-            private int count = 0;
-
-            public Object answer(InvocationOnMock invocation) {
-                if (count++ == 1)
-                    return new ByteArrayInputStream(responseString.getBytes());
-
-                return new ByteArrayInputStream(responseStringToken.getBytes());
-            }
-        });
-
-        whenNew(IAMServiceAccountSecret.class).withNoArguments()
-                .thenThrow(new IOException());
-
-        IAMServiceAccountSecret expectedIamServiceAccountSecret = new IAMServiceAccountSecret(iamServiceAccountName, accessKeyId, iamSecret, 1609754282000L, awsAccountId, "", "");
-
-        IAMServiceAccountSecretResponse iamServiceAccountSecretResponse = iamServiceAccountUtils.createAccessKeys(awsAccountId, iamServiceAccountName);
-        assertNull(iamServiceAccountSecretResponse.getIamServiceAccountSecret());
-    }
-
-    @Test
     public void test_createAccessKeys_null_http_client_success() throws IOException {
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         String iamServiceAccountName = "svc_vault_test5";
@@ -1173,35 +1034,6 @@ public class IAMServiceAccountUtilsTest {
         when(mockHttpEntity.getContent()).thenReturn(new ByteArrayInputStream(responseString.getBytes()));
 
         ReflectionTestUtils.setField(iamServiceAccountUtils, "iamPortalDeleteKeyEndpoint", "testendpoint");
-
-        boolean actualResult = iamServiceAccountUtils.deleteIAMAccesskeyFromIAM(awsAccountId, iamServiceAccountName, accessKeyId);
-        assertFalse(actualResult);
-    }
-
-    @Test
-    public void test_deleteIAMAccesskeyFromIAM_unsupported_encoding_exception_failed() throws Exception {
-        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        String iamServiceAccountName = "svc_vault_test5";
-        String awsAccountId = "1234567890";
-        String accessKeyId = "testaccesskey";
-
-        when(ControllerUtil.getSscred()).thenReturn(new SSCred());
-        when(ControllerUtil.getIamUsername()).thenReturn("M2UyNTA0MGYtODIwNS02ZWM2LTI4Y2ItOGYwZTQ1NDI1YjQ4");
-        when(ControllerUtil.getIamPassword()).thenReturn("MWFjOGM1ZTgtZjE5Ny0yMTVlLTNmODUtZWIwMDc3ZmY3NmQw");
-
-        when(httpUtils.getHttpClient()).thenReturn(httpClient);
-        when(httpClient.execute(any())).thenReturn(httpResponse);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
-
-        String responseString = "{\"auth\": {\"client_token\": \"" + tkn + "\"}}";
-        when(mockHttpEntity.getContent()).thenReturn( new ByteArrayInputStream(responseString.getBytes()));
-
-        ReflectionTestUtils.setField(iamServiceAccountUtils, "iamPortalDeleteKeyEndpoint", "testendpoint");
-
-        String inputJson = "{\"accessKeyId\": \"testaccesskey\",\"accountId\": \"1234567890\",\"userName\": \"svc_vault_test5\"}";
-        whenNew(StringEntity.class).withArguments(inputJson).thenThrow(new UnsupportedEncodingException());
 
         boolean actualResult = iamServiceAccountUtils.deleteIAMAccesskeyFromIAM(awsAccountId, iamServiceAccountName, accessKeyId);
         assertFalse(actualResult);
