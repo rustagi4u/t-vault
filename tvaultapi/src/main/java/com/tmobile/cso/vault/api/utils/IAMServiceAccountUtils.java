@@ -37,13 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.support.HttpRequestWrapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -303,14 +297,14 @@ public class IAMServiceAccountUtils {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			        put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 			        put(LogMessage.ACTION, "rotateIAMSecret").
-			        put(LogMessage.MESSAGE, "Failed to read the response - StringEntity:"+total.toString()).
+			        put(LogMessage.MESSAGE, "Failed to read the response - StringEntity:"+total).
 			        put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			        build()));
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 		        put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 		        put(LogMessage.ACTION, "rotateIAMSecret").
-		        put(LogMessage.MESSAGE, "Failed to build StringEntity:"+total.toString()).
+		        put(LogMessage.MESSAGE, "Failed to build StringEntity:"+total).
 		        put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 		        build()));
 	}
@@ -483,7 +477,7 @@ public class IAMServiceAccountUtils {
 	            List<IAMSecretsMetadata> currentSecretData = objectMapper.convertValue((List<IAMSecretsMetadata>) metadataMap.get(typeSecret), new TypeReference<List<IAMSecretsMetadata>>() { });
 	            if(null != currentSecretData) {
 	                List<IAMSecretsMetadata> newSecretData = new ArrayList<>();
-	                newSecretData = addMetadataToSecretData(currentSecretData,accessKeyId,newSecretData,iamServiceAccountSecret);
+	                addMetadataToSecretData(currentSecretData,accessKeyId,newSecretData,iamServiceAccountSecret);
 	                metadataMap.put(typeSecret, newSecretData);
 	                metadataMap.put(EXPIRY_DATE_EPOCH, iamServiceAccountSecret.getExpiryDateEpoch());
 	                String metadataJson = "";

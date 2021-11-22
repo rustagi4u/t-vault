@@ -5935,10 +5935,6 @@ public class  IAMServiceAccountsService {
 				if (jsonNode != null) {
 					iamSvcAcc.setExpiryDuration(jsonNode.asLong());
 				}
-				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("expiryDuration");
-				if (jsonNode != null) {
-					iamSvcAcc.setExpiryDuration(jsonNode.asLong());
-				}
 				JsonParser jsonParser = new JsonParser();
 				JsonArray dataSecret = ((JsonObject) jsonParser.parse(new ObjectMapper().readTree(metaResponse.getResponse()).get("data").toString()))
 						.getAsJsonArray("secret");
