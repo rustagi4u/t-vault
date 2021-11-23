@@ -1040,6 +1040,41 @@ public class IAMServiceAccountUtilsTest {
     }
 
     @Test
+    public void test_deleteIAMAccesskeyFromIAM_unsupported_encoding_exception_failed() throws Exception {
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String iamServiceAccountName = "svc_vault_test5";
+        String awsAccountId = "1234567890";
+        String accessKeyId = "testaccesskey";
+        String iamSecret = "omg_so_secret";
+        when(ControllerUtil.getSscred()).thenReturn(new SSCred());
+        when(ControllerUtil.getIamUsername()).thenReturn("M2UyNTA0MGYtODIwNS02ZWM2LTI4Y2ItOGYwZTQ1NDI1YjQ4");
+        when(ControllerUtil.getIamPassword()).thenReturn("MWFjOGM1ZTgtZjE5Ny0yMTVlLTNmODUtZWIwMDc3ZmY3NmQw");
+
+        when(httpUtils.getHttpClient()).thenReturn(httpClient);
+        when(httpClient.execute(any())).thenReturn(httpResponse);
+        when(httpResponse.getStatusLine()).thenReturn(statusLine);
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
+        String responseString = "{\"accessKeyId\": \"testaccesskey\", \"userName\": \"svc_vault_test5\", \"accessKeySecret\": \"abcdefgh\", \"expiryDateEpoch\": \"1609754282000\"}";
+        String responseStringToken = "{\"auth\": {\"client_token\": \""+tkn+"\"}}";
+        when(mockHttpEntity.getContent()).thenAnswer(new Answer() {
+            private int count = 0;
+
+            public Object answer(InvocationOnMock invocation) {
+                if (count++ == 1)
+                    return new ByteArrayInputStream(responseString.getBytes());
+
+                return new ByteArrayInputStream(responseStringToken.getBytes());
+            }
+        });
+
+        IAMServiceAccountSecret expectedIamServiceAccountSecret = new IAMServiceAccountSecret(iamServiceAccountName, accessKeyId, iamSecret, 1609754282000L, awsAccountId, "", "");
+        IAMServiceAccountRotateRequest iamServiceAccountRotateRequest = new IAMServiceAccountRotateRequest(accessKeyId, iamServiceAccountName, awsAccountId);
+        Boolean iamServiceAccountSecret = iamServiceAccountUtils.deleteIAMAccesskeyFromIAM(awsAccountId,iamServiceAccountName,accessKeyId);
+        assertEquals(false,iamServiceAccountSecret);
+    }
+
+    @Test
     public void test_deleteIAMAccesskeyFromIAM_null_http_client_failed() throws IOException {
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         String iamServiceAccountName = "svc_vault_test5";
