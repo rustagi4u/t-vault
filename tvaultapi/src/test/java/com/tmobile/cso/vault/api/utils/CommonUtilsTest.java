@@ -31,7 +31,8 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
-
+import java.util.Collections;
+import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(PowerMockRunner.class)
@@ -124,6 +125,33 @@ public class CommonUtilsTest {
 
         String modifiedBy = commonUtils.getModifiedByInfo(userDetails);
         assertEquals("AWS Role", modifiedBy);
+    }
+    @Test
+    public void test_getTokePoliciesAsList_policynodefailure() throws Exception {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+
+
+        Response response = new Response();
+        response.setHttpstatus(HttpStatus.OK);
+        response.setResponse("{\"policies\": \"sample_policy\"}");
+        Mockito.when(reqProcessor.process("/auth/tvault/lookup", "{}", sampletok)).thenReturn(response);
+
+        List<String> modifiedBy = commonUtils.getTokePoliciesAsList(sampletok);
+        List<String> expected= Collections.singletonList("sample_policy");
+        assertEquals(expected, modifiedBy);
+    }
+    @Test
+    public void test_getTokePoliciesAsList_policynode() throws Exception {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        Response response = new Response();
+        response.setHttpstatus(HttpStatus.OK);
+        response.setResponse("{\"policies\": {\"elements\": \"role1\"}}");
+
+        Mockito.when(reqProcessor.process("/auth/tvault/lookup", "{}", sampletok)).thenReturn(response);
+
+        List<String> modifiedBy = commonUtils.getTokePoliciesAsList(sampletok);
+        List<String> expected= Collections.singletonList("role1");
+        assertEquals(expected, modifiedBy);
     }
 
 }
