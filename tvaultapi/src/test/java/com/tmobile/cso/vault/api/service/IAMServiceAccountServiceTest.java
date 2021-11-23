@@ -7076,6 +7076,37 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
+	public void test_getListOfIAMServiceAccountAccessKeys_deny_failed() {
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String iamSvcaccName = "testiamsvcacc01";
+		String awsAccountId = "1234567890";
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":" +
+				"[\"r_iamsvcacc_1234567890_testiamsvcacc01, d_iamsvcacc_1234567890_testiamsvcacc01 \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("default");
+		List<String> identityPolicies = new ArrayList<>();
+		identityPolicies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
+		identityPolicies.add("d_iamsvcacc_1234567890_testiamsvcacc01");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+			when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// System under test
+		String expectedResponse = "{\"errors\":[\"Access denied. Not authorized to perform getting the list of IAM service account access keys.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.FORBIDDEN).body(expectedResponse);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId);
+		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
 	public void test_getListOfIAMServiceAccountAccessKeys_failed_Empty() {
 		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";

@@ -477,14 +477,17 @@ public class  IAMServiceAccountsService {
 				List<String> identityPolicies = iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(objectMapper, responseJson);
 				String readPolicyName = "r_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
 				String writePolicyName = "w_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
-				if (currentPolicies.contains(iamSelfSupportAdminPolicyName) || identityPolicies.stream().anyMatch((a) ->
-						a.startsWith(readPolicyName) || a.startsWith(writePolicyName))) {
-					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-							.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
-							.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
-							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-					return true;
+				String denyPolicyName = "d_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
+				if (!identityPolicies.contains(denyPolicyName)) {
+					if (currentPolicies.contains(iamSelfSupportAdminPolicyName) || identityPolicies.stream().anyMatch((policy) ->
+							policy.startsWith(readPolicyName) || policy.startsWith(writePolicyName))) {
+						log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+								.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+								.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
+								.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+						return true;
+					}
 				}
 			} catch (IOException e) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
