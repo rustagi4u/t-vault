@@ -276,7 +276,7 @@ public class IAMServiceAccountServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, token, serviceAccountApprole);
 
         assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -302,7 +302,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"testuser\",\"name\":\"svc_vault_test5\",\"users\":{\"testuser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, tkn, serviceAccountApprole);
 
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -327,7 +327,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, tkn, serviceAccountApprole);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -357,7 +357,7 @@ public class IAMServiceAccountServiceTest {
 		List<String> currnetPolicies = new ArrayList<>();
 		currnetPolicies.add("iamportal_admin_policy");
 		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(currnetPolicies);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, token, serviceAccountApprole);
 
 		assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -388,7 +388,7 @@ public class IAMServiceAccountServiceTest {
 		List<String> currnetPolicies = new ArrayList<>();
 		currnetPolicies.add("iamportal_admin_policy");
 		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(currnetPolicies);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, token, serviceAccountApprole);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -1277,57 +1277,6 @@ public class IAMServiceAccountServiceTest {
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(tkn,
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"errors\":[\"Update Failed. Owner_ntid is required when owner_email is given.\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
-		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-		assertEquals(responseEntityExpected, responseEntity);
-	}
-
-	@Test
-	public void test_updateIAMServiceAccount_null_iam_svc_acc_failure() throws Exception {
-		userDetails = getMockUser(true);
-		String tkn = userDetails.getClientToken();
-		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
-		serviceAccount.setOwnerEmail("oldowner@email.com");
-		IAMServiceAccountTransfer iamSvcAccTransfer = new IAMServiceAccountTransfer(serviceAccount.getUserName(), serviceAccount.getAwsAccountId(),
-				"newowner", "newowner@t-mobile.com", null, null, null, null);
-
-		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
-
-		// Get metadata
-		String expectedMetadataBody = "{\"data\":{\"ad_group\":\"group1\",\"application_id\":\"app1\",\"application_name\":\"App1\"," +
-				"\"application_tag\":\"App1\",\"expiryDateEpoch\":\"99999\",\"expiryDuration\":\"1234\"," +
-				"\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"}," +
-				"\"isActivated\":true,\"owner_email\":\"normaluser@test.com\",\"owner_ntid\":\"normaluser\"," +
-				"\"secret\":[{\"accessKeyId\":\"123456789123456789\",\"expiryDateEpoch\":12345}],\"userName\":\"testaccount\"}}";
-		Response expectedMetadataResponse = getMockResponse(HttpStatus.NOT_FOUND, true, expectedMetadataBody);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(tkn))).thenReturn(expectedMetadataResponse);
-
-		String path = "metadata/iamsvcacc/1234567_testaccount";
-		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", tkn)).thenReturn(getMockResponse(HttpStatus.OK, true,
-				iamMetaDataStr));
-
-		// Validations
-		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
-		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		when(JSONUtil.getJSON(Mockito.any())).thenReturn("{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"read\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
-		when(reqProcessor.process(eq("/iam/onboardedlist"), Mockito.any(), eq(tkn))).thenReturn(getMockResponse(
-				HttpStatus.OK, true, "{\"keys\":[\"1234567_testaccount\" ]}"));
-		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
-				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
-
-		PowerMockito.whenNew(IAMServiceAccount.class).withNoArguments().thenReturn(null);
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(tkn,
-				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"errors\":[\"Failed to get metadata for this IAM Service Account.\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
@@ -3298,7 +3247,7 @@ public class IAMServiceAccountServiceTest {
 				"{\"errors\":[\"Error Fetching existing IAM Service account info. please check the path specified\"]}");
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
-				"{\"data\":{\"isActivated\":false,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+				"{\"data\":{\"isActivated\":false,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		String[] latestPolicies = { "o_iamsvcacc_1234567_testaccount" };
 		when(policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(), userDetails.getUsername(), userDetails))
 				.thenReturn(latestPolicies);
@@ -3616,7 +3565,7 @@ public class IAMServiceAccountServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -3644,7 +3593,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, tkn, serviceAccountApprole);
 
@@ -3670,7 +3619,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, tkn, serviceAccountApprole);
 
@@ -3696,7 +3645,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, tkn, serviceAccountApprole);
 
@@ -3722,7 +3671,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, tkn, serviceAccountApprole);
 
@@ -3748,7 +3697,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, tkn, serviceAccountApprole);
 
@@ -3775,7 +3724,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(tkn);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, tkn, serviceAccountApprole);
 
@@ -5718,7 +5667,7 @@ public class IAMServiceAccountServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -5748,7 +5697,7 @@ public class IAMServiceAccountServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -5778,7 +5727,7 @@ public class IAMServiceAccountServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -5808,7 +5757,7 @@ public class IAMServiceAccountServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -5835,7 +5784,7 @@ public class IAMServiceAccountServiceTest {
 	        Response configureAWSRoleResponse = getMockResponse(HttpStatus.BAD_REQUEST, true, "");
 	        when(awsiamAuthService.configureAWSIAMRole(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(configureAWSRoleResponse);
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -5852,7 +5801,7 @@ public class IAMServiceAccountServiceTest {
 	        IAMServiceAccountAWSRole serviceAccountAWSRole = new IAMServiceAccountAWSRole("testsvcname", "role1", "read", "1234568990");
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -5881,7 +5830,7 @@ public class IAMServiceAccountServiceTest {
 	        Response updateMetadataResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeAWSRoleFromIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
@@ -5911,7 +5860,7 @@ public class IAMServiceAccountServiceTest {
 	        Response updateMetadataResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeAWSRoleFromIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
@@ -5942,7 +5891,7 @@ public class IAMServiceAccountServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeAWSRoleFromIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
@@ -5969,7 +5918,7 @@ public class IAMServiceAccountServiceTest {
 	        Response configureAWSRoleResponse = getMockResponse(HttpStatus.BAD_REQUEST, true, "");
 	        when(awsAuthService.configureAWSRole(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(configureAWSRoleResponse);
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeAWSRoleFromIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
@@ -5986,7 +5935,7 @@ public class IAMServiceAccountServiceTest {
 	        IAMServiceAccountAWSRole serviceAccountAWSRole = new IAMServiceAccountAWSRole("testsvcname", "role1", "read", "1234568990");
 		   
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 	        ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeAWSRoleFromIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
@@ -7038,6 +6987,69 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
+	public void test_getListOfIAMServiceAccountAccessKeys_read_identity_policy_successfully() throws IOException {
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String iamSvcaccName = "testiamsvcacc01";
+		String awsAccountId = "1234567890";
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"default\"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("default");
+		List<String> identityPolicies = new ArrayList<>();
+		identityPolicies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
+
+		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
+
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void test_getListOfIAMServiceAccountAccessKeys_write_identity_policy_successfully() throws IOException {
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String iamSvcaccName = "testiamsvcacc01";
+		String awsAccountId = "1234567890";
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"default\"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("default");
+		List<String> identityPolicies = new ArrayList<>();
+		identityPolicies.add("w_iamsvcacc_1234567890_testiamsvcacc01");
+
+		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
+
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void test_getListOfIAMServiceAccountAccessKeys_io_exception_failure() throws IOException {
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String iamSvcaccName = "testiamsvcacc01";
+		String awsAccountId = "1234567890";
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+
+		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenThrow(new IOException());
+
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId);
+		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+	}
+
+	@Test
 	public void test_getListOfIAMServiceAccountAccessKeys_notauthorized_failed() {
 		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";
@@ -7059,6 +7071,37 @@ public class IAMServiceAccountServiceTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.FORBIDDEN).body(expectedResponse);
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcaccName, awsAccountId);
+		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
+	public void test_getListOfIAMServiceAccountAccessKeys_deny_failed() {
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String iamSvcaccName = "testiamsvcacc01";
+		String awsAccountId = "1234567890";
+
+		// Mock approle permission check
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":" +
+				"[\"r_iamsvcacc_1234567890_testiamsvcacc01, d_iamsvcacc_1234567890_testiamsvcacc01 \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("default");
+		List<String> identityPolicies = new ArrayList<>();
+		identityPolicies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
+		identityPolicies.add("d_iamsvcacc_1234567890_testiamsvcacc01");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+			when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// System under test
+		String expectedResponse = "{\"errors\":[\"Access denied. Not authorized to perform getting the list of IAM service account access keys.\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.FORBIDDEN).body(expectedResponse);
+
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId);
 		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
@@ -7652,7 +7695,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, token, serviceAccountApprole);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -7678,7 +7721,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, token, serviceAccountApprole);
 
 		assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -7703,7 +7746,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.associateApproletoIAMsvcacc(userDetails, token, serviceAccountApprole);
 
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -7728,7 +7771,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeApproleFromIAMSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -7755,7 +7798,7 @@ public class IAMServiceAccountServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.addAwsRoleToIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -7780,7 +7823,7 @@ public class IAMServiceAccountServiceTest {
 		Response updateMetadataResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"auser\",\"name\":\"svc_vault_test5\",\"users\":{\"auser\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual =  iamServiceAccountsService.removeAWSRoleFromIAMSvcacc(userDetails, token, serviceAccountAWSRole);
 
