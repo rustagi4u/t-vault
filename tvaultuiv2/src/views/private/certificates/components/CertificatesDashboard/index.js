@@ -35,6 +35,8 @@ import OnboardCertificates from '../OnboardCertificate';
 import DeletionConfirmationModal from './components/DeletionConfirmationModal';
 import SuccessAndErrorModal from '../../../../../components/SuccessAndErrorModal';
 import SearchboxWithDropdown from '../../../../../components/FormFields/SearchboxWithDropdown';
+import EditCertificate from '../EditCertificate';
+import CreateCertificates from '../../CreateCertificates';
 
 const ColumnSection = styled('section')`
   position: relative;
@@ -86,13 +88,6 @@ const NoDataWrapper = styled.div`
 
 const NoListWrap = styled.div`
   width: 35%;
-`;
-
-const FloatBtnWrapper = styled('div')`
-  position: absolute;
-  bottom: 1rem;
-  right: 2.5rem;
-  z-index: 1;
 `;
 
 const SearchWrap = styled.div`
@@ -1207,6 +1202,29 @@ const CertificatesDashboard = () => {
               />
             </Switch>
           </RightColumnSection>
+          <Switch>
+            <Route
+              exact
+              path="/certificates/create-ceritificate"
+              render={() => (
+                <CreateCertificates
+                  refresh={() => {
+                    clearDataAndLoad();
+                    searchAllcertApi();
+                  }}
+                />
+              )}
+            />
+            <Route
+              exact
+              path="/certificates/edit-certificate"
+              render={() => (
+                <EditCertificate
+                  refresh={(status) => onCloseAllModal(status)}
+                />
+              )}
+            />
+          </Switch>
         </SectionPreview>
         {responseType === -1 && (
           <SnackbarComponent
