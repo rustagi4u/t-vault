@@ -23,8 +23,8 @@ public class Message {
 	}
 
 	  @ApiModelProperty(example="{\r\n" +
-	            "     \"Safe-message\":\"value1\",\r\n" +
-	            "    \"SSL-message\":\"value2\"\r\n" +
+	            "     \"message1\":\"value1\",\r\n" +
+	            "    \"message2\":\"value2\"\r\n" +
 	            "  }", position=2, required=true)
 	public HashMap<String, String> getDetails() {
 		return details;
