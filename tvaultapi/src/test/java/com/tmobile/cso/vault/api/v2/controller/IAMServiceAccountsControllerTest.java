@@ -665,7 +665,7 @@ public class IAMServiceAccountsControllerTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
 
-		when(iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token , "testiamsvcacc01", "123456789012"))
+		when(iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token , "testiamsvcacc01", "123456789012", userDetails))
 				.thenReturn(responseEntityExpected);
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/iamserviceaccounts/123456789012/testiamsvcacc01/keys")
 				.header(VAULT_TOKEN_STRING, token).header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)
