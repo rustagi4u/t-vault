@@ -7151,6 +7151,29 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
+	public void test_getListOfIAMServiceAccountAccessKeys_no_account_found_failure() {
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String iamSvcaccName = "testiamsvcacc01";
+		String awsAccountId = "1234567890";
+
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
+		List<String> currentPolicies = new ArrayList<>();
+		currentPolicies.add("iamportal_admin_policy");
+		try {
+			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(
+				getMockResponse(HttpStatus.NOT_FOUND, false, "{}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(responseEntity.getBody(), "{\"errors\":[\"No Iam Service Account with testiamsvcacc01.\"]}");
+	}
+
+	@Test
 	public void test_createAccessKeys_success() {
 		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";
