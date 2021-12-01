@@ -425,7 +425,8 @@ public class IAMServiceAccountsController {
 	public ResponseEntity<String> getListOfIAMServiceAccountAccessKeys(HttpServletRequest request,
 			@RequestHeader(value = "vault-token") String token, @PathVariable("aws_account_id") String awsAccountId,
 			@PathVariable("iam_svc_name") String iamSvcName) {
-		return iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcName, awsAccountId);
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcName, awsAccountId, userDetails);
 	}
 
 	/**

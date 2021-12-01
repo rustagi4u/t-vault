@@ -5082,9 +5082,11 @@ public class  IAMServiceAccountsService {
 	 * @param token
 	 * @param iamSvcaccName
 	 * @param awsAccountId
-	 * @return
+	 * @param userDetails
+	 * @return ResponseEntity
 	 */
-	public ResponseEntity<String> getListOfIAMServiceAccountAccessKeys(String token, String iamSvcaccName, String awsAccountId) {
+	public ResponseEntity<String> getListOfIAMServiceAccountAccessKeys(String token, String iamSvcaccName,
+																	   String awsAccountId, UserDetails userDetails) {
 		iamSvcaccName = iamSvcaccName.toLowerCase();
 		String uniqueIAMSvcName = awsAccountId + "_" + iamSvcaccName;
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
@@ -5102,6 +5104,10 @@ public class  IAMServiceAccountsService {
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
 					"{\"errors\":[\"Access denied. Not authorized to perform getting the list of IAM service account access keys.\"]}");
+		}
+
+		if (!userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
 		}
 
 		String path = TVaultConstants.IAM_SVC_PATH + uniqueIAMSvcName;
