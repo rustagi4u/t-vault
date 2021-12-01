@@ -468,33 +468,38 @@ public class  IAMServiceAccountsService {
 	 * @return boolean
 	 */
 	private boolean isAuthorizedToReadAccessKeys(String token, String iamSvcAccName, String awsAccountId) {
-		ObjectMapper objectMapper = new ObjectMapper();
 		Response response = reqProcessor.process("/auth/tvault/lookup","{}", token);
 		if(HttpStatus.OK.equals(response.getHttpstatus())) {
-			String responseJson = response.getResponse();
-			try {
-				List<String> currentPolicies = iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(objectMapper, responseJson);
-				List<String> identityPolicies = iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(objectMapper, responseJson);
+			Response renewResponse = oidcUtil.renewUserToken(token);
+			if (renewResponse != null) {
+				Map<String, Object> responseMap;
+				responseMap = ControllerUtil.parseJson(renewResponse.getResponse());
+				if(responseMap.isEmpty()) {
+					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys").
+							put(LogMessage.MESSAGE, "Parsing Json for isAuthorizedToReadAccessKeys failed").
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+					return false;
+				}
+
+				@SuppressWarnings("unchecked")
+				List<String> policies = (List<String>) responseMap.get("policies");
+
 				String readPolicyName = "r_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
 				String writePolicyName = "w_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
 				String denyPolicyName = "d_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
-				if (!identityPolicies.contains(denyPolicyName)) {
-					if (currentPolicies.contains(iamSelfSupportAdminPolicyName) || identityPolicies.stream().anyMatch((policy) ->
-							policy.startsWith(readPolicyName) || policy.startsWith(writePolicyName))) {
-						log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-								.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
-								.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
-								.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-						return true;
-					}
+
+				if (!policies.contains(denyPolicyName) && (policies.contains(iamSelfSupportAdminPolicyName) ||
+						policies.stream().anyMatch((policy) -> policy.startsWith(readPolicyName) || policy.startsWith(writePolicyName)))) {
+					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+							.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+							.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
+							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+					return true;
 				}
-			} catch (IOException e) {
-				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-						.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
-						.put(LogMessage.MESSAGE, "Failed to parse policies from token")
-						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			}
 		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()

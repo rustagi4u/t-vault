@@ -6966,23 +6966,23 @@ public class IAMServiceAccountServiceTest {
 	}
 	@Test
 	public void test_getListOfIAMServiceAccountAccessKeys_successfully() {
-		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";
 		String awsAccountId = "1234567890";
 
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
-		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
 
-		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcaccName, awsAccountId, getMockUser(false));
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("iamportal_admin_policy");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
+
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 
@@ -6995,13 +6995,13 @@ public class IAMServiceAccountServiceTest {
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("iamportal_admin_policy");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(true));
@@ -7017,13 +7017,14 @@ public class IAMServiceAccountServiceTest {
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"default\"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("default");
-		List<String> identityPolicies = new ArrayList<>();
-		identityPolicies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
 
-		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("default");
+		policies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
@@ -7039,13 +7040,14 @@ public class IAMServiceAccountServiceTest {
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"default\"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("default");
-		List<String> identityPolicies = new ArrayList<>();
-		identityPolicies.add("w_iamsvcacc_1234567890_testiamsvcacc01");
 
-		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("default");
+		policies.add("w_iamsvcacc_1234567890_testiamsvcacc01");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
@@ -7053,7 +7055,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-	public void test_getListOfIAMServiceAccountAccessKeys_io_exception_failure() throws IOException {
+	public void test_getListOfIAMServiceAccountAccessKeys_empty_response_map_failure() {
 		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";
 		String awsAccountId = "1234567890";
@@ -7061,10 +7063,10 @@ public class IAMServiceAccountServiceTest {
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
 
-		when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenThrow(new IOException());
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser1\",\"secret\":[{\"accessKeyId\":\"1212zdasd\",\"expiryDuration\":\"1086073200000\"}],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
@@ -7073,26 +7075,28 @@ public class IAMServiceAccountServiceTest {
 
 	@Test
 	public void test_getListOfIAMServiceAccountAccessKeys_notauthorized_failed() {
-		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";
 		String awsAccountId = "1234567890";
 
 		// Mock approle permission check
-		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
-		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
+		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"default\"]}");
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
 		List<String> currentPolicies = new ArrayList<>();
 		currentPolicies.add("default");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("default");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		// System under test
 		String expectedResponse = "{\"errors\":[\"Access denied. Not authorized to perform getting the list of IAM service account access keys.\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.FORBIDDEN).body(expectedResponse);
 
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcaccName, awsAccountId, getMockUser(false));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
 		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
@@ -7107,17 +7111,15 @@ public class IAMServiceAccountServiceTest {
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":" +
 				"[\"r_iamsvcacc_1234567890_testiamsvcacc01, d_iamsvcacc_1234567890_testiamsvcacc01 \"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("default");
-		List<String> identityPolicies = new ArrayList<>();
-		identityPolicies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
-		identityPolicies.add("d_iamsvcacc_1234567890_testiamsvcacc01");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-			when(iamServiceAccountUtils.getIdentityPoliciesAsListFromTokenLookupJson(Mockito.any(), Mockito.any())).thenReturn(identityPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("default");
+		policies.add("r_iamsvcacc_1234567890_testiamsvcacc01");
+		policies.add("d_iamsvcacc_1234567890_testiamsvcacc01");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		// System under test
 		String expectedResponse = "{\"errors\":[\"Access denied. Not authorized to perform getting the list of IAM service account access keys.\"]}";
@@ -7130,23 +7132,23 @@ public class IAMServiceAccountServiceTest {
 
 	@Test
 	public void test_getListOfIAMServiceAccountAccessKeys_failed_Empty() {
-		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		String iamSvcaccName = "testiamsvcacc01";
 		String awsAccountId = "1234567890";
 
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
-		when(reqProcessor.process("/auth/tvault/lookup","{}", token)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
 
-		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser\",\"secret\":[],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcaccName, awsAccountId, getMockUser(false));
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("iamportal_admin_policy");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
+
+		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"application_id\":1222,\"application_name\":\"T-Vault\",\"application_tag\":\"TVT\",\"awsAccountId\":\"123456789012\",\"awsAccountName\":\"AWS-SEC\",\"createdAtEpoch\":1086073200000,\"isActivated\":true,\"owner_email\":\"test.test1@T-mobile.com\",\"owner_ntid\":\"testuser\",\"secret\":[],\"userName\":\"testiamsvcacc01\",\"users\":{\"testuser1\":\"write\"}}}"));
+		ResponseEntity<String> responseEntity = iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(tkn, iamSvcaccName, awsAccountId, getMockUser(false));
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 
@@ -7158,13 +7160,13 @@ public class IAMServiceAccountServiceTest {
 
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
-		List<String> currentPolicies = new ArrayList<>();
-		currentPolicies.add("iamportal_admin_policy");
-		try {
-			when(iamServiceAccountUtils.getTokenPoliciesAsListFromTokenLookupJson(Mockito.any(),Mockito.any())).thenReturn(currentPolicies);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+		when(OIDCUtil.renewUserToken(tkn)).thenReturn(lookupResponse);
+		Map<String, Object> dataMap = new HashMap<>();
+		List<String> policies = new ArrayList<>();
+		policies.add("iamportal_admin_policy");
+		dataMap.put("policies", policies);
+		when(ControllerUtil.parseJson(lookupResponse.getResponse())).thenReturn(dataMap);
 
 		when(reqProcessor.process(eq("/iamsvcacct"),Mockito.any(),eq(tkn))).thenReturn(
 				getMockResponse(HttpStatus.NOT_FOUND, false, "{}"));

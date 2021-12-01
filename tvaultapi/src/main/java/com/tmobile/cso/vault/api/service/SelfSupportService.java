@@ -1001,12 +1001,12 @@ public class  SelfSupportService {
 	/**
 	 * Update AppRole
 	 * @param userToken
-	 * @param appRole
+	 * @param appRoleUpdate
 	 * @param userDetails
 	 * @return ResponseEntity<String>
 	 */
-	public ResponseEntity<String> updateAppRole(String userToken, AppRole appRole, UserDetails userDetails) {
-		return appRoleService.updateAppRole(userToken, appRole, userDetails);
+	public ResponseEntity<String> updateAppRole(String userToken, AppRoleUpdate appRoleUpdate, UserDetails userDetails) {
+		return appRoleService.updateAppRole(userToken, appRoleUpdate, userDetails);
 	}
 
 	/**

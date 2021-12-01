@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+        .image {
+            border: 1px solid #eee;
+        }
+        .special-text, h4 {
+            color:#f6006e.
+        }
+    </style>
+</head>
+<body>
+    <div>Hello<span data-th-text="${name}"></span>,</div>
+    <br/>
+    <div>This message is to inform you that ownership of AppRole <span class="special-text" data-th-text="${appRoleName}"></span>
+        has transferred from <span data-th-text="${oldOwnerName}"></span> to you.</div>
+    <br/>
+    <div>Thanks,</div>
+    <div>Support team</div>
+</body>
+</html>

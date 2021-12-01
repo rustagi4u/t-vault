@@ -339,6 +339,42 @@ public class EmailUtils {
 	 * @param variables
 	 * @param templateFileName
 	 */
+	public void sendAppRoleHtmlEmalFromTemplate(String from, List<String> to, List<String> cc, String subject,
+												  Map<String, String> variables, String templateFileName) {
+		MimeMessage message = javaMailSender.createMimeMessage();
+		MimeMessageHelper helper;
+		try {
+			helper = new MimeMessageHelper(message,true, "UTF-8");
+			helper.setFrom(from);
+			helper.setTo(to.toArray(new String[to.size()]));
+			if (cc != null) {
+				helper.setCc(cc.toArray(new String[cc.size()]));
+			}
+			helper.setSubject(subject);
+
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
+			helper.setText(content, true);
+			extractImageBytesFromByteArray(helper);
+			javaMailSender.send(message);
+		} catch (MessagingException|MailSendException e) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "sendIAMSvcAccHtmlEmalFromTemplate").
+					put(LogMessage.MESSAGE, "Failed to send email notification to AppRole owner.").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+		}
+	}
+
+	/**
+	 * To send HTML email notification
+	 * @param from
+	 * @param to
+	 * @param cc
+	 * @param subject
+	 * @param variables
+	 * @param templateFileName
+	 */
 	public void sendIAMSvcAccHtmlEmalFromTemplate(String from, List<String> to, List<String> cc, String subject,
 												  Map<String, String> variables, String templateFileName) {
 		MimeMessage message = javaMailSender.createMimeMessage();

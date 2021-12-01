@@ -3848,8 +3848,8 @@ public class SelfSupportServiceTest {
         UserDetails userDetails = getMockUser(false);
         String roleName = "myvaultapprole42";
         String [] policies = {"s_shared_s1"};
-        AppRole appRole = new AppRole("approle1", policies, true, 1, 100, 0);
-        ResponseEntity<String> responseEntity = selfSupportService.updateAppRole(sampletok, appRole, userDetails);
+        AppRoleUpdate appRoleUpdate = new AppRoleUpdate("approle1", policies, true, 1, 100, 0);
+        ResponseEntity<String> responseEntity = selfSupportService.updateAppRole(sampletok, appRoleUpdate, userDetails);
         assertTrue(true);
     }
     @Test
