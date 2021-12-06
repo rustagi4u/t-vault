@@ -4518,7 +4518,7 @@ public class AppRoleServiceTest {
         String[] policies = policiesList.toArray(new String[policiesList.size()]);
         AppRoleUpdate appRoleUpdate = new AppRoleUpdate(role_name, policies, true, 0, 0, 0);
         appRoleUpdate.setOwner("newOwner");
-        appRoleUpdate.setNewOwnerEmail("newOwner@hotmail.com");
+        appRoleUpdate.setNew_owner_email("newOwner@hotmail.com");
         AppRole appRole = constructAppRoleFromUpdateObject(appRoleUpdate);
         String appRoleResponseJson = new ObjectMapper().writeValueAsString(appRole);
         Response appRoleResponse = getMockResponse(HttpStatus.OK, true, appRoleResponseJson);
@@ -5059,7 +5059,7 @@ public class AppRoleServiceTest {
         // END - AppRole exists
         String jsonStr = "{\"role_name\":\"approle1\",\"policies\":[\"default\"],\"bind_secret_id\":true,\"secret_id_num_uses\":\"1\",\"secret_id_ttl\":\"100m\",\"token_num_uses\":0,\"token_ttl\":null,\"token_max_ttl\":null}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("{\"errors\":[\"An AppRole cannot be shared with its owner. Please remove owner newOwner from the shared_to field, or change the owner.\"]}");
+                .body("{\"errors\":[\"An AppRole cannot be shared with its owner. Please remove owner newOwner as a shared user, or change the owner.\"]}");
 
         Map<String,Object> appRolesList = new HashMap<>();
         ArrayList<String> arrayList = new ArrayList<>();

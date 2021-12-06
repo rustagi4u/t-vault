@@ -18,7 +18,7 @@ public class AppRoleUpdate implements Serializable {
     private String owner;
 
     @Email
-    private String newOwnerEmail;
+    private String new_owner_email;
 
     private String role_name;
 
@@ -240,11 +240,11 @@ public class AppRoleUpdate implements Serializable {
         this.owner = owner;
     }
 
-    public String getNewOwnerEmail() {
-        return newOwnerEmail;
+    public String getNew_owner_email() {
+        return new_owner_email;
     }
 
-    public void setNewOwnerEmail(String newOwnerEmail) {
-        this.newOwnerEmail = newOwnerEmail;
+    public void setNew_owner_email(String new_owner_email) {
+        this.new_owner_email = new_owner_email;
     }
 }

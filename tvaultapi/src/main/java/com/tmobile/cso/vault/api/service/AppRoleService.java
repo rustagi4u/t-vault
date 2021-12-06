@@ -1756,13 +1756,13 @@ public class  AppRoleService {
 						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						build()));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format(
-						"{\"errors\":[\"An AppRole cannot be shared with its owner. Please remove owner %s from the shared_to field, " +
+						"{\"errors\":[\"An AppRole cannot be shared with its owner. Please remove owner %s as a shared user, " +
 								"or change the owner.\"]}", appRoleUpdate.getOwner()));
 			}
 			isOwnershipChanged = !appRoleUpdate.getOwner().isEmpty();
 		}
 
-		if (!validateNoSharedUserIsOwner(appRoleMetadataDetails, appRole.getShared_to())) {
+		if (!isOwnershipChanged && !validateNoSharedUserIsOwner(appRoleMetadataDetails, appRole.getShared_to())) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body("{\"errors\":[\"An AppRole cannot be shared with the current owner\"]}");
 		}
@@ -1823,9 +1823,9 @@ public class  AppRoleService {
 								put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 								build()));
 
-						if (appRoleUpdate.getNewOwnerEmail() != null) {
+						if (appRoleUpdate.getNew_owner_email() != null) {
 							sendNotificationEmail(appRoleMetadataDetails.getCreatedBy(), appRole.getRole_name(),
-									appRoleUpdate.getNewOwnerEmail());
+									appRoleUpdate.getNew_owner_email());
 						}
 					} else {
 						log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
