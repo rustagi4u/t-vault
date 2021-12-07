@@ -424,7 +424,7 @@ public class IAMServiceAccountsController {
 	@GetMapping(value = "/v2/iamserviceaccounts/{aws_account_id}/{iam_svc_name}/keys", produces = "application/json")
 	public ResponseEntity<String> getListOfIAMServiceAccountAccessKeys(HttpServletRequest request,
 			@RequestHeader(value = "vault-token") String token, @PathVariable("aws_account_id") String awsAccountId,
-			@PathVariable("iam_svc_name") String iamSvcName) {
+			@PathVariable("iam_svc_name") String iamSvcName) throws IOException {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
 		return iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcName, awsAccountId, userDetails);
 	}

@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.tmobile.cso.vault.api.utils.*;
+import com.unboundid.util.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.ArrayUtils;
@@ -462,12 +463,69 @@ public class  IAMServiceAccountsService {
 
 	/**
 	 * To check if the user/token has permission to read access keys for IAM service account.
+	 * @param userDetails
 	 * @param token
 	 * @param iamSvcAccName
 	 * @param awsAccountId
 	 * @return boolean
 	 */
-	private boolean isAuthorizedToReadAccessKeys(String token, String iamSvcAccName, String awsAccountId) {
+	private boolean isAuthorizedToReadAccessKeys(UserDetails userDetails, String token, String iamSvcAccName, String awsAccountId) throws IOException {
+		boolean isAuthorized = false;
+
+		String selfSupportToken = userDetails.getSelfSupportToken();
+
+		JsonObject iamMetadata = getIAMMetadata(selfSupportToken, awsAccountId + "_" + iamSvcAccName);
+		JsonElement appRoleElement = iamMetadata.get("app-roles");
+		JsonElement awsRoleElement = iamMetadata.get("aws-roles");
+		Map<String, Object> appRoles = null;
+		Map<String, Object> awsRoles = null;
+		if (appRoleElement != null) {
+			appRoles = ControllerUtil.parseJson(appRoleElement.toString());
+		}
+		if (awsRoleElement != null) {
+			awsRoles = ControllerUtil.parseJson(iamMetadata.get("aws-roles").toString());
+		}
+
+		if (appRoles != null) {
+			for (Map.Entry<String, Object> entry : appRoles.entrySet()) {
+				AppRoleMetadata appRoleMetadata = appRoleService.readAppRoleMetadata(selfSupportToken, entry.getKey());
+				if (appRoleMetadata != null) {
+					AppRoleMetadataDetails arDetails = appRoleMetadata.getAppRoleMetadataDetails();
+					if (arDetails.getCreatedBy().equals(userDetails.getUsername()) ||
+							(arDetails.getSharedTo() != null && arDetails.getSharedTo().contains(userDetails.getUsername()))) {
+						if (entry.getValue().equals(TVaultConstants.DENY_POLICY)) {
+							log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+									.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+									.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+									.put(LogMessage.MESSAGE, String.format("User %s is denied permission to read access keys because " +
+													"of approle %s", userDetails.getUsername(), entry.getKey()))
+									.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+							return false;
+						} else {
+							isAuthorized = true;
+						}
+					}
+				}
+			}
+		}
+
+		if (awsRoles != null) {
+			for (Map.Entry<String, Object> entry : awsRoles.entrySet()) {
+				String path = PATHSTR + "metadata/awsrole/" + entry.getKey() + "\"}";
+				Response awsMetaResponse = reqProcessor.process("/read", path, selfSupportToken);
+				if (awsMetaResponse.getHttpstatus().equals(HttpStatus.OK)) {
+					String createdBy = new ObjectMapper().readTree(awsMetaResponse.getResponse()).get("data").get("createdBy").textValue();
+					if (createdBy.equals(userDetails.getUsername())) {
+						if (entry.getValue().equals(TVaultConstants.DENY_POLICY)) {
+							return false;
+						} else {
+							isAuthorized = true;
+						}
+					}
+				}
+			}
+		}
+
 		Response response = reqProcessor.process("/auth/tvault/lookup","{}", token);
 		if(HttpStatus.OK.equals(response.getHttpstatus())) {
 			Response renewResponse = oidcUtil.renewUserToken(token);
@@ -481,33 +539,28 @@ public class  IAMServiceAccountsService {
 							put(LogMessage.MESSAGE, "Parsing Json for isAuthorizedToReadAccessKeys failed").
 							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 							build()));
-					return false;
-				}
+				} else {
+					String readPolicyName = "r_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
+					String writePolicyName = "w_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
+					String denyPolicyName = "d_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
+					@SuppressWarnings("unchecked")
+					List<String> policies = (List<String>) responseMap.get("policies");
 
-				@SuppressWarnings("unchecked")
-				List<String> policies = (List<String>) responseMap.get("policies");
-
-				String readPolicyName = "r_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
-				String writePolicyName = "w_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
-				String denyPolicyName = "d_iamsvcacc_" + awsAccountId + "_" + iamSvcAccName;
-
-				if (!policies.contains(denyPolicyName) && (policies.contains(iamSelfSupportAdminPolicyName) ||
-						policies.stream().anyMatch((policy) -> policy.startsWith(readPolicyName) || policy.startsWith(writePolicyName)))) {
-					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-							.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
-							.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
-							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-					return true;
+					if (policies.contains(denyPolicyName)) {
+						return false;
+					} else if (policies.contains(iamSelfSupportAdminPolicyName) || policies.stream()
+							.anyMatch((policy) -> policy.startsWith(readPolicyName) || policy.startsWith(writePolicyName))) {
+						log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+								.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+								.put(LogMessage.MESSAGE, "The User/Token has required policies to read access keys for IAM Service Account.")
+								.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+						isAuthorized = true;
+					}
 				}
 			}
 		}
-		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-				.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
-				.put(LogMessage.MESSAGE, "The User/Token does not have required policies to read access keys for IAM Service Account.")
-				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-		return false;
+		return isAuthorized;
 	}
 
 	/**
@@ -5091,7 +5144,7 @@ public class  IAMServiceAccountsService {
 	 * @return ResponseEntity
 	 */
 	public ResponseEntity<String> getListOfIAMServiceAccountAccessKeys(String token, String iamSvcaccName,
-																	   String awsAccountId, UserDetails userDetails) {
+																	   String awsAccountId, UserDetails userDetails) throws IOException {
 		iamSvcaccName = iamSvcaccName.toLowerCase();
 		String uniqueIAMSvcName = awsAccountId + "_" + iamSvcaccName;
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
@@ -5100,7 +5153,7 @@ public class  IAMServiceAccountsService {
 				.put(LogMessage.MESSAGE, String.format("Trying to get the list of IAM Service Account [%s] access keys", iamSvcaccName))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 
-		if (!isAuthorizedToReadAccessKeys(token, iamSvcaccName, awsAccountId)) {
+		if (!isAuthorizedToReadAccessKeys(userDetails, token, iamSvcaccName, awsAccountId)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, IAMServiceAccountConstants.GET_IAMSVCACC_ACCESSKEY_LIST_MSG)
