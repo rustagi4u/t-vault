@@ -25,9 +25,11 @@ import java.util.List;
 import com.google.common.collect.ImmutableMap;
 import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.exception.LogMessage;
+import com.tmobile.cso.vault.api.model.DirectoryUser;
 import com.tmobile.cso.vault.api.model.UserDetails;
 import com.tmobile.cso.vault.api.process.RequestProcessor;
 import com.tmobile.cso.vault.api.process.Response;
+import com.tmobile.cso.vault.api.service.DirectoryService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,9 @@ public class CommonUtils {
 
 	@Autowired
 	private RequestProcessor reqProcessor;
+
+	@Autowired
+	private DirectoryService directoryService;
 
 	private Logger log = LogManager.getLogger(CommonUtils.class);
 
@@ -175,6 +180,31 @@ public class CommonUtils {
 			}
 		}
 		return currentpolicies;
+	}
+
+	/**
+	 * Method to get the Directory User details
+	 *
+	 * @param userName
+	 * @return
+	 */
+	public DirectoryUser getUserDetails(String userName) {
+		DirectoryUser directoryUser = directoryService.getUserDetailsByCorpId(userName);
+		if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
+			// Get user details from Corp domain (For sprint users)
+			directoryUser = directoryService.getUserDetailsFromCorp(userName);
+		}
+		if (directoryUser != null) {
+			if(directoryUser.getDisplayName() != null) {
+				String[] displayName = directoryUser.getDisplayName().split(",");
+				if (displayName.length > 1) {
+					directoryUser.setDisplayName(displayName[1] + "  " + displayName[0]);
+				}
+			} else {
+				directoryUser.setDisplayName(userName);
+			}
+		}
+		return directoryUser;
 	}
 
 }

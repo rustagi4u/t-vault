@@ -30,6 +30,7 @@ import {
   GlobalModalWrapper,
   RequiredCircle,
   RequiredText,
+  InstructionText,
   TitleThree,
 } from '../../../../styles/GlobalStyles';
 
@@ -114,6 +115,18 @@ const CancelButton = styled.div`
     margin-right: 1rem;
     width: 100%;
   }
+`;
+
+const TransferButton = styled.div`
+  margin-right: 0.8rem;
+  ${small} {
+    margin-right: 1rem;
+    width: 100%;
+  }
+`;
+
+const TransferConfirmButton = styled.div`
+  margin-top: 2rem;
 `;
 
 const InputLabelWrap = styled.div`
@@ -250,6 +263,12 @@ const CreateAppRole = (props) => {
   const [options, setOptions] = useState([]);
   const [autoLoader, setAutoLoader] = useState(false);
   const [sharedToUserSelected, setSharedToUserSelected] = useState(false);
+  const [openTransferConfirmationModal, setOpenTransferConfirmationModal] = useState(false);
+  const [newOwnerEmail, setNewOwnerEmail] = useState('');
+  const [newOwnerNTID, setNewOwnerNTID] = useState('');
+  const [newOwnerSelected, setNewOwnerSelected] = useState(false);
+  const [transferError, setTransferError] = useState(false);
+  const [transferErrorMessage, setTransferErrorMessage] = useState('');
 
   const admin = Boolean(stateVal.isAdmin);
 
@@ -329,6 +348,11 @@ const CreateAppRole = (props) => {
   const handleClose = () => {
     setOpen(false);
     history.goBack();
+  };
+
+  const handleTransferClose = () => {
+    setOpen(true);
+    setOpenTransferConfirmationModal(false);
   };
 
   /**
@@ -424,6 +448,14 @@ const CreateAppRole = (props) => {
     setSharedToErrorMessage('');
   };
 
+  const onNewOwnerChange = (e) => {
+    setNewOwnerEmail(e.target.value);
+    setNewOwnerSelected(false);
+    callSearchApi(e.target.value);
+    setTransferError(false);
+    setTransferErrorMessage('');
+  };
+
   const onRemoveClicked = (sharedTo) => {
     if (canEditSharedTo) {
       const array = sharedToArray.filter((item) => item !== sharedTo);
@@ -434,6 +466,11 @@ const CreateAppRole = (props) => {
   const splitString = (val) => {
     return val.split('_').slice('2').join('_');
   };
+
+  const handleTransferModalClose = () => {
+    setOpenTransferConfirmationModal(false); 
+    handleClose();
+  }
 
   useEffect(() => {
     if (
@@ -526,6 +563,35 @@ const CreateAppRole = (props) => {
       });
   };
 
+  const onTransferAppRoleOwner = () => {
+    const payload = {
+      new_owner_email: newOwnerEmail,
+      owner: newOwnerNTID,
+      role_name: roleName
+    }
+    setResponseType(0);
+    apiService
+      .updateAppRole(payload)
+      .then(async (res) => {
+        if (res) {
+          setResponseType(1);
+          setStatus({ status: 'success', message: res.data.messages[0] });
+          await refresh();
+          setTimeout(() => {
+            setOpen(false);
+            history.goBack();
+          }, 1000);
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response?.data?.errors) {
+          setStatus({ status: 'failed', message: err.response.data.errors[0] });
+        }
+      
+        setResponseType(-1);
+      });
+  };
+
   useEffect(() => {
     trackPageView();
     return () => {
@@ -575,6 +641,15 @@ const CreateAppRole = (props) => {
     setSharedToUserSelected(true);
     setSharedTo(sharedToUserNTID);
   };
+
+  const onNewOwnerSelected = (e, val) => {
+    const splitValues = val?.split(', ');
+    const newOwnerUserNTID = (splitValues[0].toLowerCase().includes('@sprint.com')) ? splitValues[1] : splitValues[2];
+    const newOwnerEmailAddress = splitValues[0];
+    setNewOwnerSelected(true);
+    setNewOwnerEmail(newOwnerEmailAddress);
+    setNewOwnerNTID(newOwnerUserNTID);
+  }
 
   const callSearchApi = useCallback(
     debounce(
@@ -643,7 +718,7 @@ const CreateAppRole = (props) => {
   };
   return (
     <ComponentError>
-      <StyledModal
+      {!openTransferConfirmationModal && (<StyledModal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
         className={classes.modal}
@@ -909,6 +984,15 @@ const CreateAppRole = (props) => {
                   width={isMobileScreen ? '100%' : ''}
                 />
               </CancelButton>
+              <TransferButton>
+                {editApprole && (<ButtonComponent
+                  label='Transfer'
+                  color='secondary'
+                  disabled={!canEditSharedTo && !admin}
+                  onClick={() => setOpenTransferConfirmationModal(true)}
+                  width={isMobileScreen ? '100%' : ''}
+                />)}
+              </TransferButton>
               <ButtonComponent
                 label={!editApprole ? 'Create' : 'Update'}
                 color="secondary"
@@ -938,6 +1022,130 @@ const CreateAppRole = (props) => {
                 }
               />
             )}
+          </GlobalModalWrapper>
+        </Fade>
+      </StyledModal>)}
+      <StyledModal
+        aria-labelledby="transition-modal-title"
+        aria-describedby="transition-modal-description"
+        className={classes.modal}
+        open={openTransferConfirmationModal}
+        onClose={() => handleTransferModalClose()}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={openTransferConfirmationModal}>
+          <GlobalModalWrapper>
+            {responseType === 0 && <BackdropLoader />}
+              <HeaderWrapper>
+                <LeftIcon
+                  src={leftArrowIcon}
+                  alt="go-back"
+                  onClick={() => handleClose()}
+                />
+                <Typography variant="h5">
+                  Transfer AppRole Owner
+                </Typography>
+              </HeaderWrapper>
+              <IconDescriptionWrapper>
+                <SafeIcon src={ApproleIcon} alt="app-role-icon" />
+                <TitleThree lineHeight="1.8rem" extraCss={extraCss} color="#ccc">
+                  Approles’s operate a lot like safes, but they put the
+                  application at the logical unit for sharing.
+                </TitleThree>
+              </IconDescriptionWrapper>
+              <CreateSafeForm>
+              <InputFieldLabelWrapper>
+                <>
+                  <Tooltip
+                    classes={tooltipClasses}
+                    arrow
+                    title="New Owner of the AppRole"
+                    placement="top"
+                  >
+                    <InputLabel>
+                      New Owner
+                    </InputLabel>
+                  </Tooltip>
+                </>   
+                <SharedToAutoWrap>
+                  <AutoInputFieldLabelWrapper>
+                    <TypeAheadWrap>
+                      <TypeAheadComponent
+                        options = { 
+                          options.map(
+                            (item) =>
+                              `${item?.userEmail?.toLowerCase()}, ${
+                                item?.displayName &&
+                                item?.displayName !== '' &&
+                                getName(item?.displayName?.toLowerCase()) !== ' '
+                                  ? `${getName(item?.displayName?.toLowerCase())}, `: ''
+                              }${item?.userName?.toLowerCase()}`
+                          )
+                          }
+                        loader={autoLoader}
+                        userInput={newOwnerEmail}
+                        icon="search"
+                        name="newOwner"
+                        onSelected={(e, val) => onNewOwnerSelected(e, val)}
+                        onChange={(e) => {
+                          onNewOwnerChange(e);
+                        }}
+                        placeholder={'Search by NTID, Email or Name'}
+                        error={transferError}
+                        helperText={transferError ? transferErrorMessage : ''}
+                        disabled={!canEditSharedTo && !admin}
+                        styling={{ bottom: '5rem' }}
+                      />
+                      {autoLoader && sharedTo.length > 2 && (
+                        <LoaderSpinner customStyle={autoLoaderStyle} />
+                      )}
+                    </TypeAheadWrap>
+                  </AutoInputFieldLabelWrapper>
+                </SharedToAutoWrap>
+                <InstructionText>
+                  Search the T-Mobile system to add users
+                </InstructionText>
+                <CancelSaveWrapper>
+                  <CancelButton>
+                    <ButtonComponent
+                      label="Cancel"
+                      color="primary"
+                      onClick={() => handleTransferClose()}
+                      width={isMobileScreen ? '100%' : ''}
+                    />
+                  </CancelButton>
+                    <ButtonComponent 
+                      label='Confirm Transfer'
+                      color="secondary"
+                      disabled={(!canEditSharedTo && !admin) || !newOwnerSelected}
+                      onClick={() => onTransferAppRoleOwner()}
+                      width={isMobileScreen ? '100%' : ''}
+                    />
+                </CancelSaveWrapper>
+                {status.status === 'failed' && (
+                  <SnackbarComponent
+                    open
+                    onClose={() => onToastClose()}
+                    severity="error"
+                    icon="error"
+                    message={status.message || 'Something went wrong!'}
+                  />
+                )}
+                {status.status === 'success' && (
+                  <SnackbarComponent
+                    open
+                    onClose={() => onToastClose()}
+                    message={
+                      status.message || 'Approle has been created successfully '
+                    }
+                  />
+                )}
+              </InputFieldLabelWrapper>
+            </CreateSafeForm>
           </GlobalModalWrapper>
         </Fade>
       </StyledModal>

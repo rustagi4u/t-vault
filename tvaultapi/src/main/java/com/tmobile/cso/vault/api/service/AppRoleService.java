@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.tmobile.cso.vault.api.model.*;
+import com.tmobile.cso.vault.api.utils.CommonUtils;
+import com.tmobile.cso.vault.api.utils.EmailUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -40,17 +43,6 @@ import com.tmobile.cso.vault.api.common.SSLCertificateConstants;
 import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.controller.ControllerUtil;
 import com.tmobile.cso.vault.api.exception.LogMessage;
-import com.tmobile.cso.vault.api.model.AppRole;
-import com.tmobile.cso.vault.api.model.AppRoleAccessorId;
-import com.tmobile.cso.vault.api.model.AppRoleAccessorIds;
-import com.tmobile.cso.vault.api.model.AppRoleDetails;
-import com.tmobile.cso.vault.api.model.AppRoleIdSecretId;
-import com.tmobile.cso.vault.api.model.AppRoleMetadata;
-import com.tmobile.cso.vault.api.model.AppRoleMetadataDetails;
-import com.tmobile.cso.vault.api.model.AppRoleNameSecretId;
-import com.tmobile.cso.vault.api.model.AppRoleSecretData;
-import com.tmobile.cso.vault.api.model.SafeAppRoleAccess;
-import com.tmobile.cso.vault.api.model.UserDetails;
 import com.tmobile.cso.vault.api.process.RequestProcessor;
 import com.tmobile.cso.vault.api.process.Response;
 import com.tmobile.cso.vault.api.utils.JSONUtil;
@@ -67,6 +59,15 @@ public class  AppRoleService {
 
 	@Value("${vault.auth.method}")
 	private String vaultAuthMethod;
+
+	@Value("${ad.notification.fromemail}")
+	private String supportEmail;
+
+	@Autowired
+	private EmailUtils emailUtils;
+
+	@Autowired
+	private CommonUtils commonUtils;
 
 	private static Logger log = LogManager.getLogger(AppRoleService.class);
 	
@@ -138,7 +139,7 @@ public class  AppRoleService {
 		if (!isDuplicate) {
 			Response response = reqProcessor.process(CREATEPATH, jsonStr,token);
 			if (response.getHttpstatus().equals(HttpStatus.NO_CONTENT) || response.getHttpstatus().equals(HttpStatus.OK)) {
-				boolean metadataCreatedSuccessfully = createAppRoleMetaData(token, userDetails, appRole);
+				boolean metadataCreatedSuccessfully = createAppRoleMetaData(token, appRole, userDetails.getUsername());
 				if(metadataCreatedSuccessfully) {
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
@@ -184,16 +185,16 @@ public class  AppRoleService {
 	 * @param appRole
 	 * @return boolean
 	 */
-	private boolean createAppRoleMetaData(String token, UserDetails userDetails, AppRole appRole) {
-		String metadataJson = ControllerUtil.populateAppRoleMetaJson(appRole, userDetails.getUsername());
+	private boolean createAppRoleMetaData(String token, AppRole appRole, String username) {
+		String metadataJson = ControllerUtil.populateAppRoleMetaJson(appRole, username);
 		boolean appRoleMetaDataCreationStatus = ControllerUtil.createMetadata(metadataJson, token);
-		String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole, userDetails.getUsername());
+		String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole, username);
 		boolean appRoleUserMetaDataCreationStatus = ControllerUtil.createMetadata(appRoleUsermetadataJson, token);
 		boolean appRoleSharedToUserMetaDataCreationStatus = true;
 		if (appRole.getShared_to() != null) {
 			for (String sharedToUser : appRole.getShared_to()) {
 				if (StringUtils.isNotEmpty(sharedToUser)) {
-					String appRoleSharedToMetadataJson = ControllerUtil.populateSharedToUserMetaJson(userDetails.getUsername(), sharedToUser, appRole);
+					String appRoleSharedToMetadataJson = ControllerUtil.populateSharedToUserMetaJson(username, sharedToUser, appRole);
 					appRoleSharedToUserMetaDataCreationStatus = ControllerUtil.createMetadata(appRoleSharedToMetadataJson, token);
 				}
 			}
@@ -1666,30 +1667,33 @@ public class  AppRoleService {
 		
 		}
 	}
+
 	/**
-	 * Updates an AppRole
+	 * Updates an AppRole, including ability to transfer ownership.
 	 * @param token
-	 * @param appRole
+	 * @param appRoleUpdate
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity
 	 */
-	public ResponseEntity<String> updateAppRole(String token, AppRole appRole, UserDetails userDetails) {
+	public ResponseEntity<String> updateAppRole(String token, AppRoleUpdate appRoleUpdate, UserDetails userDetails) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION,UPDATE_APPROLE).
-			      put(LogMessage.MESSAGE, String.format("Start trying to update AppRole [%s]", appRole.getRole_name())).
+			      put(LogMessage.MESSAGE, String.format("Start trying to update AppRole [%s]", appRoleUpdate.getRole_name())).
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-		if (StringUtils.isEmpty(appRole.getRole_name())) {
+		if (StringUtils.isEmpty(appRoleUpdate.getRole_name())) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					  put(LogMessage.ACTION, UPDATE_APPROLE).
 				      put(LogMessage.MESSAGE, "Not enough information to update AppRole").
 				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"AppRole can't be updated since insufficient information has been provided.\"]}");		
-
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"AppRole can't be updated since insufficient information has been provided.\"]}");
 		}
+
+		AppRole appRole = constructAppRoleFromUpdateObject(appRoleUpdate);
 		String rolename = appRole.getRole_name();
 
 		if (Arrays.asList(TVaultConstants.SELF_SUPPORT_ADMIN_APPROLES).contains(rolename)) {
@@ -1708,7 +1712,57 @@ public class  AppRoleService {
 
 		AppRoleMetadataDetails appRoleMetadataDetails = readAppRoleMetadata(token, rolename).getAppRoleMetadataDetails();
 		boolean isSharedToChanged = isSharedToChanged(appRoleMetadataDetails, appRole.getShared_to());
-		if (!validateNoSharedUserIsOwner(appRoleMetadataDetails, appRole.getShared_to())) {
+		boolean isOwnershipChanged = false;
+		if (appRoleUpdate.getOwner() != null) {
+			if (!userDetails.getUsername().equals(appRoleMetadataDetails.getCreatedBy()) && !userDetails.isAdmin()) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, UPDATE_APPROLE).
+						put(LogMessage.MESSAGE, String.format("Unable to transfer owner on AppRole [%s] because user %s is not the owner or admin.",
+								rolename, appRoleUpdate.getOwner())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format(
+						"{\"errors\":[\"Unable to transfer ownership of AppRole %s because you are not the owner of the AppRole or an admin user.\"]}",
+						rolename, appRoleUpdate.getOwner()));
+			}
+			if (appRoleMetadataDetails.getCreatedBy().equals(appRoleUpdate.getOwner())) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, UPDATE_APPROLE).
+						put(LogMessage.MESSAGE, String.format("Unable to transfer owner on AppRole [%s] because [%s] is already the owner",
+								rolename, appRoleUpdate.getOwner())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format(
+						"{\"errors\":[\"Unable to transfer ownership of AppRole %s because %s is already the owner\"]}",
+						rolename, appRoleUpdate.getOwner()));
+			}
+
+			boolean newOwnerIsSharedUser = false;
+			if (appRoleMetadataDetails.getSharedTo() != null &&
+					appRoleMetadataDetails.getSharedTo().contains(appRoleUpdate.getOwner())) {
+				newOwnerIsSharedUser = true;
+			}
+			if (appRoleUpdate.getShared_to() != null && appRoleUpdate.getShared_to().contains(appRoleUpdate.getOwner())) {
+				newOwnerIsSharedUser = true;
+			}
+			if (newOwnerIsSharedUser) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, UPDATE_APPROLE).
+						put(LogMessage.MESSAGE, String.format("Unable to share AppRole [%s] with [%s] because they are the existing owner.",
+								rolename, appRoleUpdate.getOwner())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format(
+						"{\"errors\":[\"An AppRole cannot be shared with its owner. Please remove owner %s as a shared user, " +
+								"or change the owner.\"]}", appRoleUpdate.getOwner()));
+			}
+			isOwnershipChanged = !appRoleUpdate.getOwner().isEmpty();
+		}
+
+		if (!isOwnershipChanged && !validateNoSharedUserIsOwner(appRoleMetadataDetails, appRole.getShared_to())) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body("{\"errors\":[\"An AppRole cannot be shared with the current owner\"]}");
 		}
@@ -1723,7 +1777,7 @@ public class  AppRoleService {
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-					String.format("Unable to update shared_to on AppRole [%s] because you are not the owner", rolename));
+					String.format("{\"errors\":[\"Unable to update shared_to on AppRole %s because you are not the owner\"]}", rolename));
 		}
 
 		AppRole existingAppRole = readAppRoleBasicDetails(token, rolename);
@@ -1750,9 +1804,43 @@ public class  AppRoleService {
 				      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				      build()));
 
-			if (isSharedToChanged) {
-				createAppRoleMetaData(token, userDetails, appRole);
+			if (null == appRole.getShared_to()) {
+				appRole.setShared_to(appRoleMetadataDetails.getSharedTo());
+			}
 
+			if (isSharedToChanged || isOwnershipChanged) {
+				String username = userDetails.getUsername();
+				if (isOwnershipChanged) {
+					username = appRoleUpdate.getOwner();
+					String appRoleUsermetadataJson = ControllerUtil.populateUserMetaJson(appRole, appRoleMetadataDetails.getCreatedBy());
+					Response appRoleUserMetaDataDeletionResponse = reqProcessor.process("/delete", appRoleUsermetadataJson, token);
+					if (appRoleUserMetaDataDeletionResponse.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+						log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+								put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+								put(LogMessage.ACTION, UPDATE_APPROLE).
+								put(LogMessage.MESSAGE, String.format("Successfully deleted metadata for old AppRole owner [%s]",
+										appRoleMetadataDetails.getCreatedBy())).
+								put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+								build()));
+
+						if (appRoleUpdate.getNew_owner_email() != null) {
+							sendNotificationEmail(appRoleMetadataDetails.getCreatedBy(), appRole.getRole_name(),
+									appRoleUpdate.getNew_owner_email());
+						}
+					} else {
+						log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+								put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+								put(LogMessage.ACTION, UPDATE_APPROLE).
+								put(LogMessage.MESSAGE, String.format("Error deleting metadata for old AppRole owner [%s]",
+										appRoleMetadataDetails.getCreatedBy())).
+								put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+								build()));
+					}
+				}
+				createAppRoleMetaData(token, appRole, username);
+			}
+
+			if (isSharedToChanged) {
 				List<String> usersToBeRemovedFromSharedList = appRoleMetadataDetails.getSharedTo();
 				if (!CollectionUtils.isEmpty(usersToBeRemovedFromSharedList)) {
 					if (appRole.getShared_to() != null) {
@@ -1760,24 +1848,26 @@ public class  AppRoleService {
 					}
 
 					for (String userToBeRemoved : usersToBeRemovedFromSharedList) {
-						String path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + userToBeRemoved + "/" + appRole.getRole_name();
-						Response deleteResponse = reqProcessor.process("/delete", "{\"path\":\"" + path + "\"}", token);
-						if (HttpStatus.NO_CONTENT.equals(deleteResponse.getHttpstatus())) {
-							log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-									put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-									put(LogMessage.ACTION, SSLCertificateConstants.DELETE_METADATA_PERMISSIONS).
-									put(LogMessage.MESSAGE, String.format("Successfully deleted metadata for user [%s]", userToBeRemoved)).
-									put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
-									build()));
-						} else {
-							log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
-									put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-									put(LogMessage.ACTION, SSLCertificateConstants.DELETE_METADATA_PERMISSIONS).
-									put(LogMessage.MESSAGE, String.format("Failed to delete metadata for user [%s]", userToBeRemoved)).
-									put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
-									build()));
-							return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-									String.format("{\"errors\":[\"Failed to delete metadata for user %s\"]}", userToBeRemoved));
+						if (!userToBeRemoved.equals(appRoleUpdate.getOwner())) {
+							String path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + userToBeRemoved + "/" + appRole.getRole_name();
+							Response deleteResponse = reqProcessor.process("/delete", "{\"path\":\"" + path + "\"}", token);
+							if (HttpStatus.NO_CONTENT.equals(deleteResponse.getHttpstatus())) {
+								log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+										put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+										put(LogMessage.ACTION, SSLCertificateConstants.DELETE_METADATA_PERMISSIONS).
+										put(LogMessage.MESSAGE, String.format("Successfully deleted metadata for user [%s]", userToBeRemoved)).
+										put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+										build()));
+							} else {
+								log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+										put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+										put(LogMessage.ACTION, SSLCertificateConstants.DELETE_METADATA_PERMISSIONS).
+										put(LogMessage.MESSAGE, String.format("Failed to delete metadata for user [%s]", userToBeRemoved)).
+										put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+										build()));
+								return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+										String.format("{\"errors\":[\"Failed to delete metadata for user %s\"]}", userToBeRemoved));
+							}
 						}
 					}
 				}
@@ -1794,7 +1884,32 @@ public class  AppRoleService {
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
-	
+	}
+
+	private void sendNotificationEmail(String originalAppRoleOwner, String appRoleName, String ownerEmail) {
+		DirectoryUser oldOwnerObj = commonUtils.getUserDetails(originalAppRoleOwner);
+		Map<String, String> mailTemplateVariables = new HashMap<>();
+		mailTemplateVariables.put("appRoleName", appRoleName);
+		mailTemplateVariables.put("oldOwnerName", oldOwnerObj != null ? oldOwnerObj.getDisplayName() : "");
+		List<String> cc = new ArrayList<>();
+		List<String> to = new ArrayList<>();
+		to.add(ownerEmail);
+		String subject = String.format("AppRole %s has been successfully transferred", appRoleName);
+		emailUtils.sendAppRoleHtmlEmalFromTemplate(supportEmail, to, cc, subject, mailTemplateVariables, "AppRoleTransferEmailTemplate");
+	}
+
+	private AppRole constructAppRoleFromUpdateObject(AppRoleUpdate appRoleUpdate) {
+		AppRole appRole = new AppRole();
+		appRole.setRole_name(appRoleUpdate.getRole_name());
+		appRole.setPolicies(appRoleUpdate.getPolicies());
+		appRole.setBind_secret_id(appRoleUpdate.isBind_secret_id());
+		appRole.setSecret_id_num_uses(appRoleUpdate.getSecret_id_num_uses());
+		appRole.setToken_num_uses(appRoleUpdate.getToken_num_uses());
+		appRole.setToken_ttl(appRoleUpdate.getToken_ttl());
+		appRole.setToken_max_ttl(appRoleUpdate.getToken_max_ttl());
+		appRole.setShared_to(appRoleUpdate.getShared_to());
+
+		return appRole;
 	}
 
 	private boolean validateNoSharedUserIsOwner(AppRoleMetadataDetails appRoleMetadataDetails, List<String> sharedUsers) {
@@ -1836,7 +1951,10 @@ public class  AppRoleService {
 	}
 
 	/**
-	 * Determines whether user is the creator of the approle
+	 * Determines whether the sharedTo list has changed. <br>
+	 * If the sharedTo list is null then we assume the user doesn't want to make a change to the field, <br>
+	 * so false is returned in that scenario.
+	 *
 	 * @param appRoleMetadataDetails
 	 * @param newSharedTo
 	 * @return boolean
@@ -1849,6 +1967,9 @@ public class  AppRoleService {
 				put(LogMessage.MESSAGE, "Check to see if sharedTo array changed failed because appRoleMetadataDetails was null").
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
+			return false;
+		}
+		if (newSharedTo == null) {
 			return false;
 		}
 		List<String> oldSharedTo = appRoleMetadataDetails.getSharedTo();

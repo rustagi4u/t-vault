@@ -650,7 +650,7 @@ public class OIDCUtil {
      * @param token
      * @return
      */
-    public void renewUserToken(String token) {
+    public Response renewUserToken(String token) {
         Response renewResponse = reqProcessor.process("/auth/tvault/renew", "{}", token);
         if (renewResponse != null && HttpStatus.OK.equals(renewResponse.getHttpstatus())) {
             log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -660,6 +660,7 @@ public class OIDCUtil {
                     put(LogMessage.STATUS, renewResponse.getHttpstatus().toString()).
                     put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
                     build()));
+            return renewResponse;
         } else {
             log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
                     put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
@@ -669,8 +670,8 @@ public class OIDCUtil {
                     put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
                     build()));
         }
+        return null;
     }
-
 
     /**
      * Get Entity LookUp Response
