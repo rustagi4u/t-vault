@@ -1,4 +1,5 @@
 package com.tmobile.cso.vault.api.service;
+import java.io.Console;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,8 +58,15 @@ public class MessageBannerService {
 		ObjectMapper objMapper = new ObjectMapper();
 
 		HashMap<String, String> metadataMap = message.getDetails();
+		
 		if(metadataMap.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message & SSL-message cannot be empty\"]}");
+		}
+		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("")) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Blank message not allowed\"]}");
+		}
+		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("")) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Blank message not allowed\"]}");
 		}
 		String metadataJson = "";
 		try {
@@ -74,7 +82,6 @@ public class MessageBannerService {
 				.put(LogMessage.ACTION, "Write ui banner message")
 				.put(LogMessage.MESSAGE, String.format("Trying to write message [%s]", path))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).build()));
-		System.out.println(path);
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
@@ -162,6 +169,15 @@ public class MessageBannerService {
 		ObjectMapper objMapper = new ObjectMapper();
 
 		HashMap<String, String> metadataMap = message.getDetails();
+		if(metadataMap.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message & SSL-message cannot be empty\"]}");
+		}
+		if(!metadataMap.containsKey("message1")) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message cannot be empty\"]}");
+		}
+		if(!metadataMap.containsKey("message2")) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"SSL-message cannot be empty\"]}");
+		}
 		String metadataJson = "";
 		try {
 			metadataJson = objMapper.writeValueAsString(metadataMap);
@@ -176,7 +192,6 @@ public class MessageBannerService {
 				.put(LogMessage.ACTION, "Write message")
 				.put(LogMessage.MESSAGE, String.format("Trying to write message [%s]", path))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).build()));
-		System.out.println(path);
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())

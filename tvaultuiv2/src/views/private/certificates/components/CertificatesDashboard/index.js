@@ -90,6 +90,13 @@ const NoListWrap = styled.div`
   width: 35%;
 `;
 
+const FloatBtnWrapper = styled('div')`
+  position: absolute;
+  bottom: 1rem;
+  right: 2.5rem;
+  z-index: 1;
+`;
+
 const SearchWrap = styled.div`
   width: 100%;
   border: 0.5px solid transparent;
@@ -1138,6 +1145,17 @@ const CertificatesDashboard = () => {
                   </>
                 )}
               </>
+            )}
+            {certificateList.length > 0 && (
+              <FloatBtnWrapper>
+                <FloatingActionButtonComponent
+                  href="/certificates/create-ceritificate"
+                  color="secondary"
+                  icon="add"
+                  tooltipTitle="Create New Certificate"
+                  tooltipPos="left"
+                />
+              </FloatBtnWrapper>
             )}
           </LeftColumnSection>
           <RightColumnSection
