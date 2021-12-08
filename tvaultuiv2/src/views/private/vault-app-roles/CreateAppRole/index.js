@@ -1066,9 +1066,10 @@ const CreateAppRole = (props) => {
                     title="New Owner of the AppRole"
                     placement="top"
                   >
-                    <InputLabel>
+                    <InputLabelWithInfo>
                       New Owner
-                    </InputLabel>
+                      <RequiredCircle margin="0.5rem" />
+                    </InputLabelWithInfo>
                   </Tooltip>
                 </>   
                 <SharedToAutoWrap>
