@@ -581,14 +581,14 @@ public class SelfSupportControllerTest {
     @Test
     public void test_isApproleOwner() throws Exception {
         String role_name = "testapprole01";
-        String vaultToken = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 
-        when(selfSupportService.isAppRoleOwner(eq(vaultToken), Mockito.any(), Mockito.any())).thenReturn(true);
+        when(selfSupportService.getAppRoleOwner(eq(tkn), Mockito.any(), Mockito.any())).thenReturn("someone");
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle/"+role_name+"/owner")
-                .header("vault-token", vaultToken)
+                .header("vault-token", tkn)
                 .header("Content-Type", "application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+                .andExpect(content().string("someone"));
     }
 
     @Test

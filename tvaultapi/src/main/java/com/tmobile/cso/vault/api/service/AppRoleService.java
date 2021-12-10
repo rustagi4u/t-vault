@@ -1692,6 +1692,17 @@ public class  AppRoleService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{\"errors\":[\"AppRole can't be updated since insufficient information has been provided.\"]}");
 		}
+		if ((appRoleUpdate.getOwner() != null && appRoleUpdate.getNew_owner_email() == null) ||
+				(appRoleUpdate.getOwner() == null && appRoleUpdate.getNew_owner_email() != null)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, UPDATE_APPROLE).
+					put(LogMessage.MESSAGE, "Could not update AppRole because user either didn't provide a new owner, or a new_owner_email.").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"If you provide an owner you must also provide a new_owner_email, and vice versa.\"]}");
+		}
 
 		AppRole appRole = constructAppRoleFromUpdateObject(appRoleUpdate);
 		String rolename = appRole.getRole_name();
@@ -1740,8 +1751,8 @@ public class  AppRoleService {
 			}
 
 			boolean newOwnerIsSharedUser = false;
-			if (appRoleMetadataDetails.getSharedTo() != null &&
-					appRoleMetadataDetails.getSharedTo().contains(appRoleUpdate.getOwner())) {
+			if (appRoleUpdate.getShared_to() == null &&
+					(appRoleMetadataDetails.getSharedTo() != null && appRoleMetadataDetails.getSharedTo().contains(appRoleUpdate.getOwner()))) {
 				newOwnerIsSharedUser = true;
 			}
 			if (appRoleUpdate.getShared_to() != null && appRoleUpdate.getShared_to().contains(appRoleUpdate.getOwner())) {
@@ -1768,7 +1779,7 @@ public class  AppRoleService {
 		}
 
 		boolean isAppRoleOwner = isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails);
-		if (isSharedToChanged && !isAppRoleOwner) {
+		if (!userDetails.isAdmin() && (isSharedToChanged && !isAppRoleOwner)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, UPDATE_APPROLE).
@@ -1824,8 +1835,8 @@ public class  AppRoleService {
 								build()));
 
 						if (appRoleUpdate.getNew_owner_email() != null) {
-							sendNotificationEmail(appRoleMetadataDetails.getCreatedBy(), appRole.getRole_name(),
-									appRoleUpdate.getNew_owner_email());
+							sendTransferNotificationEmail(appRoleMetadataDetails.getCreatedBy(), appRole.getRole_name(),
+									appRoleUpdate.getOwner(), appRoleUpdate.getNew_owner_email());
 						}
 					} else {
 						log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -1886,14 +1897,18 @@ public class  AppRoleService {
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
 
-	private void sendNotificationEmail(String originalAppRoleOwner, String appRoleName, String ownerEmail) {
+	private void sendTransferNotificationEmail(String originalAppRoleOwner, String appRoleName, String ownerName, String ownerEmail) {
 		DirectoryUser oldOwnerObj = commonUtils.getUserDetails(originalAppRoleOwner);
 		Map<String, String> mailTemplateVariables = new HashMap<>();
+		mailTemplateVariables.put("name", ownerName);
 		mailTemplateVariables.put("appRoleName", appRoleName);
 		mailTemplateVariables.put("oldOwnerName", oldOwnerObj != null ? oldOwnerObj.getDisplayName() : "");
-		List<String> cc = new ArrayList<>();
 		List<String> to = new ArrayList<>();
 		to.add(ownerEmail);
+		List<String> cc = new ArrayList<>();
+		if (oldOwnerObj != null) {
+			cc.add(oldOwnerObj.getUserEmail());
+		}
 		String subject = String.format("AppRole %s has been successfully transferred", appRoleName);
 		emailUtils.sendAppRoleHtmlEmalFromTemplate(supportEmail, to, cc, subject, mailTemplateVariables, "AppRoleTransferEmailTemplate");
 	}

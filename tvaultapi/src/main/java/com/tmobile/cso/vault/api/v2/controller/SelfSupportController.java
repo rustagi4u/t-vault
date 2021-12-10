@@ -487,17 +487,17 @@ public class SelfSupportController {
 	}
 
 	/**
-	 * Returns whether the user is the owner of the approle
+	 * Returns the owner of the AppRole
 	 * @param request
 	 * @param token
 	 * @param roleName
-	 * @return ResponseEntity<Boolean>
+	 * @return ResponseEntity
 	 */
-	@ApiOperation(value = "${SelfSupportController.isApproleOwner.value}", notes = "${SelfSupportController.isApproleOwner.notes}")
+	@ApiOperation(value = "${SelfSupportController.getAppRoleOwner.value}", notes = "${SelfSupportController.getAppRoleOwner.notes}")
 	@GetMapping(value="/v2/ss/approle/{role_name}/owner", produces="application/json")
-	public ResponseEntity<Boolean> isApproleOwner(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
+	public ResponseEntity<String> getApproleOwner(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
-		return ResponseEntity.status(HttpStatus.OK).body(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
+		return ResponseEntity.status(HttpStatus.OK).body(selfSupportService.getAppRoleOwner(token, userDetails, roleName));
 	}
 
 	/**
