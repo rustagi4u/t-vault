@@ -213,6 +213,23 @@ const TypeAheadWrap = styled.div`
   width: 100%;
 `;
 
+const EachValueWrap = styled.div`
+  display: flex;
+  font-size: 1.4rem;
+  margin: 0 0 2rem 0;
+  p {
+    margin: 0;
+  }
+`;
+const Label = styled.p`
+  color: ${(props) => props?.theme?.customColor?.label?.color};
+  margin-right: 0.5rem !important;
+`;
+
+const Value = styled.p`
+  text-transform: ${(props) => props.capitalize || ''};
+`;
+
 const useStyles = makeStyles((theme) => ({
   modal: {
     display: 'flex',
@@ -269,6 +286,7 @@ const CreateAppRole = (props) => {
   const [newOwnerSelected, setNewOwnerSelected] = useState(false);
   const [transferError, setTransferError] = useState(false);
   const [transferErrorMessage, setTransferErrorMessage] = useState('');
+  const [appRoleOwner, setAppRoleOwner] = useState('');
 
   const admin = Boolean(stateVal.isAdmin);
 
@@ -339,8 +357,9 @@ const CreateAppRole = (props) => {
   useEffect(() => {
     if (history.location.pathname === '/vault-app-roles/edit-vault-app-role' &&
         history.location.state.appRoleDetails.isEdit) {
-      validateCanUpdateSharedTo().then((res) => {
-        setCanEditSharedTo(res);
+      getAppRoleOwner().then((ownerName) => {
+        setCanEditSharedTo(ownerName == stateVal.username);
+        setAppRoleOwner(ownerName);
       })
     }
   }, [canEditSharedTo]);
@@ -351,6 +370,8 @@ const CreateAppRole = (props) => {
   };
 
   const handleTransferClose = () => {
+    setNewOwnerEmail('');
+    setNewOwnerSelected(false);
     setOpen(true);
     setOpenTransferConfirmationModal(false);
   };
@@ -380,10 +401,10 @@ const CreateAppRole = (props) => {
     setNameAvailable(true);
   };
 
-  const validateCanUpdateSharedTo = () => {
+  const getAppRoleOwner = () => {
     return new Promise((resolve, reject) =>
       apiService
-        .getIsAppRoleOwner(history.location.state.appRoleDetails.name)
+        .getAppRoleOwner(history.location.state.appRoleDetails.name)
         .then((res) => {
           resolve(res.data);
         })
@@ -521,6 +542,7 @@ const CreateAppRole = (props) => {
           }
           setResponseType(-1);
         });
+
     }
   }, [history]);
 
@@ -780,6 +802,33 @@ const CreateAppRole = (props) => {
                   <Span>Role Name Available!</Span>
                 )}
               </InputFieldLabelWrapper>
+              {editApprole && (
+              <>
+                <InputFieldLabelWrapper>
+                  <InputLabelWrap>
+                    <InputLabel>
+                      Role Owner
+                      <RequiredCircle margin="0.5rem" />
+                    </InputLabel>
+                    <InfoIcon src={infoIcon} alt="info-icon-role-name" />
+                  </InputLabelWrap>
+                  <TextFieldComponent
+                    value={appRoleOwner}
+                    placeholder="Role name - enter minimum 3 characters"
+                    fullWidth
+                    readOnly={true}
+                    characterLimit={50}
+                    name="roleName"
+                    onChange={(e) => onRoleNameChange(e)}
+                    error={appRoleError?.error}
+                    helperText={appRoleError?.message || ''}
+                  />
+                  {roleName && nameAvailable && !editApprole && (
+                    <Span>Role Name Available!</Span>
+                  )}
+                </InputFieldLabelWrapper>
+              </>
+              )}
               <Tooltip
                 classes={tooltipClasses}
                 arrow
@@ -1050,14 +1099,15 @@ const CreateAppRole = (props) => {
                   Transfer AppRole Owner
                 </Typography>
               </HeaderWrapper>
-              <IconDescriptionWrapper>
-                <SafeIcon src={ApproleIcon} alt="app-role-icon" />
-                <TitleThree lineHeight="1.8rem" extraCss={extraCss} color="#ccc">
-                  Approles’s operate a lot like safes, but they put the
-                  application at the logical unit for sharing.
-                </TitleThree>
-              </IconDescriptionWrapper>
               <CreateSafeForm>
+              <EachValueWrap>
+                  <Label>AppRole Name:</Label>
+                  <Value>{history.location.state.appRoleDetails.name}</Value>
+              </EachValueWrap>
+              <EachValueWrap>
+                  <Label>Current Owner:</Label>
+                  <Value>{appRoleOwner}</Value>
+              </EachValueWrap>
               <InputFieldLabelWrapper>
                 <>
                   <Tooltip
@@ -1066,11 +1116,12 @@ const CreateAppRole = (props) => {
                     title="New Owner of the AppRole"
                     placement="top"
                   >
-                    <InputLabel>
+                    <InputLabelWithInfo>
                       New Owner
-                    </InputLabel>
+                      <RequiredCircle margin="0.5rem" />
+                    </InputLabelWithInfo>
                   </Tooltip>
-                </>   
+                </>
                 <SharedToAutoWrap>
                   <AutoInputFieldLabelWrapper>
                     <TypeAheadWrap>
@@ -1118,13 +1169,13 @@ const CreateAppRole = (props) => {
                       width={isMobileScreen ? '100%' : ''}
                     />
                   </CancelButton>
-                    <ButtonComponent 
-                      label='Confirm Transfer'
-                      color="secondary"
-                      disabled={(!canEditSharedTo && !admin) || !newOwnerSelected}
-                      onClick={() => onTransferAppRoleOwner()}
-                      width={isMobileScreen ? '100%' : ''}
-                    />
+                  <ButtonComponent 
+                    label='Transfer'
+                    color="secondary"
+                    disabled={(!canEditSharedTo && !admin) || !newOwnerSelected}
+                    onClick={() => onTransferAppRoleOwner()}
+                    width={isMobileScreen ? '100%' : ''}
+                  />
                 </CancelSaveWrapper>
                 {status.status === 'failed' && (
                   <SnackbarComponent

@@ -470,6 +470,16 @@ public class  IAMServiceAccountsService {
 	 * @return boolean
 	 */
 	private boolean isAuthorizedToReadAccessKeys(UserDetails userDetails, String token, String iamSvcAccName, String awsAccountId) throws IOException {
+		if (userDetails.isAdmin()) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, "isAuthorizedToReadAccessKeys")
+					.put(LogMessage.MESSAGE, String.format("User %s is authorized to read access keys because they are an admin user.",
+							userDetails.getUsername()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return true;
+		}
+
 		boolean isAuthorized = false;
 
 		String selfSupportToken = userDetails.getSelfSupportToken();

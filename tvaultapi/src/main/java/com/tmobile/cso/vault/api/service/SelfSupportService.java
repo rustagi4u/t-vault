@@ -1010,32 +1010,31 @@ public class  SelfSupportService {
 	}
 
 	/**
-	 * Method to determine whether user is the owner of the AppRole
+	 * Method to retrieve the owner of the AppRole
 	 * @param token
 	 * @param userDetails
 	 * @param roleName
-	 * @return boolean
+	 * @return String
 	 */
-	public boolean isAppRoleOwner(String token, UserDetails userDetails, String roleName) {
+	public String getAppRoleOwner(String token, UserDetails userDetails, String roleName) {
 		if (!userDetails.isAdmin()) {
 			token = userDetails.getSelfSupportToken();
 		}
 		AppRoleMetadata appRoleMetadata = appRoleService.readAppRoleMetadata(token, roleName);
-		AppRoleMetadataDetails appRoleMetadataDetails = null;
+		AppRoleMetadataDetails appRoleMetadataDetails;
 		if (appRoleMetadata != null) {
 			appRoleMetadataDetails = appRoleMetadata.getAppRoleMetadataDetails();
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
-					put(LogMessage.ACTION, "isAppRoleOwner").
+					put(LogMessage.ACTION, "getAppRoleOwner").
 					put(LogMessage.MESSAGE,
-							String.format("Failed to determine whether [%s] is the owner for AppRole [%s] because fetching metadata failed",
-									userDetails.getUsername(), roleName)).
+							String.format("Failed to determine owner for AppRole [%s] because fetching metadata failed", roleName)).
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
-			return false;
+			return "";
 		}
-		return appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails);
+		return appRoleMetadataDetails.getCreatedBy();
 	}
 
 	/**

@@ -5177,7 +5177,7 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
             } else {
                 renewResponse = nclmMockUtil.getRenewMockResponse();
             }
-			Thread.sleep(renewDelayTime);
+
 			log.debug(
 					JSONUtil.getJSON(
 							ImmutableMap.<String, String> builder()

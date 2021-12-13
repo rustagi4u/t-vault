@@ -1622,7 +1622,7 @@ public class SelfSupportServiceTest {
 
     @Test
     public void test_isAppRoleOwner_successfully_as_admin() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(true);
         String roleName = "myvaultapprole42";
 
@@ -1634,10 +1634,10 @@ public class SelfSupportServiceTest {
         sharedToList.add("anotherguy");
         appRoleMetadataDetails.setSharedTo(sharedToList);
         appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
-        when(appRoleService.readAppRoleMetadata(token, roleName)).thenReturn(appRoleMetadata);
+        when(appRoleService.readAppRoleMetadata(tkn, roleName)).thenReturn(appRoleMetadata);
         when(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails)).thenReturn(true);
 
-        assertTrue(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
+        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName), userDetails.getUsername());
     }
 
     @Test
@@ -1646,12 +1646,12 @@ public class SelfSupportServiceTest {
         UserDetails userDetails = getMockUser(false);
         String roleName = "myvaultapprole42";
 
-        assertFalse(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
+        assertNotEquals(selfSupportService.getAppRoleOwner(token, userDetails, roleName), userDetails.getUsername());
     }
 
     @Test
     public void test_isAppRoleOwner_successfully() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(false);
         String roleName = "myvaultapprole42";
 
@@ -1663,10 +1663,10 @@ public class SelfSupportServiceTest {
         sharedToList.add("anotherguy");
         appRoleMetadataDetails.setSharedTo(sharedToList);
         appRoleMetadata.setAppRoleMetadataDetails(appRoleMetadataDetails);
-        when(appRoleService.readAppRoleMetadata(token, roleName)).thenReturn(appRoleMetadata);
+        when(appRoleService.readAppRoleMetadata(tkn, roleName)).thenReturn(appRoleMetadata);
         when(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails)).thenReturn(true);
 
-        assertTrue(selfSupportService.isAppRoleOwner(token, userDetails, roleName));
+        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName), userDetails.getUsername());
     }
 
     @Test

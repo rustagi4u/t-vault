@@ -5,7 +5,7 @@ const fetchAppRole = (appRole) => api.get(`/ss/approle/role/${appRole}`);
 const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/${appRole}`);
 const getAccessors = (appRole) => api.get(`/ss/approle/${appRole}/accessors`);
 const getRoleId = (appRole) => api.get(`/ss/approle/${appRole}/role_id`);
-const getIsAppRoleOwner = (appRole) => api.get(`/ss/approle/${appRole}/owner`);
+const getAppRoleOwner = (appRole) => api.get(`/ss/approle/${appRole}/owner`);
 const getUserName = (user) => api.get(`/ldap/ntusers?displayName=${user}`);
 const getTmoUsers = (user) => api.get(`/tmo/users?UserPrincipalName=${user}`);
 const getEntitiesAssociatedWithAppRole = (appRole) => api.get(`/ss/approle/list/associations/${appRole}`);
@@ -34,7 +34,7 @@ export default {
   deleteSecretIds,
   getRoleId,
   deleteAppRole,
-  getIsAppRoleOwner,
+  getAppRoleOwner,
   getUserName,
   getTmoUsers,
   getEntitiesAssociatedWithAppRole,
