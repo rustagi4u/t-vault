@@ -1897,17 +1897,26 @@ public class  AppRoleService {
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
 
-	private void sendTransferNotificationEmail(String originalAppRoleOwner, String appRoleName, String ownerName, String ownerEmail) {
+	private void sendTransferNotificationEmail(String originalAppRoleOwner, String appRoleName, String newOwnerName, String ownerEmail) {
 		DirectoryUser oldOwnerObj = commonUtils.getUserDetails(originalAppRoleOwner);
+		if (oldOwnerObj != null && oldOwnerObj.getDisplayName() != null && oldOwnerObj.getDisplayName().trim().isEmpty()) {
+			oldOwnerObj.setDisplayName(oldOwnerObj.getUserName());
+		}
+		DirectoryUser newOwnerObj = commonUtils.getUserDetails(newOwnerName);
+		if (newOwnerObj != null && newOwnerObj.getDisplayName() != null && newOwnerObj.getDisplayName().trim().isEmpty()) {
+			newOwnerObj.setDisplayName(newOwnerObj.getUserName());
+		}
 		Map<String, String> mailTemplateVariables = new HashMap<>();
-		mailTemplateVariables.put("name", ownerName);
+		mailTemplateVariables.put("name", newOwnerObj != null ? newOwnerObj.getDisplayName() : "");
 		mailTemplateVariables.put("appRoleName", appRoleName);
 		mailTemplateVariables.put("oldOwnerName", oldOwnerObj != null ? oldOwnerObj.getDisplayName() : "");
 		List<String> to = new ArrayList<>();
 		to.add(ownerEmail);
 		List<String> cc = new ArrayList<>();
 		if (oldOwnerObj != null) {
-			cc.add(oldOwnerObj.getUserEmail());
+			if (oldOwnerObj.getUserEmail() != null) {
+				cc.add(oldOwnerObj.getUserEmail());
+			}
 		}
 		String subject = String.format("AppRole %s has been successfully transferred", appRoleName);
 		emailUtils.sendAppRoleHtmlEmalFromTemplate(supportEmail, to, cc, subject, mailTemplateVariables, "AppRoleTransferEmailTemplate");

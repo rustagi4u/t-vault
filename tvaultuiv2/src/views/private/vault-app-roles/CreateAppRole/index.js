@@ -357,9 +357,11 @@ const CreateAppRole = (props) => {
   useEffect(() => {
     if (history.location.pathname === '/vault-app-roles/edit-vault-app-role' &&
         history.location.state.appRoleDetails.isEdit) {
-      getAppRoleOwner().then((ownerName) => {
-        setCanEditSharedTo(ownerName == stateVal.username);
-        setAppRoleOwner(ownerName);
+      getAppRoleOwner().then((ownerInfo) => {
+        if (ownerInfo.length > 0) {
+          setCanEditSharedTo(ownerInfo[0] == stateVal.username);
+          setAppRoleOwner(ownerInfo[1]);
+        }
       })
     }
   }, [canEditSharedTo]);
@@ -1102,7 +1104,7 @@ const CreateAppRole = (props) => {
               <CreateSafeForm>
               <EachValueWrap>
                   <Label>AppRole Name:</Label>
-                  <Value>{history.location.state.appRoleDetails.name}</Value>
+                  <Value>{history.location.state?.appRoleDetails?.name}</Value>
               </EachValueWrap>
               <EachValueWrap>
                   <Label>Current Owner:</Label>

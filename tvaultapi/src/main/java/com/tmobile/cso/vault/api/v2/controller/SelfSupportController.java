@@ -495,7 +495,7 @@ public class SelfSupportController {
 	 */
 	@ApiOperation(value = "${SelfSupportController.getAppRoleOwner.value}", notes = "${SelfSupportController.getAppRoleOwner.notes}")
 	@GetMapping(value="/v2/ss/approle/{role_name}/owner", produces="application/json")
-	public ResponseEntity<String> getApproleOwner(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
+	public ResponseEntity<String[]> getApproleOwner(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return ResponseEntity.status(HttpStatus.OK).body(selfSupportService.getAppRoleOwner(token, userDetails, roleName));
 	}
