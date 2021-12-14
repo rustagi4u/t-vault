@@ -1721,7 +1721,21 @@ public class  AppRoleService {
 			token = userDetails.getSelfSupportToken();
 		}
 
-		AppRoleMetadataDetails appRoleMetadataDetails = readAppRoleMetadata(token, rolename).getAppRoleMetadataDetails();
+		AppRoleMetadata appRoleMetadata = readAppRoleMetadata(token, rolename);
+		AppRoleMetadataDetails appRoleMetadataDetails;
+		if (appRoleMetadata != null) {
+			appRoleMetadataDetails = appRoleMetadata.getAppRoleMetadataDetails();
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, UPDATE_APPROLE).
+					put(LogMessage.MESSAGE, "Could not update AppRole because metadata for it could not be found.").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"AppRole doesn't exist.\"]}");
+		}
+
 		boolean isSharedToChanged = isSharedToChanged(appRoleMetadataDetails, appRole.getShared_to());
 		boolean isOwnershipChanged = false;
 		if (appRoleUpdate.getOwner() != null) {
