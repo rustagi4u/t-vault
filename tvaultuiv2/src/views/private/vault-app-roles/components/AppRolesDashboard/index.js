@@ -342,7 +342,7 @@ const AppRolesDashboard = () => {
    */
   const onDeleteClicked = (name) => {
     validateCanDeleteSharedTo(name).then((sharedToRes) => {
-      setCanDeleteSharedTo(sharedToRes);
+      setCanDeleteSharedTo(sharedToRes[0] == state.username);
       setDeleteAppRoleConfirmation(true);
       setDeleteAppRoleName(name);
     });
@@ -425,7 +425,7 @@ const AppRolesDashboard = () => {
   const validateCanDeleteSharedTo = (appRoleName) => {
     return new Promise((resolve, reject) =>
       apiService
-        .getIsAppRoleOwner(appRoleName)
+        .getAppRoleOwner(appRoleName)
         .then((res) => {
           resolve(res.data);
         })
