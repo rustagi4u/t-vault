@@ -5246,6 +5246,9 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
                 }
 
             }else {
+                if (String.valueOf(certificateId).equalsIgnoreCase(String.valueOf(certData.getCertificateId()))) {
+                    certData = getRenewedCertificate(certType, certificateName, nclmAccessToken, containerId, certificateId);
+                }
 				metaDataParams.put(SSLCertificateConstants.CERTIFICATE_ID,((Integer)certData.getCertificateId()).toString()!=null?
 						((Integer)certData.getCertificateId()).toString():String.valueOf(certificateId));
 				metaDataParams.put("createDate", certData.getCreateDate()!=null?certData.getCreateDate():object.get("createDate").getAsString());
