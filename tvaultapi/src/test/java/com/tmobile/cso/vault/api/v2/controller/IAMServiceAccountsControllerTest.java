@@ -163,9 +163,6 @@ public class IAMServiceAccountsControllerTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccountOwner_successful() throws Exception {
-
 	public void test_transferIAMServiceAccountOwner_successful() throws Exception {
 
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
