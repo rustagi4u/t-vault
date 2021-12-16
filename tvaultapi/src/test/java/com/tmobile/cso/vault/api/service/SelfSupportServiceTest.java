@@ -3790,16 +3790,23 @@ public class SelfSupportServiceTest {
         assertEquals(responseEntityExpected, responseEntity);
     }
     @Test
-    public void test_list_fail(){
+    public void test_listAppRoles_successfully(){
         String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(false);
         String path = "users/safe1";
         String PATHSTR = "{\"path\":\"";
-        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"safe1\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
+        AppRoleListObject appRoleListObject = new AppRoleListObject("role1", false);
+        AppRoleListObject appRoleListObject2 = new AppRoleListObject("role2", true);
+        AppRoleListObject appRoleListObject3 = new AppRoleListObject("role3", false);
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(appRoleListObject);
+        appRoleListObjects.add(appRoleListObject2);
+        appRoleListObjects.add(appRoleListObject3);
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
 
-        when(reqProcessor.process("/auth/approles/rolesbyuser/list",PATHSTR+ path +"\"}",userDetails.getSelfSupportToken())).thenReturn(readResponse);
-        ResponseEntity<String>responseEntity= selfSupportService.listAppRoles(sampletok,userDetails, 10,0);
-
+        when(appRoleService.listAppRoles(sampletok, userDetails, 10, 0)).thenReturn(responseEntityExpected);
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = selfSupportService.listAppRoles(sampletok,userDetails, 10,0);
+        assertEquals(responseEntityActual, responseEntityExpected);
     }
     @Test
     public void test_readAppRoleRoleId_failure(){

@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.tmobile.cso.vault.api.model.*;
 import org.apache.commons.collections.CollectionUtils;
@@ -671,20 +672,16 @@ public class SelfSupportControllerTest {
     
     @Test
     public void test_listAppRoles() throws Exception {
-		String vaultToken = "5PDrOhsy4ig8L3EpsJZSLAMg";
-    	String role_id_response = "{\n" + 
-    			"  \"keys\": [\n" + 
-    			"    \"testapprole01\"\n" + 
-    			"  ]\n" + 
-    			"}";
-    	StringBuilder responseMessage = new StringBuilder(role_id_response);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseMessage.toString());
-        when(selfSupportService.listAppRoles(eq(vaultToken), Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseEntityExpected);
+		String vaultTkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(new AppRoleListObject("somename", true));
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        when(selfSupportService.listAppRoles(eq(vaultTkn), Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseEntityExpected);
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle")
-                .header("vault-token", vaultToken)
+                .header("vault-token", vaultTkn)
                 .header("Content-Type", "application/json;charset=UTF-8"))
         		.andExpect(status().isOk())
-        		.andExpect(content().string(containsString(responseMessage.toString())));
+        		.andExpect(content().string(containsString("somename")));
     }
 
     @Test

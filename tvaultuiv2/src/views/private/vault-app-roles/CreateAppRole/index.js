@@ -486,6 +486,12 @@ const CreateAppRole = (props) => {
     }
   };
 
+  const onTransferKeyClicked = (e) => {
+    if (e.keyCode === 13 && e?.target?.value) {
+      e.preventDefault();
+    }
+  }
+
   const splitString = (val) => {
     return val.split('_').slice('2').join('_');
   };
@@ -1147,6 +1153,7 @@ const CreateAppRole = (props) => {
                         onChange={(e) => {
                           onNewOwnerChange(e);
                         }}
+                        onKeyDownClick={(e) => onTransferKeyClicked(e)}
                         placeholder={'Search by NTID, Email or Name'}
                         error={transferError}
                         helperText={transferError ? transferErrorMessage : ''}

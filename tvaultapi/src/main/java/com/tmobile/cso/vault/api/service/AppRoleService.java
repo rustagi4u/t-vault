@@ -353,9 +353,9 @@ public class  AppRoleService {
 	 * @param userDetails
 	 * @param limit
 	 * @param offset
-	 * @return ResponseEntity<String>
+	 * @return ResponseEntity
 	 */
-	public ResponseEntity<String> listAppRoles(String token,  UserDetails userDetails, Integer limit, Integer offset) {
+	public ResponseEntity<List<AppRoleListObject>> listAppRoles(String token,  UserDetails userDetails, Integer limit, Integer offset) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "listAppRoles").
@@ -370,6 +370,7 @@ public class  AppRoleService {
 		else {
 			response = reqProcessor.process("/auth/approles/rolesbyuser/list",PATHSTR+ path +"\"}",userDetails.getSelfSupportToken());
 		}
+
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "listAppRoles").
@@ -378,15 +379,61 @@ public class  AppRoleService {
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (HttpStatus.OK.equals(response.getHttpstatus())) {
+			List<AppRoleListObject> listObjects = getAppRoleObjectList(userDetails, token, response);
+
 			if (TVaultConstants.HIDESELFSUPPORTADMINAPPROLE) {
 				response = ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(response, limit, offset);
 			}
-			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+			return ResponseEntity.status(response.getHttpstatus()).body(listObjects);
 		}
 		else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
-			return ResponseEntity.status(HttpStatus.OK).body("{\"keys\":[]}");
+			return ResponseEntity.status(HttpStatus.OK).body(new ArrayList<>());
 		}
-		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+		return ResponseEntity.status(response.getHttpstatus()).body(new ArrayList<>());
+	}
+
+	/**
+	 * Gets list of AppRoleListObjects
+	 * @param token
+	 * @param response
+	 * @return List
+	 */
+	private List<AppRoleListObject> getAppRoleObjectList(UserDetails userDetails, String token, Response response) {
+		Map<String, Object> responseMap = ControllerUtil.parseJson(response.getResponse());
+		if(responseMap.isEmpty()) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "listAppRoles").
+					put(LogMessage.MESSAGE, "Failed to read JSON AppRole list.").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+		}
+
+		List<String> appRoleNames = (ArrayList<String>) responseMap.get("keys");
+		List<AppRoleListObject> listObjects = new ArrayList<>();
+		if (appRoleNames != null && !appRoleNames.isEmpty()) {
+			for (String roleName : appRoleNames) {
+				AppRoleMetadata appRoleMetadata = readAppRoleMetadata(token, roleName);
+				AppRoleMetadataDetails appRoleMetadataDetails = null;
+				if (appRoleMetadata != null) {
+					appRoleMetadataDetails = appRoleMetadata.getAppRoleMetadataDetails();
+				} else {
+					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "listAppRoles").
+							put(LogMessage.MESSAGE, "Failed to get AppRole metadata.").
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+					continue;
+				}
+				boolean isOwner = false;
+				if (appRoleMetadataDetails != null) {
+					isOwner = isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails);
+				}
+				listObjects.add(new AppRoleListObject(roleName, isOwner));
+			}
+		}
+		return listObjects;
 	}
 
 	/**
@@ -926,7 +973,14 @@ public class  AppRoleService {
 			List<String> accessorIds = readAccessorIds(token, rolename);
 			
 			AppRoleDetails appRoleDetails = new AppRoleDetails();
-			appRoleDetails.setAppRole(appRole);
+			appRoleDetails.setRole_name(appRole.getRole_name());
+			appRoleDetails.setPolicies(appRole.getPolicies());
+			appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+			appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+			appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+			appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+			appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+			appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
 			appRoleDetails.setRole_id(roleId);
 			appRoleDetails.setAppRoleMetadata(appRoleMetadata);
 			if (!CollectionUtils.isEmpty(accessorIds)) {

@@ -2140,45 +2140,202 @@ public class AppRoleServiceTest {
     }
 
     @Test
-    public void test_listAppRoles_successfully() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        String responseJson = "{\r\n" + 
-        		"  \"keys\": [\r\n" + 
-        		"    \"testapprole01\"\r\n" + 
-        		"  ]\r\n" + 
+    public void test_listAppRoles_successfully() throws JsonProcessingException {
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String responseJson = "{\r\n" +
+        		"  \"keys\": [\r\n" +
+        		"    \"testapprole01\"\r\n" +
+        		"  ]\r\n" +
         		"}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+        AppRoleListObject appRoleListObject = new AppRoleListObject();
+        appRoleListObject.setRoleName("testapprole01");
+        appRoleListObject.setOwner(true);
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(appRoleListObject);
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
         UserDetails userDetails = getMockUser("testuser1", false);
-        Response response =getMockResponse(HttpStatus.OK, true, responseJson);
+        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
         Response responseAfterHide = response;
         String _path = "metadata/approle_users/" + userDetails.getUsername();
         String jsonStr = "{\"path\":\""+_path+"\"}";
-        when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr,userDetails.getSelfSupportToken())).thenReturn(response);
-        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any())).thenReturn(responseAfterHide);
-        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(token, userDetails, 1, 0);
-        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntityActual);
+        when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr, userDetails.getSelfSupportToken()))
+                .thenReturn(response);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        List<String> keys = new ArrayList<>();
+        keys.add("testapprole01");
+        responseMap.put("keys", keys);
+        when(ControllerUtil.parseJson(any())).thenReturn(responseMap);
+
+        AppRoleMetadata approleMetadataExpected = new AppRoleMetadata();
+        approleMetadataExpected.setPath(_path);
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy("testuser1");
+        appRoleMetadataDetails.setName("testapprole01");
+        approleMetadataExpected.setAppRoleMetadataDetails(appRoleMetadataDetails);
+
+        String readResponseJson = new ObjectMapper().writeValueAsString(approleMetadataExpected);
+        Response readResponse = getMockResponse(HttpStatus.OK, true, readResponseJson);
+        when(reqProcessor.process(eq("/read"), any(), any())).thenReturn(readResponse);
+
+        Map<String, Object> readResponseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        appRoleMetadataMap.put("createdBy", userDetails.getUsername());
+        readResponseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(readResponseJson)).thenReturn(readResponseMap);
+
+        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
+                .thenReturn(responseAfterHide);
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
+        assertEquals(responseEntityExpected.getBody().get(0).getRoleName(), responseEntityActual.getBody().get(0).getRoleName());
     }
 
     @Test
-    public void test_listAppRoles_as_admin_successfully() {
+    public void test_listAppRoles_as_admin_successfully() throws JsonProcessingException {
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         String responseJson = "{\r\n" +
                 "  \"keys\": [\r\n" +
                 "    \"testapprole01\"\r\n" +
                 "  ]\r\n" +
                 "}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+        AppRoleListObject appRoleListObject = new AppRoleListObject();
+        appRoleListObject.setRoleName("testapprole01");
+        appRoleListObject.setOwner(true);
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(appRoleListObject);
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
         UserDetails userDetails = getMockUser("testuser1", true);
-        Response response =getMockResponse(HttpStatus.OK, true, responseJson);
+        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
         Response responseAfterHide = response;
         String _path = "metadata/approle_users/" + userDetails.getUsername();
         String jsonStr = "{\"path\":\""+_path+"\"}";
         when(reqProcessor.process("/auth/approle/role/list", jsonStr, tkn)).thenReturn(response);
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any())).thenReturn(responseAfterHide);
-        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
-        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntityActual);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        List<String> keys = new ArrayList<>();
+        keys.add("testapprole01");
+        responseMap.put("keys", keys);
+        when(ControllerUtil.parseJson(any())).thenReturn(responseMap);
+
+        AppRoleMetadata approleMetadataExpected = new AppRoleMetadata();
+        approleMetadataExpected.setPath(_path);
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy("testuser1");
+        appRoleMetadataDetails.setName("testapprole01");
+        approleMetadataExpected.setAppRoleMetadataDetails(appRoleMetadataDetails);
+
+        String readResponseJson = new ObjectMapper().writeValueAsString(approleMetadataExpected);
+        Response readResponse = getMockResponse(HttpStatus.OK, true, readResponseJson);
+        when(reqProcessor.process(eq("/read"), any(), any())).thenReturn(readResponse);
+
+        Map<String, Object> readResponseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        appRoleMetadataMap.put("createdBy", userDetails.getUsername());
+        readResponseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(readResponseJson)).thenReturn(readResponseMap);
+
+        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
+                .thenReturn(responseAfterHide);
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
+        assertEquals(responseEntityExpected.getBody().get(0).getRoleName(), responseEntityActual.getBody().get(0).getRoleName());
+    }
+
+    @Test
+    public void test_listAppRoles_empty_response_failure() throws JsonProcessingException {
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String responseJson = "{\r\n" +
+                "  \"keys\": [\r\n" +
+                "    \"testapprole01\"\r\n" +
+                "  ]\r\n" +
+                "}";
+        AppRoleListObject appRoleListObject = new AppRoleListObject();
+        appRoleListObject.setRoleName("testapprole01");
+        appRoleListObject.setOwner(true);
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(appRoleListObject);
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        UserDetails userDetails = getMockUser("testuser1", false);
+        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
+        Response responseAfterHide = response;
+        String _path = "metadata/approle_users/" + userDetails.getUsername();
+        String jsonStr = "{\"path\":\""+_path+"\"}";
+        when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr, userDetails.getSelfSupportToken()))
+                .thenReturn(response);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        when(ControllerUtil.parseJson(any())).thenReturn(responseMap);
+
+        AppRoleMetadata approleMetadataExpected = new AppRoleMetadata();
+        approleMetadataExpected.setPath(_path);
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy("testuser1");
+        appRoleMetadataDetails.setName("testapprole01");
+        approleMetadataExpected.setAppRoleMetadataDetails(appRoleMetadataDetails);
+
+        String readResponseJson = new ObjectMapper().writeValueAsString(approleMetadataExpected);
+        Response readResponse = getMockResponse(HttpStatus.OK, true, readResponseJson);
+        when(reqProcessor.process(eq("/read"), any(), any())).thenReturn(readResponse);
+
+        Map<String, Object> readResponseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        appRoleMetadataMap.put("createdBy", userDetails.getUsername());
+        readResponseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson(readResponseJson)).thenReturn(readResponseMap);
+
+        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
+                .thenReturn(responseAfterHide);
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
+        assertTrue(responseEntityActual.getBody().isEmpty());
+    }
+
+    @Test
+    public void test_listAppRoles_null_metadata_failure() throws JsonProcessingException {
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String responseJson = "{\r\n" +
+                "  \"keys\": [\r\n" +
+                "    \"testapprole01\"\r\n" +
+                "  ]\r\n" +
+                "}";
+        AppRoleListObject appRoleListObject = new AppRoleListObject();
+        appRoleListObject.setRoleName("testapprole01");
+        appRoleListObject.setOwner(true);
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(appRoleListObject);
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        UserDetails userDetails = getMockUser("testuser1", false);
+        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
+        Response responseAfterHide = response;
+        String _path = "metadata/approle_users/" + userDetails.getUsername();
+        String jsonStr = "{\"path\":\""+_path+"\"}";
+        when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr, userDetails.getSelfSupportToken()))
+                .thenReturn(response);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        List<String> keys = new ArrayList<>();
+        keys.add("testapprole01");
+        responseMap.put("keys", keys);
+        when(ControllerUtil.parseJson(any())).thenReturn(responseMap);
+
+        AppRoleMetadata approleMetadataExpected = new AppRoleMetadata();
+        approleMetadataExpected.setPath(_path);
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy("testuser1");
+        appRoleMetadataDetails.setName("testapprole01");
+        approleMetadataExpected.setAppRoleMetadataDetails(appRoleMetadataDetails);
+
+        String readResponseJson = new ObjectMapper().writeValueAsString(approleMetadataExpected);
+        Response readResponse = getMockResponse(HttpStatus.NOT_FOUND, true, readResponseJson);
+        when(reqProcessor.process(eq("/read"), any(), any())).thenReturn(readResponse);
+
+        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
+                .thenReturn(responseAfterHide);
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
+        assertTrue(responseEntityActual.getBody().isEmpty());
     }
 
     @Test
@@ -2189,38 +2346,36 @@ public class AppRoleServiceTest {
                 "    \"\"\r\n" +
                 "  \r\n" +
                 "}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"keys\":[]}");
         UserDetails userDetails = getMockUser("testuser1", false);
         Response response = getMockResponse(HttpStatus.NOT_FOUND, false, responseJson);
         String _path = "metadata/approle_users/" + userDetails.getUsername();
         String jsonStr = "{\"path\":\""+_path+"\"}";
         when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr,userDetails.getSelfSupportToken())).thenReturn(response);
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(response);
-        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
-        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntityActual);
+
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        assertTrue(responseEntityActual.getBody().isEmpty());
     }
-    
+
     @Test
     public void test_listAppRoles_bad_request_failure() {
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        String responseJson = "{\r\n" + 
-        		"  \"error\": \r\n" + 
-        		"    \"\"\r\n" + 
-        		"  \r\n" + 
+        String responseJson = "{\r\n" +
+        		"  \"error\": \r\n" +
+        		"    \"\"\r\n" +
+        		"  \r\n" +
         		"}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseJson);
         UserDetails userDetails = getMockUser("testuser1", false);
         Response response =getMockResponse(HttpStatus.BAD_REQUEST, true, responseJson);
         String _path = "metadata/approle_users/" + userDetails.getUsername();
         String jsonStr = "{\"path\":\""+_path+"\"}";
         when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr,userDetails.getSelfSupportToken())).thenReturn(response);
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(response);
-        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntityActual);
+        assertTrue(responseEntityActual.getBody().isEmpty());
     }
-    
+
     @Test
     public void test_readRoleId_successfully() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
@@ -3613,7 +3768,14 @@ public class AppRoleServiceTest {
         when(reqProcessor.process("/auth/approle/role/accessors/list", "{\"role_name\":\""+role_name+"\"}",token)).thenReturn(accessorIdResponse);
         
 		AppRoleDetails appRoleDetails = new AppRoleDetails();
-		appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
 		appRoleDetails.setRole_id(roleId);
 		appRoleDetails.setAppRoleMetadata(approleMetadata);
 		if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -3715,7 +3877,14 @@ public class AppRoleServiceTest {
                 Mockito.any())).thenReturn(accessorIdResponse);
 
         AppRoleDetails appRoleDetails = new AppRoleDetails();
-        appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
         appRoleDetails.setRole_id(roleId);
         appRoleDetails.setAppRoleMetadata(approleMetadata);
         if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -3812,7 +3981,14 @@ public class AppRoleServiceTest {
         when(reqProcessor.process("/auth/approle/role/accessors/list", "{\"role_name\":\""+role_name+"\"}",userDetails.getSelfSupportToken())).thenReturn(accessorIdResponse);
         
 		AppRoleDetails appRoleDetails = new AppRoleDetails();
-		appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
 		appRoleDetails.setRole_id(roleId);
 		appRoleDetails.setAppRoleMetadata(approleMetadata);
 		if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -3908,7 +4084,14 @@ public class AppRoleServiceTest {
                 .thenReturn(accessorIdResponse);
 
         AppRoleDetails appRoleDetails = new AppRoleDetails();
-        appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
         appRoleDetails.setRole_id(roleId);
         appRoleDetails.setAppRoleMetadata(approleMetadata);
         if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -4047,7 +4230,14 @@ public class AppRoleServiceTest {
                 userDetails.getSelfSupportToken())).thenReturn(accessorIdResponse);
 
         AppRoleDetails appRoleDetails = new AppRoleDetails();
-        appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
         appRoleDetails.setRole_id(roleId);
         appRoleDetails.setAppRoleMetadata(approleMetadata);
         if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -4142,7 +4332,14 @@ public class AppRoleServiceTest {
                 userDetails.getSelfSupportToken())).thenReturn(accessorIdResponse);
 
         AppRoleDetails appRoleDetails = new AppRoleDetails();
-        appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
         appRoleDetails.setRole_id(roleId);
         appRoleDetails.setAppRoleMetadata(approleMetadata);
         if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -4235,7 +4432,14 @@ public class AppRoleServiceTest {
         when(reqProcessor.process("/auth/approle/role/accessors/list", "{\"role_name\":\""+role_name+"\"}",userDetails.getSelfSupportToken())).thenReturn(accessorIdResponse);
 
         AppRoleDetails appRoleDetails = new AppRoleDetails();
-        appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
         appRoleDetails.setRole_id(roleId);
         appRoleDetails.setAppRoleMetadata(approleMetadata);
         if (!CollectionUtils.isEmpty(accessorIds)) {
@@ -4334,7 +4538,14 @@ public class AppRoleServiceTest {
         when(reqProcessor.process("/auth/approle/role/accessors/list", "{\"role_name\":\""+role_name+"\"}",userDetails.getSelfSupportToken())).thenReturn(accessorIdResponse);
         
 		AppRoleDetails appRoleDetails = new AppRoleDetails();
-		appRoleDetails.setAppRole(appRole);
+        appRoleDetails.setRole_name(appRole.getRole_name());
+        appRoleDetails.setPolicies(appRole.getPolicies());
+        appRoleDetails.setBind_secret_id(appRole.isBind_secret_id());
+        appRoleDetails.setSecret_id_num_uses(appRole.getSecret_id_num_uses());
+        appRoleDetails.setSecret_id_ttl(appRole.getSecret_id_ttl());
+        appRoleDetails.setToken_num_uses(appRole.getToken_num_uses());
+        appRoleDetails.setToken_ttl(appRole.getToken_ttl());
+        appRoleDetails.setToken_max_ttl(appRole.getToken_max_ttl());
 		appRoleDetails.setRole_id(roleId);
 		appRoleDetails.setAppRoleMetadata(approleMetadata);
 		if (!CollectionUtils.isEmpty(accessorIds)) {
