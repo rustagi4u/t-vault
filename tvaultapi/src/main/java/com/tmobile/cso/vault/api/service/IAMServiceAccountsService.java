@@ -5775,23 +5775,6 @@ public class  IAMServiceAccountsService {
 					"{\"errors\":[\"Update Failed. Owner_ntid is required when owner_email is given.\"]}");
 		}
 
-
-		if (isOwnerBeingTransferred) {
-			iamSvcAcc.setOwnerNtid(iamServiceAccountTransfer.getOwnerNtid());
-			if (!StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerEmail())) {
-				iamSvcAcc.setOwnerEmail(iamServiceAccountTransfer.getOwnerEmail());
-			} else {
-				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
-						.put(LogMessage.MESSAGE, "Failed to update IAM Service Account because owner_ntid was given but owner_email was not")
-						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-						"{\"errors\":[\"Update Failed. Owner_email is required when owner_ntid is given.\"]}");
-			}
-		}
-
-
 		if (isOwnerBeingTransferred) {
 			iamSvcAcc.setOwnerNtid(iamServiceAccountTransfer.getOwnerNtid());
 			if (!StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerEmail())) {
