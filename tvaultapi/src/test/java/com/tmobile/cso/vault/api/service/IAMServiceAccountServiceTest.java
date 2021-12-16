@@ -994,11 +994,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-	public void test_updateIAMServiceAccount_success() throws IOException {
-    
 	public void testOnboardIAMServiceAccount_secret_failed() {
-
-  
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
@@ -1105,13 +1101,6 @@ public class IAMServiceAccountServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(token,
-				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"messages\":[\"IAM Service Account has been successfully updated.\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
 		// changes for add self support group
 		IAMServiceAccountGroup iamSvcAccGroup = new IAMServiceAccountGroup("testaccount", "group1", "rotate1", "1234567");
