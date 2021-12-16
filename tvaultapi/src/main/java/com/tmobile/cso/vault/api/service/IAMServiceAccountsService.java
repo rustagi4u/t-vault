@@ -5762,19 +5762,6 @@ public class  IAMServiceAccountsService {
 
 		}
 
-		if (!StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerNtid())) {
-			if (iamServiceAccountTransfer.getOwnerNtid().equals(iamSvcAcc.getOwnerNtid())) {
-				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
-						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
-						.put(LogMessage.MESSAGE, String.format("Failed to transfer IAM Service Account owner. " +
-								"The owner given is already the current owner on account [%s]", iamSvcAccName))
-						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-						"{\"errors\":[\"Failed to transfer IAM Service Account owner. The owner given is already the current owner.\"]}");
-			}
-		}
-
 		boolean isOwnerBeingTransferred = !StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerNtid());
 
 		IAMServiceAccountUser oldOwner = new IAMServiceAccountUser(iamSvcAcc.getUserName().toLowerCase(),
