@@ -1137,7 +1137,9 @@ public class IAMServiceAccountServiceTest {
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.onboardIAMServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+	
 	@Test
 
 	public void test_updateIAMServiceAccount_with_new_app_details() throws IOException {
