@@ -1384,89 +1384,6 @@ public class IAMServiceAccountServiceTest {
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
 				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
 
-
-		// Add Group
-		userDetails = getMockUser(false);
-		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-
-		String[] policies = { "o_iamsvcacc_1234567_testaccount" };
-		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
-		Response groupResp = getMockResponse(HttpStatus.OK, true,
-				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
-		when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"group1\"}", token)).thenReturn(groupResp);
-		ReflectionTestUtils.setField(iamServiceAccountsService, "vaultAuthMethod", "ldap");
-		ObjectMapper objMapper = new ObjectMapper();
-		String responseJson = groupResp.getResponse();
-		try {
-			List<String> resList = new ArrayList<>();
-			resList.add("default");
-			resList.add("w_shared_mysafe01");
-			resList.add("w_shared_mysafe02");
-			when(ControllerUtil.getPoliciesAsListFromJson(objMapper, responseJson)).thenReturn(resList);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
-		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		Response groupMetadataResponse = getMockResponse(HttpStatus.OK, true,
-				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}");
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token)))
-				.thenReturn(serviceAccountMetadataResponse)
-				.thenReturn(groupMetadataResponse);
-
-		// Process and remove user permission from IAM Service Account
-		Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");when(reqProcessor.process(eq("/auth/ldap/users"),Mockito.any(),eq(token))).thenReturn(userResponse);
-
-		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token))).thenReturn(responseNoContent);
-
-		// create metadata for new owner
-		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
-				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
-
-		// Add User to Service Account
-		Response ldapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-		when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"normaluser\"}", token)).thenReturn(userResponse);
-
-		try {
-			List<String> resList = new ArrayList<>();
-			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		when(ControllerUtil.configureLDAPUser(eq("newowner"), any(), any(), eq(token)))
-				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
-
-		// Send email
-		DirectoryUser directoryUser = new DirectoryUser();
-		directoryUser.setDisplayName("testUserfirstname,lastname");
-		directoryUser.setGivenName("testUser");
-		directoryUser.setUserEmail("testUser@t-mobile.com");
-		directoryUser.setUserId("normaluser");
-		directoryUser.setUserName("normaluser");
-
-		List<DirectoryUser> persons = new ArrayList<>();
-		persons.add(directoryUser);
-		DirectoryObjects users = new DirectoryObjects();
-		DirectoryObjectsList usersList = new DirectoryObjectsList();
-		usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
-		users.setData(usersList);
-
-		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
-		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
-
-		ReflectionTestUtils.setField(iamServiceAccountsService, "supportEmail", "support@abc.com");
-		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
-				Mockito.any());
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(token,
-				userDetails, iamSvcAccTransfer);
-		String expectedResponse = "{\"messages\":[\"IAM Service Account has been successfully updated.\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(tkn,
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"errors\":[\"Update Failed. Owner_ntid is required when owner_email is given.\"]}";
@@ -1477,11 +1394,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccount_owner_already_exists() throws IOException {
-
 	public void test_updateIAMServiceAccount_invalid_account_failure() throws IOException {
-
 		userDetails = getMockUser(true);
 		String tkn = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
@@ -1549,11 +1462,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccount_not_authorized_failure() throws IOException {
-
 	public void test_updateIAMServiceAccount_no_ownerNTID_success() throws IOException {
-
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
@@ -1605,11 +1514,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccount_failed_to_remove_user_permissions() throws IOException {
-
 	public void test_updateIAMServiceAccount_io_exception_failure() throws IOException {
-
 		userDetails = getMockUser(true);
 		String tkn = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
@@ -1706,11 +1611,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccount_update_metadata_failure() throws IOException {
-
 	public void test_updateIAMServiceAccount_cannot_add_write_permission_failure() throws IOException {
-
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
@@ -1848,11 +1749,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccount_add_sudo_permission_failure() throws IOException {
-
 	public void test_updateIAMServiceAccount_with_new_app_details() throws IOException {
-
 		userDetails = getMockUser(true);
 		token = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
