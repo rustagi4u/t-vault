@@ -5760,8 +5760,6 @@ public class  IAMServiceAccountsService {
 			}
 		}
 
-		}
-
 		boolean isOwnerBeingTransferred = !StringUtils.isEmpty(iamServiceAccountTransfer.getOwnerNtid());
 
 		IAMServiceAccountUser oldOwner = new IAMServiceAccountUser(iamSvcAcc.getUserName().toLowerCase(),
