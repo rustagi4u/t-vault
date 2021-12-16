@@ -5868,9 +5868,7 @@ public class  IAMServiceAccountsService {
 			if (HttpStatus.OK.equals(removeOldPermissionResponse.getStatusCode())) {
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-
 						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
-
 						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
 						.put(LogMessage.MESSAGE, String.format("Successfully removed permission from old owner [%s] on account [%s]",
 								oldOwner.getUsername(), iamSvcAccName))
@@ -5878,11 +5876,8 @@ public class  IAMServiceAccountsService {
 			} else {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-
 						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_UPDATE_TITLE)
-
 						.put(LogMessage.ACTION, IAMServiceAccountConstants.IAM_SVCACC_CREATION_TITLE)
-
 						.put(LogMessage.MESSAGE, String.format("Failed to remove permission from old owner [%s] on account [%s]",
 								oldOwner.getUsername(), iamSvcAccName))
 						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
