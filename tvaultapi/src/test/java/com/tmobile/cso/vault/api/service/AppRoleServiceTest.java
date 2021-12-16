@@ -4591,6 +4591,92 @@ public class AppRoleServiceTest {
     }
 
     @Test
+    public void test_updateAppRole_successfully_with_email_empty_user_lookup() throws Exception{
+        Response response =getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response responseList = getMockResponse(HttpStatus.OK, true, "{\"keys\": [ \"role1\" ]}");
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String role_name="approle1";
+        UserDetails userDetails = getMockUser("testuser1", false);
+
+        // START - AppRole exists
+        ArrayList<String> policiesList = new ArrayList<String>();
+        policiesList.add("r_shared_safe01");
+        String[] policies = policiesList.toArray(new String[policiesList.size()]);
+        AppRoleUpdate appRoleUpdate = new AppRoleUpdate(role_name, policies, true, 0, 0, 0);
+        appRoleUpdate.setOwner("newOwner");
+        appRoleUpdate.setNew_owner_email("newOwner@hotmail.com");
+        AppRole appRole = constructAppRoleFromUpdateObject(appRoleUpdate);
+        String appRoleResponseJson = new ObjectMapper().writeValueAsString(appRole);
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true, appRoleResponseJson);
+        Map<String, Object> appRoleResponseMap = new HashMap<>();
+        Map<String, Object> dataMap = new HashMap<>();
+        appRoleResponseMap.put("data", dataMap);
+        dataMap.put("policies",policiesList);
+        dataMap.put("bind_secret_id",new Boolean(true));
+        dataMap.put("secret_id_num_uses", new Integer(0));
+        dataMap.put("secret_id_ttl", new Integer(0));
+        dataMap.put("token_num_uses", new Integer(0));
+        dataMap.put("token_ttl", new Integer(0));
+        dataMap.put("token_max_ttl", new Integer(0));
+        when(reqProcessor.process("/auth/approle/role/read", "{\"role_name\":\""+role_name+"\"}",userDetails.getSelfSupportToken())).thenReturn(appRoleResponse);
+        when(ControllerUtil.parseJson(appRoleResponseJson)).thenReturn(appRoleResponseMap);
+        // END - AppRole exists
+        String jsonStr = "{\"role_name\":\"approle1\",\"policies\":[\"default\"],\"bind_secret_id\":true,\"secret_id_num_uses\":\"1\",\"secret_id_ttl\":\"100m\",\"token_num_uses\":0,\"token_ttl\":null,\"token_max_ttl\":null}";
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"AppRole updated successfully.\"]}");
+
+        Map<String,Object> appRolesList = new HashMap<>();
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("role1");
+        appRolesList.put("keys", arrayList);
+        when(ControllerUtil.parseJson("{\"keys\": [ \"role1\" ]}")).thenReturn(appRolesList);
+
+        Response responseAfterHide = getMockResponse(HttpStatus.OK, true, "{\"keys\": [ \"role1\" ]}");
+        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseAfterHide);
+
+        when(reqProcessor.process(Mockito.eq("/auth/approle/role/create"), Mockito.any(),
+                Mockito.eq(userDetails.getSelfSupportToken()))).thenReturn(response);
+        when(reqProcessor.process("/auth/approle/role/list","{}", tkn)).thenReturn(responseList);
+        when(ControllerUtil.areAppRoleInputsValid(appRole)).thenReturn(true);
+        when(JSONUtil.getJSON(appRole)).thenReturn(jsonStr);
+        when(ControllerUtil.convertAppRoleInputsToLowerCase(Mockito.any())).thenReturn(jsonStr);
+
+        String userMetaJson = "{\"path\":\"metadata/approle_users/testuser1/test\",\"data\":{\"name\":\"test\",\"createdBy\":\"testuser1\",\"sharedTo\":[\"someone\"]}}\n";
+        when(ControllerUtil.populateUserMetaJson(Mockito.any(), Mockito.any())).thenReturn(userMetaJson);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.eq(userMetaJson), Mockito.any())).thenReturn(response);
+
+        String username = "testuser1";
+        String _path = "metadata/approle/" + role_name;
+        AppRoleMetadata approleMetadataExpected = new AppRoleMetadata();
+        approleMetadataExpected.setPath(_path);
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails();
+        appRoleMetadataDetails.setCreatedBy(username);
+        appRoleMetadataDetails.setName(role_name);
+        approleMetadataExpected.setAppRoleMetadataDetails(appRoleMetadataDetails);
+
+        String mapResponseJson = new ObjectMapper().writeValueAsString(approleMetadataExpected);
+        Response mapResponse = getMockResponse(HttpStatus.OK, true, mapResponseJson);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> appRoleMetadataMap = new HashMap<>();
+        appRoleMetadataMap.put("createdBy", username);
+        responseMap.put("data", appRoleMetadataMap);
+        when(ControllerUtil.parseJson("{\"path\":\"metadata/approle/approle1\",\"data\":{\"name\":\"approle1\",\"createdBy\":\"testuser1\",\"sharedTo\":null}}")).thenReturn(responseMap);
+
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(),
+                Mockito.any())).thenReturn(mapResponse);
+
+        DirectoryUser directoryUser = new DirectoryUser();
+        directoryUser.setDisplayName(" ");
+        when(commonUtils.getUserDetails(Mockito.any())).thenReturn(directoryUser);
+
+        when(reqProcessor.process(eq("/write"),Mockito.any(),eq(tkn))).thenReturn(response);
+        when(ControllerUtil.createMetadata(Mockito.any(), eq(tkn))).thenReturn(true);
+        ResponseEntity<String> responseEntityActual = appRoleService.updateAppRole(tkn, appRoleUpdate, userDetails);
+        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntityActual);
+    }
+
+    @Test
     public void test_updateAppRole_successfully_with_shared_to() throws Exception{
         Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
         Response responseList = getMockResponse(HttpStatus.OK, true, "{\"keys\": [ \"role1\" ]}");
@@ -4862,6 +4948,65 @@ public class AppRoleServiceTest {
         when(ControllerUtil.createMetadata(Mockito.any(), eq(tkn))).thenReturn(true);
         ResponseEntity<String> responseEntityActual = appRoleService.updateAppRole(tkn, appRoleUpdate, userDetails);
         assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntityActual);
+    }
+
+    @Test
+    public void test_updateAppRole_approle_doesnt_exist_failure() throws Exception{
+        Response response =getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response responseList = getMockResponse(HttpStatus.OK, true, "{\"keys\": [ \"role1\" ]}");
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String role_name="some_insane_name_that_does_not_exist";
+        UserDetails userDetails = getMockUser("testuser1", false);
+
+        ArrayList<String> policiesList = new ArrayList<>();
+        policiesList.add("r_shared_safe01");
+        String[] policies = policiesList.toArray(new String[policiesList.size()]);
+        AppRoleUpdate appRoleUpdate = new AppRoleUpdate(role_name, policies, true, 0, 0, 0);
+        AppRole appRole = constructAppRoleFromUpdateObject(appRoleUpdate);
+        String appRoleResponseJson = new ObjectMapper().writeValueAsString(appRole);
+        Response appRoleResponse = getMockResponse(HttpStatus.OK, true, appRoleResponseJson);
+        Map<String, Object> appRoleResponseMap = new HashMap<>();
+        Map<String, Object> dataMap = new HashMap<>();
+        appRoleResponseMap.put("data", dataMap);
+        dataMap.put("policies",policiesList);
+        dataMap.put("bind_secret_id",new Boolean(true));
+        dataMap.put("secret_id_num_uses", new Integer(0));
+        dataMap.put("secret_id_ttl", new Integer(0));
+        dataMap.put("token_num_uses", new Integer(0));
+        dataMap.put("token_ttl", new Integer(0));
+        dataMap.put("token_max_ttl", new Integer(0));
+        when(reqProcessor.process("/auth/approle/role/read", "{\"role_name\":\""+role_name+"\"}",userDetails.getSelfSupportToken())).thenReturn(appRoleResponse);
+        when(ControllerUtil.parseJson(appRoleResponseJson)).thenReturn(appRoleResponseMap);
+        // END - AppRole exists
+        String jsonStr = "{\"role_name\":\"approle1\",\"policies\":[\"default\"],\"bind_secret_id\":true,\"secret_id_num_uses\":\"1\",\"secret_id_ttl\":\"100m\",\"token_num_uses\":0,\"token_ttl\":null,\"token_max_ttl\":null}";
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("{\"errors\":[\"AppRole doesn't exist.\"]}");
+
+        Map<String,Object> appRolesList = new HashMap<>();
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("role1");
+        appRolesList.put("keys", arrayList);
+        when(ControllerUtil.parseJson("{\"keys\": [ \"role1\" ]}")).thenReturn(appRolesList);
+
+        Response responseAfterHide = getMockResponse(HttpStatus.OK, true, "{\"keys\": [ \"role1\" ]}");
+        when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseAfterHide);
+
+        when(reqProcessor.process(Mockito.eq("/auth/approle/role/create"), Mockito.any(),
+                Mockito.eq(userDetails.getSelfSupportToken()))).thenReturn(response);
+        when(reqProcessor.process("/auth/approle/role/list","{}", tkn)).thenReturn(responseList);
+        when(ControllerUtil.areAppRoleInputsValid(appRole)).thenReturn(true);
+        when(JSONUtil.getJSON(appRole)).thenReturn(jsonStr);
+        when(ControllerUtil.convertAppRoleInputsToLowerCase(Mockito.any())).thenReturn(jsonStr);
+
+        Response mapResponse = getMockResponse(HttpStatus.NOT_FOUND, true, null);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(),
+                Mockito.any())).thenReturn(mapResponse);
+
+        when(reqProcessor.process(eq("/write"),Mockito.any(),eq(tkn))).thenReturn(response);
+        when(ControllerUtil.createMetadata(Mockito.any(), eq(tkn))).thenReturn(true);
+        ResponseEntity<String> responseEntityActual = appRoleService.updateAppRole(tkn, appRoleUpdate, userDetails);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
         assertEquals(responseEntityExpected, responseEntityActual);
     }
 

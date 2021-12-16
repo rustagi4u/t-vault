@@ -1014,9 +1014,9 @@ public class  SelfSupportService {
 	 * @param token
 	 * @param userDetails
 	 * @param roleName
-	 * @return String
+	 * @return String[]
 	 */
-	public String getAppRoleOwner(String token, UserDetails userDetails, String roleName) {
+	public String[] getAppRoleOwner(String token, UserDetails userDetails, String roleName) {
 		if (!userDetails.isAdmin()) {
 			token = userDetails.getSelfSupportToken();
 		}
@@ -1032,9 +1032,16 @@ public class  SelfSupportService {
 							String.format("Failed to determine owner for AppRole [%s] because fetching metadata failed", roleName)).
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
-			return "";
+			return new String[] {};
 		}
-		return appRoleMetadataDetails.getCreatedBy();
+
+		DirectoryUser createdByUserDetails = new DirectoryUser();
+		if (appRoleMetadataDetails.getCreatedBy().equals("approle")) {
+			createdByUserDetails.setUserEmail("approle");
+		} else {
+			createdByUserDetails = directoryService.getUserDetailsFromCorp(appRoleMetadataDetails.getCreatedBy());
+		}
+		return new String[] { appRoleMetadataDetails.getCreatedBy(), createdByUserDetails.getUserEmail() };
 	}
 
 	/**

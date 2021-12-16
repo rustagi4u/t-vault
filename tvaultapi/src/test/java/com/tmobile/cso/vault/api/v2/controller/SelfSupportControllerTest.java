@@ -579,16 +579,16 @@ public class SelfSupportControllerTest {
     }
 
     @Test
-    public void test_isApproleOwner() throws Exception {
+    public void test_getApproleOwner() throws Exception {
         String role_name = "testapprole01";
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 
-        when(selfSupportService.getAppRoleOwner(eq(tkn), Mockito.any(), Mockito.any())).thenReturn("someone");
+        when(selfSupportService.getAppRoleOwner(eq(tkn), Mockito.any(), Mockito.any())).thenReturn(new String[]{"someone", "someone@gmail.com"});
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle/"+role_name+"/owner")
                 .header("vault-token", tkn)
                 .header("Content-Type", "application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("someone"));
+                .andExpect(content().string("[\"someone\",\"someone@gmail.com\"]"));
     }
 
     @Test

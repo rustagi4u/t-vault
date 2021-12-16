@@ -1621,7 +1621,7 @@ public class SelfSupportServiceTest {
     }
 
     @Test
-    public void test_isAppRoleOwner_successfully_as_admin() {
+    public void test_getAppRoleOwner_successfully_as_admin() {
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(true);
         String roleName = "myvaultapprole42";
@@ -1637,11 +1637,16 @@ public class SelfSupportServiceTest {
         when(appRoleService.readAppRoleMetadata(tkn, roleName)).thenReturn(appRoleMetadata);
         when(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails)).thenReturn(true);
 
-        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName), userDetails.getUsername());
+        DirectoryUser directoryUser = new DirectoryUser();
+        directoryUser.setUserEmail("someEmail@email.mail");
+        when(directoryService.getUserDetailsFromCorp("normaluser")).thenReturn(directoryUser);
+
+        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName)[0], userDetails.getUsername());
+        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName)[1], directoryUser.getUserEmail());
     }
 
     @Test
-    public void test_isAppRoleOwner_metadata_failure() {
+    public void test_getAppRoleOwner_metadata_failure() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(false);
         String roleName = "myvaultapprole42";
@@ -1666,7 +1671,12 @@ public class SelfSupportServiceTest {
         when(appRoleService.readAppRoleMetadata(tkn, roleName)).thenReturn(appRoleMetadata);
         when(appRoleService.isAppRoleOwner(userDetails.getUsername(), appRoleMetadataDetails)).thenReturn(true);
 
-        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName), userDetails.getUsername());
+        DirectoryUser directoryUser = new DirectoryUser();
+        directoryUser.setUserEmail("someEmail@email.mail");
+        when(directoryService.getUserDetailsFromCorp("normaluser")).thenReturn(directoryUser);
+
+        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName)[0], userDetails.getUsername());
+        assertEquals(selfSupportService.getAppRoleOwner(tkn, userDetails, roleName)[1], directoryUser.getUserEmail());
     }
 
     @Test

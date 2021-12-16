@@ -1721,7 +1721,21 @@ public class  AppRoleService {
 			token = userDetails.getSelfSupportToken();
 		}
 
-		AppRoleMetadataDetails appRoleMetadataDetails = readAppRoleMetadata(token, rolename).getAppRoleMetadataDetails();
+		AppRoleMetadata appRoleMetadata = readAppRoleMetadata(token, rolename);
+		AppRoleMetadataDetails appRoleMetadataDetails;
+		if (appRoleMetadata != null) {
+			appRoleMetadataDetails = appRoleMetadata.getAppRoleMetadataDetails();
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, UPDATE_APPROLE).
+					put(LogMessage.MESSAGE, "Could not update AppRole because metadata for it could not be found.").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"AppRole doesn't exist.\"]}");
+		}
+
 		boolean isSharedToChanged = isSharedToChanged(appRoleMetadataDetails, appRole.getShared_to());
 		boolean isOwnershipChanged = false;
 		if (appRoleUpdate.getOwner() != null) {
@@ -1897,17 +1911,26 @@ public class  AppRoleService {
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
 
-	private void sendTransferNotificationEmail(String originalAppRoleOwner, String appRoleName, String ownerName, String ownerEmail) {
+	private void sendTransferNotificationEmail(String originalAppRoleOwner, String appRoleName, String newOwnerName, String ownerEmail) {
 		DirectoryUser oldOwnerObj = commonUtils.getUserDetails(originalAppRoleOwner);
+		if (oldOwnerObj != null && oldOwnerObj.getDisplayName() != null && oldOwnerObj.getDisplayName().trim().isEmpty()) {
+			oldOwnerObj.setDisplayName(oldOwnerObj.getUserName());
+		}
+		DirectoryUser newOwnerObj = commonUtils.getUserDetails(newOwnerName);
+		if (newOwnerObj != null && newOwnerObj.getDisplayName() != null && newOwnerObj.getDisplayName().trim().isEmpty()) {
+			newOwnerObj.setDisplayName(newOwnerObj.getUserName());
+		}
 		Map<String, String> mailTemplateVariables = new HashMap<>();
-		mailTemplateVariables.put("name", ownerName);
+		mailTemplateVariables.put("name", newOwnerObj != null ? newOwnerObj.getDisplayName() : "");
 		mailTemplateVariables.put("appRoleName", appRoleName);
 		mailTemplateVariables.put("oldOwnerName", oldOwnerObj != null ? oldOwnerObj.getDisplayName() : "");
 		List<String> to = new ArrayList<>();
 		to.add(ownerEmail);
 		List<String> cc = new ArrayList<>();
 		if (oldOwnerObj != null) {
-			cc.add(oldOwnerObj.getUserEmail());
+			if (oldOwnerObj.getUserEmail() != null) {
+				cc.add(oldOwnerObj.getUserEmail());
+			}
 		}
 		String subject = String.format("AppRole %s has been successfully transferred", appRoleName);
 		emailUtils.sendAppRoleHtmlEmalFromTemplate(supportEmail, to, cc, subject, mailTemplateVariables, "AppRoleTransferEmailTemplate");
