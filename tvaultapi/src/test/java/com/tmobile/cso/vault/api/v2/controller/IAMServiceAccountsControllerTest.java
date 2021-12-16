@@ -164,7 +164,6 @@ public class IAMServiceAccountsControllerTest {
 
 	@Test
 	public void test_transferIAMServiceAccountOwner_successful() throws Exception {
-
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
 
 		String expected = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
