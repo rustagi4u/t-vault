@@ -234,7 +234,7 @@ public class ADServiceAccount implements Serializable {
 			passwordExpiry  = pwdLastSet + maxlife. If passwordExpiry  in past then password expired
 		*/
 		int maxLife = (int)TimeUnit.SECONDS.toDays(maxPwdAge);
-		String pwdExpiryDateTime = TVaultConstants.EXPIRED;
+		String paswExpiryDateTime = TVaultConstants.EXPIRED;
 
 		String memberOfStr = memberOf;
 		if (!StringUtils.isEmpty(memberOfStr)) {
@@ -244,10 +244,10 @@ public class ADServiceAccount implements Serializable {
 					c.setTime(dateFormat.parse(pwdLastSetFormatted));
 					c.add(Calendar.DAY_OF_MONTH, maxLife);
 					if (c.getTime().before(new Date())) {
-						pwdExpiryDateTime = TVaultConstants.EXPIRED;
+						paswExpiryDateTime = TVaultConstants.EXPIRED;
 					}
 					else {
-						String pwdExpiry = dateFormat.format(c.getTime());
+						String paswExpiry = dateFormat.format(c.getTime());
 						// find days to expire
 						long difference = c.getTime().getTime() - new Date().getTime();
 						String daysToExpire;
@@ -257,14 +257,14 @@ public class ADServiceAccount implements Serializable {
 						else { // less than one day
 							daysToExpire = TimeUnit.HOURS.convert(difference, TimeUnit.MILLISECONDS) + " hours";
 						}
-						pwdExpiryDateTime = pwdExpiry +" ("+daysToExpire+")";
+						paswExpiryDateTime = paswExpiry +" ("+daysToExpire+")";
 					}
 				}catch(ParseException e){
-					pwdExpiryDateTime = TVaultConstants.EMPTY;
+					paswExpiryDateTime = TVaultConstants.EMPTY;
 				}
 			}
 		}
-		passwordExpiry = pwdExpiryDateTime;
+		passwordExpiry = paswExpiryDateTime;
 		return passwordExpiry;
 	}
 	/**

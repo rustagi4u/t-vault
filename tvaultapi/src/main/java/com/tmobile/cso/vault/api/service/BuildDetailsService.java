@@ -45,8 +45,8 @@ public class BuildDetailsService {
     public ResponseEntity<BuildDetails> getBuildDetails(){
     	BuildDetails details = new BuildDetails();
     	try {
-    	Resource resource = new ClassPathResource("classpath:build_variables.txt");
-        InputStream stream = resource.getInputStream();  
+			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+			InputStream stream = classloader.getResourceAsStream("build_variables.txt");
        	 
          if (stream == null) {
              throw new IllegalArgumentException("File build_variables.txt not found! " );

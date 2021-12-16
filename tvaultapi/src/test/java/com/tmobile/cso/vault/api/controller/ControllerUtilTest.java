@@ -1020,14 +1020,26 @@ public class ControllerUtilTest {
 
     @Test
     public void test_populateAppRoleMetaJson()  {
-        String json = ControllerUtil.populateAppRoleMetaJson("role1", "normalsuer");
+        AppRole appRole = new AppRole();
+        appRole.setRole_name("role1");
+        String json = ControllerUtil.populateAppRoleMetaJson(appRole, "normalsuer");
         assertEquals("{\"path\":\"metadata/approle/role1\"}", json);
     }
 
     @Test
     public void test_populateUserMetaJson()  {
-        String json = ControllerUtil.populateUserMetaJson("role1", "normalsuer");
+        AppRole appRole = new AppRole();
+        appRole.setRole_name("role1");
+        String json = ControllerUtil.populateUserMetaJson(appRole, "normalsuer");
         assertEquals("{\"path\":\"metadata/approle_users/normalsuer/role1\"}", json);
+    }
+
+    @Test
+    public void test_populateSharedToUserMetaJson() {
+        AppRole appRole = new AppRole();
+        appRole.setRole_name("role1");
+        String json = ControllerUtil.populateSharedToUserMetaJson("owneruser", "shareduser", appRole);
+        assertEquals("{\"path\":\"metadata/approle_users/shareduser/role1\"}", json);
     }
     
     @Test

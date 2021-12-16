@@ -723,10 +723,9 @@ public class  SelfSupportService {
 
 	/**
 	 * Create AppRole
-	 * @param userToken
 	 * @param appRole
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> createAppRole(AppRole appRole, UserDetails userDetails) {
 		String token = userDetails.getClientToken();
@@ -741,10 +740,9 @@ public class  SelfSupportService {
 
 	/**
 	 * Delete AppRole
-	 * @param userToken
 	 * @param appRole
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> deleteAppRole(AppRole appRole, UserDetails userDetails) {
 		String token = userDetails.getClientToken();
@@ -759,11 +757,10 @@ public class  SelfSupportService {
 	
 	/**
 	 * Get safes having read/write permission
-	 * @param token
 	 * @param userDetails
 	 * @param limit
 	 * @param offset
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> getSafes(UserDetails userDetails, Integer limit, Integer offset) {
 		oidcUtil.renewUserToken(userDetails.getClientToken());
@@ -857,7 +854,7 @@ public class  SelfSupportService {
 	/**
 	 * Filter safe policies based on policy precedence.
 	 * @param policies
-	 * @return
+	 * @return String[]
 	 */
 	private String [] filterPoliciesBasedOnPrecedence(List<String> policies) {
 		List<String> filteredList = new ArrayList<>();
@@ -901,9 +898,8 @@ public class  SelfSupportService {
 
 	/**
 	 * Read all approle names
-	 * @param userToken
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoles(UserDetails userDetails) {
 		String token = userDetails.getClientToken();
@@ -922,16 +918,15 @@ public class  SelfSupportService {
 	 * @param userDetails
 	 * @return
 	 */
-	public ResponseEntity<String> listAppRoles(String userToken, UserDetails userDetails, Integer limit, Integer offset) {
+	public ResponseEntity<List<AppRoleListObject>> listAppRoles(String userToken, UserDetails userDetails, Integer limit, Integer offset) {
 		return appRoleService.listAppRoles(userToken, userDetails, limit, offset);
 	}
 
 	/**
 	 * Read approle info
-	 * @param userToken
 	 * @param rolename
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRole(String rolename, UserDetails userDetails) {
 		String token = userDetails.getClientToken();
@@ -946,19 +941,19 @@ public class  SelfSupportService {
 	/**
 	 * Read role_id for a given AppRole
 	 * @param userToken
-	 * @param appRole
+	 * @param rolename
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoleRoleId(String userToken, String rolename, UserDetails userDetails) {
 		return appRoleService.readAppRoleRoleId(userToken, rolename, userDetails);
 	}
+
 	/**
 	 * Read secret_id for a given AppRole
-	 * @param userToken
-	 * @param appRole
+	 * @param rolename
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoleSecretId(String rolename, UserDetails userDetails) {
 		String token = userDetails.getClientToken();
@@ -972,7 +967,7 @@ public class  SelfSupportService {
 	 * @param userToken
 	 * @param rolename
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readAppRoleDetails(String userToken, String rolename, UserDetails userDetails) {
 		return appRoleService.readAppRoleDetails(userToken, rolename, userDetails);
@@ -982,7 +977,7 @@ public class  SelfSupportService {
 	 * @param userToken
 	 * @param rolename
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> readSecretIdAccessors(String userToken, String rolename, UserDetails userDetails) {
 		return appRoleService.readSecretIdAccessors(userToken, rolename, userDetails);
@@ -990,9 +985,9 @@ public class  SelfSupportService {
 	/**
 	 * Delete SecretIds for a given AppRole
 	 * @param userToken
-	 * @param appRole
+	 * @param appRoleAccessorIds
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> deleteSecretIds(String userToken, AppRoleAccessorIds appRoleAccessorIds, UserDetails userDetails) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -1006,19 +1001,55 @@ public class  SelfSupportService {
 	/**
 	 * Update AppRole
 	 * @param userToken
-	 * @param appRole
+	 * @param appRoleUpdate
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
-	public ResponseEntity<String> updateAppRole(String userToken, AppRole appRole, UserDetails userDetails) {
-		return appRoleService.updateAppRole(userToken, appRole, userDetails);
+	public ResponseEntity<String> updateAppRole(String userToken, AppRoleUpdate appRoleUpdate, UserDetails userDetails) {
+		return appRoleService.updateAppRole(userToken, appRoleUpdate, userDetails);
+	}
+
+	/**
+	 * Method to retrieve the owner of the AppRole
+	 * @param token
+	 * @param userDetails
+	 * @param roleName
+	 * @return String[]
+	 */
+	public String[] getAppRoleOwner(String token, UserDetails userDetails, String roleName) {
+		if (!userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
+		}
+		AppRoleMetadata appRoleMetadata = appRoleService.readAppRoleMetadata(token, roleName);
+		AppRoleMetadataDetails appRoleMetadataDetails;
+		if (appRoleMetadata != null) {
+			appRoleMetadataDetails = appRoleMetadata.getAppRoleMetadataDetails();
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+					put(LogMessage.ACTION, "getAppRoleOwner").
+					put(LogMessage.MESSAGE,
+							String.format("Failed to determine owner for AppRole [%s] because fetching metadata failed", roleName)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+					build()));
+			return new String[] {};
+		}
+
+		DirectoryUser createdByUserDetails = new DirectoryUser();
+		if (appRoleMetadataDetails.getCreatedBy().equals("approle")) {
+			createdByUserDetails.setUserEmail("approle");
+		} else {
+			createdByUserDetails = directoryService.getUserDetailsFromCorp(appRoleMetadataDetails.getCreatedBy());
+		}
+		return new String[] { appRoleMetadataDetails.getCreatedBy(), createdByUserDetails.getUserEmail() };
 	}
 
 	/**
 	 * Transfer safe ownership to a user.
 	 * @param token
 	 * @param safeTransferRequest
-	 * @return
+	 * @param userDetails
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> transferSafe(String token, SafeTransferRequest safeTransferRequest, UserDetails userDetails) {
 
@@ -1169,7 +1200,7 @@ public class  SelfSupportService {
 	 * @param token
 	 * @param safeUser
 	 * @param userDetails
-	 * @return
+	 * @return ResponseEntity<String>
 	 */
 	public ResponseEntity<String> removeSudoUserFromSafe(String token, SafeUser safeUser, UserDetails userDetails) {
 		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
@@ -1558,5 +1589,20 @@ public class  SelfSupportService {
 			}
 		}
 		return safeList;
+	}
+
+	/**
+	 * Retrieves the list of entities that are associated to this AppRole.
+	 * Entities include safes, services accounts, and certs.
+	 * @param roleName - The name of the AppRole to get the list of associations for
+	 * @param userDetails
+	 * @return ResponseEntity
+	 */
+	public ResponseEntity<String> listAppRoleEntityAssociations(String roleName, UserDetails userDetails) {
+		String token = userDetails.getClientToken();
+		if (!userDetails.isAdmin()) {
+			token = userDetails.getSelfSupportToken();
+		}
+		return appRoleService.listAppRoleEntityAssociations(roleName, token);
 	}
 }
