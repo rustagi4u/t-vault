@@ -225,9 +225,10 @@ const AppRolesDashboard = () => {
         setResponse({ status: 'success' });
         const appRolesArr = [];
         if (res?.data?.keys) {
-          res.data.keys.map((item) => {
+          res.data.map((item) => {
             const appObj = {
-              name: item,
+              name: item.roleName,
+              isOwner: item.owner,
               admin,
             };
             return appRolesArr.push(appObj);
@@ -490,7 +491,7 @@ const AppRolesDashboard = () => {
         }
       >
         <ListItem
-          title={appRole.name}
+          title={appRole.isOwner ? appRole.name + ' 👑' : appRole.name}
           subTitle={appRole.date}
           flag={appRole.type}
           icon={appRoleIcon}

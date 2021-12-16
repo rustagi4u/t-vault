@@ -918,7 +918,7 @@ public class  SelfSupportService {
 	 * @param userDetails
 	 * @return
 	 */
-	public ResponseEntity<String> listAppRoles(String userToken, UserDetails userDetails, Integer limit, Integer offset) {
+	public ResponseEntity<List<AppRoleListObject>> listAppRoles(String userToken, UserDetails userDetails, Integer limit, Integer offset) {
 		return appRoleService.listAppRoles(userToken, userDetails, limit, offset);
 	}
 
