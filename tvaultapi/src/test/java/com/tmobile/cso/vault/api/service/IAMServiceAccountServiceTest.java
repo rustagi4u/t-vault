@@ -1293,7 +1293,7 @@ public class IAMServiceAccountServiceTest {
 
 		String iamMetaDataStr = "{ \"data\": {\"userName\": \"testaccount\", \"awsAccountId\": \"1234567\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 12345, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567_testaccount\"}";
 
-		// Validations
+		// Get metadata
 		String expectedMetadataBody = "{\"data\":{\"ad_group\":\"group1\",\"application_id\":\"app1\",\"application_name\":\"App1\"," +
 				"\"application_tag\":\"App1\",\"expiryDateEpoch\":\"99999\",\"expiryDuration\":\"1234\"," +
 				"\"awsAccountId\":\"1234567\",\"awsAccountName\":\"testaccount1\",\"createdAtEpoch\":12345,\"groups\":{\"group1\":\"write\"}," +
@@ -1305,10 +1305,7 @@ public class IAMServiceAccountServiceTest {
 		String path = "metadata/iamsvcacc/1234567_testaccount";
 		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", tkn)).thenReturn(getMockResponse(HttpStatus.OK, true,
 				iamMetaDataStr));
-
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(token,
-
+		
 		// Validations
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
@@ -1325,7 +1322,6 @@ public class IAMServiceAccountServiceTest {
 				HttpStatus.OK, true, "{\"keys\":[\"1234567_some_other_account\" ]}"));
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(tkn,
-
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"errors\":[\"Invalid username or awsAccountId.\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
