@@ -1139,13 +1139,9 @@ public class IAMServiceAccountServiceTest {
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
-	
+
 	@Test
-
-	public void test_updateIAMServiceAccount_with_new_app_details() throws IOException {
-
 	public void test_updateIAMServiceAccount_success() throws IOException {
-
 		userDetails = getMockUser(true);
 		String tkn = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
@@ -1229,11 +1225,7 @@ public class IAMServiceAccountServiceTest {
 		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
 				Mockito.any());
 
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(token,
-
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(tkn,
-
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"messages\":[\"IAM Service Account has been successfully updated.\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
@@ -1242,11 +1234,7 @@ public class IAMServiceAccountServiceTest {
 	}
 
 	@Test
-
-	public void test_updateIAMServiceAccount_with_add_group() throws IOException {
-
 	public void test_updateIAMServiceAccount_email_given_no_ntid_failure() throws IOException {
-
 		userDetails = getMockUser(true);
 		String tkn = userDetails.getClientToken();
 		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
