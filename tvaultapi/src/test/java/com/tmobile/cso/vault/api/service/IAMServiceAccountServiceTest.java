@@ -1305,7 +1305,7 @@ public class IAMServiceAccountServiceTest {
 		String path = "metadata/iamsvcacc/1234567_testaccount";
 		when(reqProcessor.process("/read", "{\"path\":\""+path+"\"}", tkn)).thenReturn(getMockResponse(HttpStatus.OK, true,
 				iamMetaDataStr));
-		
+
 		// Validations
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"iamportal_admin_policy \"]}");
 		when(reqProcessor.process("/auth/tvault/lookup","{}", tkn)).thenReturn(lookupResponse);
@@ -1366,12 +1366,9 @@ public class IAMServiceAccountServiceTest {
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(
 				"{\"shared\":[{\"s3\":\"read\"},{\"s4\":\"write\"}],\"users\":[{\"s1\":\"read\"},{\"s2\":\"write\"}],\"svcacct\":[{\"test\":\"read\"}],\"iamsvcacc\":[{\"test\":\"sudo\"}],\"apps\":[{\"s5\":\"read\"},{\"s6\":\"write\"},{\"s7\":\"deny\"}]}");
 
-
-
 		// Update metadata
 		when(ControllerUtil.updateMetadataOnIAMSvcUpdate(Mockito.anyString(), Mockito.any(),
 				Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.OK, true,"{}"));
-
 
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(token,
 				userDetails, iamSvcAccTransfer);
@@ -1466,11 +1463,7 @@ public class IAMServiceAccountServiceTest {
 		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
 				Mockito.any());
 
-
-		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(token,
-
 		ResponseEntity<String> responseEntity = iamServiceAccountsService.updateIAMServiceAccount(tkn,
-
 				userDetails, iamSvcAccTransfer);
 		String expectedResponse = "{\"errors\":[\"Failed to get metadata for this IAM Service Account.\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
@@ -1694,7 +1687,6 @@ public class IAMServiceAccountServiceTest {
 		directoryUser.setUserEmail("testUser@t-mobile.com");
 		directoryUser.setUserId("normaluser");
 		directoryUser.setUserName("normaluser");
-
 
 		List<DirectoryUser> persons = new ArrayList<>();
 		persons.add(directoryUser);
