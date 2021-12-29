@@ -132,8 +132,8 @@ public class VaultAuthServiceTest {
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(responseJson);
         when(JSONUtil.getJSON(userLogin)).thenReturn(jsonStr);
-        when(ControllerUtil.filterDuplicateSafePermissions(any())).thenReturn(access);
-        when(ControllerUtil.filterDuplicateSvcaccPermissions(any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSafePermissions(Mockito.any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSvcaccPermissions(Mockito.any())).thenReturn(access);
         when(reqProcessor.process("/auth/ldap/login",jsonStr,"")).thenReturn(response);
 
         ResponseEntity<String> responseEntity = vaultAuthService.login(userLogin);
@@ -160,8 +160,8 @@ public class VaultAuthServiceTest {
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(responseJson);
         when(JSONUtil.getJSON(userLogin)).thenReturn(jsonStr);
-        when(ControllerUtil.filterDuplicateSafePermissions(any())).thenReturn(access);
-        when(ControllerUtil.filterDuplicateSvcaccPermissions(any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSafePermissions(Mockito.any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSvcaccPermissions(Mockito.any())).thenReturn(access);
         when(reqProcessor.process("/auth/ldap/login",jsonStr,"")).thenReturn(response);
 
         ResponseEntity<String> responseEntity = vaultAuthService.login(userLogin);
@@ -187,8 +187,8 @@ public class VaultAuthServiceTest {
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(responseJson);
         when(JSONUtil.getJSON(userLogin)).thenReturn(jsonStr);
-        when(ControllerUtil.filterDuplicateSafePermissions(any())).thenReturn(access);
-        when(ControllerUtil.filterDuplicateSvcaccPermissions(any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSafePermissions(Mockito.any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSvcaccPermissions(Mockito.any())).thenReturn(access);
         when(reqProcessor.process("/auth/ldap/login",jsonStr,"")).thenReturn(response);
 
         ResponseEntity<String> responseEntity = vaultAuthService.login(userLogin);
@@ -215,8 +215,8 @@ public class VaultAuthServiceTest {
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(responseJson);
         when(JSONUtil.getJSON(userLogin)).thenReturn(jsonStr);
-        when(ControllerUtil.filterDuplicateSafePermissions(any())).thenReturn(access);
-        when(ControllerUtil.filterDuplicateSvcaccPermissions(any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSafePermissions(Mockito.any())).thenReturn(access);
+        when(ControllerUtil.filterDuplicateSvcaccPermissions(Mockito.any())).thenReturn(access);
         when(reqProcessor.process("/auth/ldap/login",jsonStr,"")).thenReturn(response);
 
         ResponseEntity<String> responseEntity = vaultAuthService.login(userLogin);
