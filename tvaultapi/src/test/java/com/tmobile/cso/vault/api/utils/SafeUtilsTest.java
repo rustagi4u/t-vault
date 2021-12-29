@@ -262,17 +262,6 @@ public class SafeUtilsTest {
 	}
 
     @Test
-    public void test_getSafeMetaData_failure() {
-        Response response = getMockResponse(HttpStatus.OK, true, "");
-
-        when(ControllerUtil.getSafeType("users/ert")).thenReturn("users");
-        when(ControllerUtil.getSafeName("users/ert")).thenReturn("ert");
-        when(ControllerUtil.getReqProcessor().process("/sdb", "{\"path\":\"metadata/users/ert\"}", "5PDrOhsy4ig8L3EpsJZSLAMg")).thenReturn(response);
-        Safe safe = safeUtils.getSafeMetaData("5PDrOhsy4ig8L3EpsJZSLAMg", "users", "ert");
-        assertNull(safe);
-    }
-
-    @Test
     public void test_canAddOrRemoveUser_successfully_admin() {
         UserDetails userDetails = getMockUser(true);
         SafeUser safeUser = new SafeUser("users/ert", "normaluser", "write");
@@ -476,7 +465,7 @@ public class SafeUtilsTest {
         deletedKeys.add("secret3");
         Response expectedResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "");
         when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(true);
-        when(reqProcessor.process(eq("/write"),Mockito.any(),eq(token))).thenReturn(expectedResponse);
+        when(reqProcessor.process(Mockito.eq("/write"),Mockito.any(),Mockito.eq(token))).thenReturn(expectedResponse);
         Response actualResponse = safeUtils.updateActivityInfo(token, path, userDetails, TVaultConstants.UPDATE_ACTION, modifiedKeys, deletedKeys);
         assertEquals(expectedResponse.getHttpstatus(), actualResponse.getHttpstatus());
     }
@@ -516,7 +505,7 @@ public class SafeUtilsTest {
         deletedKeys.add("secret3");
         Response expectedResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
-        when(reqProcessor.process(eq("/write"),Mockito.any(),eq(token))).thenReturn(expectedResponse);
+        when(reqProcessor.process(Mockito.eq("/write"),Mockito.any(),Mockito.eq(token))).thenReturn(expectedResponse);
         Response actualResponse = safeUtils.updateActivityInfo(token, path, userDetails, TVaultConstants.UPDATE_ACTION, modifiedKeys, deletedKeys);
         assertEquals(expectedResponse.getHttpstatus(), actualResponse.getHttpstatus());
     }
@@ -527,7 +516,7 @@ public class SafeUtilsTest {
         String versionFolderPath = "users/123safe/$_versions_fld1";
         String path = "users/123safe/fld1";
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(response);
         when(ControllerUtil.isPathValid(path)).thenReturn(true);
         UserDetails userDetails = getMockUser(false);
         when(commonUtils.getModifiedByInfo(userDetails)).thenReturn("username1");
@@ -538,7 +527,7 @@ public class SafeUtilsTest {
         Response expectedResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "");
         when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(true);
 
-        when(reqProcessor.process(eq("/sdb/createfolder"),Mockito.any(),eq(token))).thenReturn(expectedResponse);
+        when(reqProcessor.process(Mockito.eq("/sdb/createfolder"),Mockito.any(),Mockito.eq(token))).thenReturn(expectedResponse);
         Response actualResponse = safeUtils.updateActivityInfo(token, path, userDetails, TVaultConstants.DELETE_FOLDER_ACTION, modifiedKeys, deletedKeys);
         assertEquals(expectedResponse.getHttpstatus(), actualResponse.getHttpstatus());
     }
@@ -555,7 +544,7 @@ public class SafeUtilsTest {
         deletedKeys.add("secret3");
         Response expectedResponse = getMockResponse(HttpStatus.BAD_REQUEST, false, "{\"errors\":[\"Invalid path\"]}");
 
-        when(reqProcessor.process(eq("/sdb/createfolder"),Mockito.any(),eq(token))).thenReturn(expectedResponse);
+        when(reqProcessor.process(Mockito.eq("/sdb/createfolder"),Mockito.any(),Mockito.eq(token))).thenReturn(expectedResponse);
         Response actualResponse = safeUtils.updateActivityInfo(token, path, userDetails, TVaultConstants.UPDATE_ACTION, modifiedKeys, deletedKeys);
         assertEquals(expectedResponse.getHttpstatus(), actualResponse.getHttpstatus());
     }

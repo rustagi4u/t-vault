@@ -42,6 +42,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.apache.http.client.HttpClient;
 
 import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,19 +96,5 @@ public class HttpUtilsTest {
 
         HttpClient httpClientActual = httpUtils.getHttpClient();
         assertNotNull(httpClientActual);
-    }
-    
-    @Test
-    public void test_getHttpClient_failure() {
-
-
-        when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.build()).thenThrow(KeyManagementException.class);
-
-        HttpClient httpClientActual = httpUtils.getHttpClient();
-        assertTrue(true);
     }
 }

@@ -149,7 +149,7 @@ public class SSLCertificateMockServiceTest {
         Whitebox.setInternalState(ControllerUtil.class, "log", LogManager.getLogger(ControllerUtil.class));
         Whitebox.setInternalState(OIDCUtil.class, "log", LogManager.getLogger(OIDCUtil.class));
 
-        when(JSONUtil.getJSON(any(ImmutableMap.class))).thenReturn("log");
+        when(JSONUtil.getJSON(Mockito.any(ImmutableMap.class))).thenReturn("log");
 
         Map<String, String> currentMap = new HashMap<>();
         currentMap.put("apiurl", "http://localhost:8080/v2/sslcert");
@@ -200,17 +200,17 @@ public class SSLCertificateMockServiceTest {
         userDetails.setAdmin(true);
         userDetails.setClientToken(token);
         userDetails.setSelfSupportToken(token);
-        when(vaultAuthService.lookup(anyString())).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        when(vaultAuthService.lookup(Mockito.anyString())).thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
 
         ReflectionTestUtils.setField(sSLCertificateService, "workloadEndpoint", "http://appdetails.com");
         // when(ControllerUtil.getCwmToken()).thenReturn("dG9rZW4=");
         when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
         when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setSSLContext(Mockito.any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setRedirectStrategy(Mockito.any())).thenReturn(httpClientBuilder);
         when(httpClientBuilder.build()).thenReturn(httpClient1);
-        when(httpClient1.execute(any())).thenReturn(httpResponse);
+        when(httpClient1.execute(Mockito.any())).thenReturn(httpResponse);
         String responseStr = "{\"spec\":{\"akmid\":\"103001\",\"brtContactEmail\":\" contacteops@email.com\",\"businessUnit\":\"\"," +
                 "\"classification\":\"\",\"directorEmail\":\"john.mathew@email.com\",\"directorName\":\"test jin\",\"executiveSponsor\":" +
                 "\"robert sam\",\"executiveSponsorEmail\":\"kim.tim@email.com\",\"id\":\"tvt\"," +
@@ -227,7 +227,7 @@ public class SSLCertificateMockServiceTest {
                 "\"directorName\":\"abc amith\",\"executiveSponsor\":\"Dar Web\",\"opsContactEmail\":\"rick.nick@test.com\"," +
                 "\"organizationalUnits\":[\"tvt\"],\"projectLeadEmail\":\"rick.nick@test.com\",\"scope\":\"Production\",\"summary\":" +
                 "\"T-Vault\",\"tag\":\"T-Vault\",\"tier\":\"Tier II\",\"workflowStatus\":\"Open_CCP\",\"workload\":\"Adaptive Security\"}}";
-        when(workloadDetailsService.getWorkloadDetailsByAppName(anyString())).
+        when(workloadDetailsService.getWorkloadDetailsByAppName(Mockito.anyString())).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(workloadApiResponse));
 
         DirectoryUser directoryUser = new DirectoryUser();
@@ -258,9 +258,9 @@ public class SSLCertificateMockServiceTest {
         when(nclmMockUtil.getMockLoginDetails()).thenReturn(getMockLoginDetails());
         when(nclmMockUtil.getMockDataForRevoked()).thenReturn(getMockDataForRevoked());
         when(nclmMockUtil.getMockRevocationReasons()).thenReturn(getMockRevocationReasons());
-        when(nclmMockUtil.getMockCertificateData(any())).thenReturn(getMockCertificateData());
+        when(nclmMockUtil.getMockCertificateData(Mockito.any())).thenReturn(getMockCertificateData());
         when(nclmMockUtil.getEnrollMockResponse()).thenReturn(getEnrollMockResponse());
-        when(nclmMockUtil.getDeleteCertMockResponse(any())).thenReturn(getDeleteCertMockResponse());
+        when(nclmMockUtil.getDeleteCertMockResponse(Mockito.any())).thenReturn(getDeleteCertMockResponse());
         when(nclmMockUtil.getDeleteMockResponse()).thenReturn(getDeleteMockResponse());
         when(nclmMockUtil.getRenewMockResponse()).thenReturn(getRenewMockResponse());
         when(nclmMockUtil.getRenewCertificateMockData()).thenReturn(getRenewCertificateMockData());
@@ -538,13 +538,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -552,7 +552,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"," +
                 "\"targetSystemID\": \"29\"}";
         response1.setResponse(createTargetSystemResponse);
@@ -562,7 +562,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -572,7 +572,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -594,38 +594,38 @@ public class SSLCertificateMockServiceTest {
 
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse());
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
@@ -634,19 +634,19 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
 
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
         ResponseEntity<?> enrollResponse =
@@ -701,13 +701,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -715,7 +715,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"," +
                 "\"targetSystemID\": \"29\"}";
         response1.setResponse(createTargetSystemResponse);
@@ -725,7 +725,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -735,7 +735,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -748,46 +748,46 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemServiceMap.put("targetSystemId", 12);
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse_For_External_Certificate());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse_For_External_Certificate());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse_External());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse_External());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getTemplateParameter Validation
-        when(reqProcessor.processCert(eq("/certmanager/getTemplateParameter"), anyObject(), anyString(), anyString())).thenReturn(getTemplateParametersResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getTemplateParameter"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getTemplateParametersResponse());
 
         ///putTemplateParameter Validation
-        when(reqProcessor.processCert(eq("/certmanager/putTemplateParameter"), anyObject(), anyString(), anyString())).thenReturn(putTemplateParameterResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putTemplateParameter"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(putTemplateParameterResponse());
 
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse_For_ExternalCertificate());
-        when(reqProcessor.processCert(eq("/certmanager/approvalrequest"), anyObject(), anyString(), anyString())).thenReturn(getApproveResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse_For_ExternalCertificate());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/approvalrequest"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getApproveResponse());
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
@@ -805,10 +805,10 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
         String metaDataStr1 = "{\"actionId\":111}";
         Map<String, Object> createCertPolicyMap1 = new HashMap<>();
@@ -818,10 +818,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
         String certType = "internal";
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "CertificateName.t-mobile.com", certType)).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
         ResponseEntity<?> enrollResponse =
@@ -876,13 +876,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -890,7 +890,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"," +
                 "\"targetSystemID\": \"29\"}";
         response1.setResponse(createTargetSystemResponse);
@@ -900,7 +900,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -910,7 +910,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -923,46 +923,46 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemServiceMap.put("targetSystemId", 12);
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse_For_External_Certificate());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse_For_External_Certificate());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse_External());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse_External());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getTemplateParameter Validation
-        when(reqProcessor.processCert(eq("/certmanager/getTemplateParameter"), anyObject(), anyString(), anyString())).thenReturn(getTemplateParametersResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getTemplateParameter"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getTemplateParametersResponse());
 
         ///putTemplateParameter Validation
-        when(reqProcessor.processCert(eq("/certmanager/putTemplateParameter"), anyObject(), anyString(), anyString())).thenReturn(putTemplateParameterResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putTemplateParameter"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(putTemplateParameterResponse());
 
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse_For_ExternalCertificate());
-        when(reqProcessor.processCert(eq("/certmanager/approvalrequest"), anyObject(), anyString(), anyString())).thenReturn(getApproveResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse_For_ExternalCertificate());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/approvalrequest"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getApproveResponse());
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
@@ -980,10 +980,10 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
         String metaDataStr1 = "{\"actionId\":111}";
         Map<String, Object> createCertPolicyMap1 = new HashMap<>();
@@ -993,10 +993,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
         String certType = "internal";
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "CertificateName.t-mobile.com", certType)).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
         ResponseEntity<?> enrollResponse =
@@ -1049,13 +1049,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -1063,7 +1063,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"," +
                 "\"targetSystemID\": \"29\"}";
         response1.setResponse(createTargetSystemResponse);
@@ -1073,7 +1073,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -1083,7 +1083,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -1096,46 +1096,46 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemServiceMap.put("targetSystemId", 12);
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse_For_External_Certificate());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse_For_External_Certificate());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse_External());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse_External());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getTemplateParameter Validation
-        when(reqProcessor.processCert(eq("/certmanager/getTemplateParameter"), anyObject(), anyString(), anyString())).thenReturn(getTemplateParametersResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getTemplateParameter"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getTemplateParametersResponse());
 
         ///putTemplateParameter Validation
-        when(reqProcessor.processCert(eq("/certmanager/putTemplateParameter"), anyObject(), anyString(), anyString())).thenReturn(putTemplateParameterResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putTemplateParameter"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(putTemplateParameterResponse());
 
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse_For_ExternalCertificate());
-        when(reqProcessor.processCert(eq("/certmanager/approvalrequest"), anyObject(), anyString(), anyString())).thenReturn(getApproveResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse_For_ExternalCertificate());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/approvalrequest"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getApproveResponse());
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
@@ -1155,11 +1155,11 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
 
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
         String metaDataStr1 = "{\"actionId\":111}";
         Map<String, Object> createCertPolicyMap1 = new HashMap<>();
@@ -1169,10 +1169,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
         String certType = "external";
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "CertificateName.t-mobile.com", certType)).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
         ResponseEntity<?> enrollResponse =
@@ -1213,10 +1213,10 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(jsonStr);
         response.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -1224,7 +1224,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         CertResponse response2 = new CertResponse();
         response2.setHttpstatus(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -1239,7 +1239,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.UI);
@@ -1280,9 +1280,9 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(jsonStr);
         response.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -1290,7 +1290,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"}";
         response1.setResponse(createTargetSystemResponse);
         Map<String, Object> createTargetSystemMap = new HashMap<>();
@@ -1299,7 +1299,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -1309,7 +1309,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.INTERNAL_SERVER_ERROR);
         response2.setResponse(jsonStr1);
         response2.setSuccess(false);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -1322,11 +1322,11 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemServiceMap.put("targetSystemId", 12);
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.UI);
@@ -1378,11 +1378,11 @@ public class SSLCertificateMockServiceTest {
         response1.setHttpstatus(HttpStatus.OK);
         response1.setResponse(jsonStr1);
         response1.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
-        when(certificateUtils.getCertificateMetaData(any(), anyString(), anyString())).thenReturn(certificateMetadata);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certificateMetadata);
 
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.UI);
@@ -1419,9 +1419,9 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(jsonStr);
         response.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -1429,7 +1429,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"}";
         response1.setResponse(createTargetSystemResponse);
         Map<String, Object> createTargetSystemMap = new HashMap<>();
@@ -1438,7 +1438,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGETSYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -1448,7 +1448,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGETSYSTEMService\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -1468,38 +1468,38 @@ public class SSLCertificateMockServiceTest {
         userDetails1.setSelfSupportToken(token);
 
         Response responseNoContent = getMockResponse(HttpStatus.INTERNAL_SERVER_ERROR, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse());
 
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails1,token,SSLCertificateConstants.UI);
@@ -1549,9 +1549,9 @@ public class SSLCertificateMockServiceTest {
 
         SSLCertificateMetadataDetails certificateMetadata = getSSLCertificateMetadataDetails();
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         String jsonStr1 ="{\"targetSystems\":[{\"address\":\"abcUser.t-mobile.com\",\"allowedOperations\":[\"targetsystems_delete\"],\"name\":\"Target Name\",\"targetSystemGroupID\":29,\"targetSystemID\":7239}]}";
         CertResponse response1 = new CertResponse();
@@ -1560,7 +1560,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         Map<String, Object> requestMap1= new HashMap<>();
         requestMap1.put("targetSystems", "targetSystems");
@@ -1568,7 +1568,7 @@ public class SSLCertificateMockServiceTest {
         requestMap1.put("targetSystemID", 29);
         when(ControllerUtil.parseJson(jsonStr1)).thenReturn(requestMap1);
 
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         //Create Target System Validation
         CertResponse response2 = new CertResponse();
@@ -1576,7 +1576,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr2);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -1600,48 +1600,48 @@ public class SSLCertificateMockServiceTest {
         createCertPolicyMap.put("notificationEmail", "certificatename.t-mobile.com");
 
         Response responseOkContent = getMockResponse(HttpStatus.OK, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseOkContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseOkContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse());
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "CertificateName.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
 
@@ -1650,10 +1650,10 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.UI);
@@ -1702,9 +1702,9 @@ public class SSLCertificateMockServiceTest {
 
         SSLCertificateMetadataDetails certificateMetadata = getSSLCertificateMetadataDetails();
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         String jsonStr1 ="{\"targetSystems\":[{\"address\":\"abcUser.t-mobile.com\",\"allowedOperations\":[\"targetsystems_delete\"],\"name\":\"Target Name\",\"targetSystemGroupID\":29,\"targetSystemID\":7239}]}";
         CertResponse response1 = new CertResponse();
@@ -1713,7 +1713,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         Map<String, Object> requestMap1= new HashMap<>();
         requestMap1.put("targetSystems", "targetSystems");
@@ -1721,7 +1721,7 @@ public class SSLCertificateMockServiceTest {
         requestMap1.put("targetSystemID", 29);
         when(ControllerUtil.parseJson(jsonStr1)).thenReturn(requestMap1);
 
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         String createTargetSystemServiceResponse =
                 "{\"targetsystemservices\":[{\"name\":\"Target System Service Name\",\"targetSystemGroupId\":29,\"targetSystemId\":7239,\"targetSystemServiceId\":9990}]}";
@@ -1733,7 +1733,7 @@ public class SSLCertificateMockServiceTest {
         response2.setSuccess(true);
         response2.setResponse(createTargetSystemServiceResponse);
 
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         Map<String, Object> createTargetSystemServiceMap = new HashMap<>();
         createTargetSystemServiceMap.put("targetSystemServiceId", 40);
@@ -1752,48 +1752,48 @@ public class SSLCertificateMockServiceTest {
         createCertPolicyMap.put("certOwnerNtid", "testusername1");
 
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse());
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "CertificateName.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
 
@@ -1802,10 +1802,10 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.UI);
@@ -1845,10 +1845,10 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(jsonStr);
         response.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
 
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -1856,7 +1856,7 @@ public class SSLCertificateMockServiceTest {
         response1.setSuccess(true);
 
         //Create Target System Validation
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"}";
         response1.setResponse(createTargetSystemResponse);
         Map<String, Object> createTargetSystemMap = new HashMap<>();
@@ -1865,7 +1865,7 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
 
         // loadTargetSystemServiceData();
 
@@ -1875,7 +1875,7 @@ public class SSLCertificateMockServiceTest {
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGETSYSTEMService\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -1888,38 +1888,38 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemServiceMap.put("targetSystemId", 12);
 
         Response responseNoContent = getMockResponse(HttpStatus.OK, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(false);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(false);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
 
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
 
         //getEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///putEnrollCA Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollTemplate Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
 
         ///getEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///putEnrollKeys Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
 
         ///getEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         ///putEnrollCSR Validation
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
 
         //enroll
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse());
 
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.generateSSLCertificate(sslCertificateRequest,userDetails,token,SSLCertificateConstants.UI);
@@ -1959,7 +1959,7 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(jsonStr);
         response.setSuccess(true);
         doThrow(new TVaultValidationException("Exception while creating certificate"))
-                .when(reqProcessor).processCert(anyString(), anyObject(), anyString(), anyString());
+                .when(reqProcessor).processCert(Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
         ResponseEntity<?> enrollResponse = sSLCertificateService.generateSSLCertificate(sslCertificateRequest,
                 userDetails,token,SSLCertificateConstants.UI);
 
@@ -2222,13 +2222,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
         String jsonStr2 ="{\"time_enabled\":false,\"details_enabled\":false,\"reasons\":[{\"reason\":\"unspecified\",\"displayName\":\"Unspecified\"},{\"reason\":\"keyCompromise\",\"displayName\":\"Key compromise\"},{\"reason\":\"cACompromise\",\"displayName\":\"CA compromise\"},{\"reason\":\"affiliationChanged\",\"displayName\":\"Affiliation changed\"},{\"reason\":\"superseded\",\"displayName\":\"Superseded\"},{\"reason\":\"cessationOfOperation\",\"displayName\":\"Cessation of operation\"},{\"reason\":\"certificateHold\",\"displayName\":\"Certificate hold\"}]}";
         CertResponse revocationResponse = new CertResponse();
         revocationResponse.setHttpstatus(HttpStatus.OK);
         revocationResponse.setResponse(jsonStr2);
         revocationResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/revocationreasons"), anyObject(), anyString(), anyString())).thenReturn(revocationResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/revocationreasons"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(revocationResponse);
 
         ResponseEntity<?> enrollResponse =
                 sSLCertificateService.getRevocationReasons(certficateId, token);
@@ -2277,7 +2277,7 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
 
 
@@ -2285,19 +2285,19 @@ public class SSLCertificateMockServiceTest {
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
         CertResponse revocationResponse = new CertResponse();
         revocationResponse.setHttpstatus(HttpStatus.OK);
         revocationResponse.setResponse(null);
         revocationResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/revocationrequest"), anyObject(), anyString(), anyString())).thenReturn(revocationResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/revocationrequest"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(revocationResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
         SSLCertificateMetadataDetails certificateMetadata = getSSLCertificateMetadataDetails();
         when(certificateUtils.getCertificateMetaData(token, "testCert.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.getCertificateMetaData(token, "testCert.t-mobile.com", "external")).thenReturn(certificateMetadata);
@@ -2348,7 +2348,7 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
 
 
@@ -2356,19 +2356,19 @@ public class SSLCertificateMockServiceTest {
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
         CertResponse revocationResponse = new CertResponse();
         revocationResponse.setHttpstatus(HttpStatus.OK);
         revocationResponse.setResponse(null);
         revocationResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/revocationrequest"), anyObject(), anyString(), anyString())).thenReturn(revocationResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/revocationrequest"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(revocationResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
         SSLCertificateMetadataDetails certificateMetadata = getSSLCertificateMetadataDetails();
         when(certificateUtils.getCertificateMetaData(token, "testCert.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.getCertificateMetaData(token, "testCert.t-mobile.com", "external")).thenReturn(certificateMetadata);
@@ -2412,7 +2412,7 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJsonError);
         response.setSuccess(false);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
         SSLCertificateMetadataDetails certificateMetadata = getSSLCertificateMetadataDetails();
         when(certificateUtils.getCertificateMetaData(token, "testCert@t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.getCertificateMetaData(token, "testCert@t-mobile.com", "external")).thenReturn(certificateMetadata);
@@ -2423,14 +2423,14 @@ public class SSLCertificateMockServiceTest {
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
         CertResponse revocationResponse = new CertResponse();
         revocationResponse.setHttpstatus(HttpStatus.OK);
         revocationResponse.setResponse(null);
         revocationResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/revocationrequest"), anyObject(), anyString(), anyString())).thenReturn(revocationResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/revocationrequest"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(revocationResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
         ResponseEntity<?> revocResponse =
                 sSLCertificateService.issueRevocationRequest(certficateType,certficateName, userDetails, token, revocationRequest);
@@ -2459,14 +2459,14 @@ public class SSLCertificateMockServiceTest {
             List<String> resList = new ArrayList<>();
             resList.add("default");
             resList.add("r_cert_certificatename.t-mobile.com");
-            when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
 
@@ -2495,14 +2495,14 @@ public class SSLCertificateMockServiceTest {
             List<String> resList = new ArrayList<>();
             resList.add("default");
             resList.add("r_cert_certificatename.t-mobile.com");
-            when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
         //oidc test cases
@@ -2542,9 +2542,9 @@ public class SSLCertificateMockServiceTest {
         when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
 
         Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-        when(OIDCUtil.updateOIDCEntity(any(), any()))
+        when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any()))
                 .thenReturn(responseEntity3);
-        when(OIDCUtil.oidcFetchEntityDetails(anyString(), anyString(), any(), eq(true))).thenReturn(responseEntity2);
+        when(OIDCUtil.oidcFetchEntityDetails(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
         ResponseEntity<String> responseEntity = sSLCertificateService.addUserToCertificate(certUser, userDetail, false);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
@@ -2567,14 +2567,14 @@ public class SSLCertificateMockServiceTest {
         when(reqProcessor.process("/auth/ldap/users","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
         try {
-            when(ControllerUtil.getPoliciesAsStringFromJson(any(), any())).thenReturn("default,r_cert_certtest250630.t-mobile.com");
+            when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,r_cert_certtest250630.t-mobile.com");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenAnswer(new Answer() {
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenAnswer(new Answer() {
             private int count = 0;
 
             public Object answer(InvocationOnMock invocation) {
@@ -2611,10 +2611,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("w_cert_certtest250630.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(responseNotFound);
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(responseNotFound);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(responseNotFound);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNotFound);
 
         when(certificateUtils.getCertificateMetaData(token, "certtest250630.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
@@ -2658,11 +2658,11 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("d_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
 
@@ -2742,10 +2742,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
 
         when(JSONUtil.getJSONasDefaultPrettyPrint(Mockito.any())).thenReturn(jsonStr);
@@ -2785,10 +2785,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
 
         when(JSONUtil.getJSONasDefaultPrettyPrint(Mockito.any())).thenReturn(jsonStr);
@@ -2828,10 +2828,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
 
 
@@ -2861,10 +2861,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/findTargetSystem"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
         when(JSONUtil.getJSONasDefaultPrettyPrint(Mockito.any())).thenReturn("[]");
 
@@ -2901,10 +2901,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/targetsystemservicelist"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/targetsystemservicelist"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
 
         when(JSONUtil.getJSONasDefaultPrettyPrint(Mockito.any())).thenReturn(jsonStr);
@@ -2941,10 +2941,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/targetsystemservicelist"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/targetsystemservicelist"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
 
 
@@ -2973,10 +2973,10 @@ public class SSLCertificateMockServiceTest {
         requestMap.put("token_type", "type");
         when(ControllerUtil.parseJson(jsonStrUser)).thenReturn(requestMap);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(responseUser);
 
-        when(reqProcessor.processCert(eq( "/certmanager/targetsystemservicelist"), Mockito.anyObject(), Mockito.anyString(),
+        when(reqProcessor.processCert(Mockito.eq( "/certmanager/targetsystemservicelist"), Mockito.anyObject(), Mockito.anyString(),
                 Mockito.anyString())).thenReturn(response);
         when(JSONUtil.getJSONasDefaultPrettyPrint(Mockito.any())).thenReturn("[]");
 
@@ -3333,7 +3333,7 @@ public class SSLCertificateMockServiceTest {
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), any(), any(), any())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(certResponse);
     }
 
 
@@ -3377,7 +3377,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         InputStreamResource resource = null;
         ResponseEntity<InputStreamResource> responseEntityExpected =
@@ -3429,7 +3429,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         InputStreamResource resource = null;
         ResponseEntity<InputStreamResource> responseEntityExpected =
@@ -3480,7 +3480,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         InputStreamResource resource = null;
         ResponseEntity<InputStreamResource> responseEntityExpected =
@@ -3525,7 +3525,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         String responseString = "teststreamdata";
         when(EntityUtils.toString(mockHttpEntity, "UTF-8")).thenReturn(responseString);
@@ -3556,7 +3556,7 @@ public class SSLCertificateMockServiceTest {
         certResponse.setResponse(null);
         certResponse.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), any(), any(), any())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(certResponse);
 
         CertificateDownloadRequest certificateDownloadRequest = new CertificateDownloadRequest(
                 "certname", "password", "pembundle", false,"internal");
@@ -3578,7 +3578,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         String responseString = "teststreamdata";
         when(EntityUtils.toString(mockHttpEntity, "UTF-8")).thenReturn(responseString);
@@ -3624,7 +3624,7 @@ public class SSLCertificateMockServiceTest {
         lookupDetails.setToken(token);
         lookupDetails.setValid(true);
         lookupDetails.setAdmin(true);
-        when(controllerUtil.areDownloadInputsValid(any(),any())).thenReturn(true);
+        when(controllerUtil.areDownloadInputsValid(Mockito.any(),Mockito.any())).thenReturn(true);
         when(tokenValidator.getVaultTokenLookupDetails(Mockito.any())).thenReturn(lookupDetails);
         SSLCertificateMetadataDetails certDetails = new SSLCertificateMetadataDetails();
         certDetails.setCertType("internal");
@@ -3633,7 +3633,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         String responseString = "teststreamdata";
         when(EntityUtils.toString(mockHttpEntity, "UTF-8")).thenReturn(responseString);
@@ -3680,7 +3680,7 @@ public class SSLCertificateMockServiceTest {
         lookupDetails.setToken(token);
         lookupDetails.setValid(true);
         lookupDetails.setAdmin(true);
-        when(controllerUtil.areDownloadInputsValid(any(),any())).thenReturn(true);
+        when(controllerUtil.areDownloadInputsValid(Mockito.any(),Mockito.any())).thenReturn(true);
         when(tokenValidator.getVaultTokenLookupDetails(Mockito.any())).thenReturn(lookupDetails);
         SSLCertificateMetadataDetails certDetails = new SSLCertificateMetadataDetails();
         certDetails.setCertType("internal");
@@ -3689,7 +3689,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         ResponseEntity<InputStreamResource> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(null);
@@ -3727,7 +3727,7 @@ public class SSLCertificateMockServiceTest {
         lookupDetails.setToken(token);
         lookupDetails.setValid(true);
         lookupDetails.setAdmin(true);
-        when(controllerUtil.areDownloadInputsValid(any(),any())).thenReturn(true);
+        when(controllerUtil.areDownloadInputsValid(Mockito.any(),Mockito.any())).thenReturn(true);
         when(tokenValidator.getVaultTokenLookupDetails(Mockito.any())).thenReturn(lookupDetails);
         SSLCertificateMetadataDetails certDetails = new SSLCertificateMetadataDetails();
         certDetails.setCertType("internal");
@@ -3736,7 +3736,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         ResponseEntity<InputStreamResource> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(null);
@@ -3767,7 +3767,7 @@ public class SSLCertificateMockServiceTest {
         lookupDetails.setToken(token);
         lookupDetails.setValid(true);
         lookupDetails.setAdmin(true);
-        when(controllerUtil.areDownloadInputsValid(any(),any())).thenReturn(true);
+        when(controllerUtil.areDownloadInputsValid(Mockito.any(),Mockito.any())).thenReturn(true);
         when(tokenValidator.getVaultTokenLookupDetails(Mockito.any())).thenReturn(lookupDetails);
         SSLCertificateMetadataDetails certDetails = new SSLCertificateMetadataDetails();
         certDetails.setCertType("internal");
@@ -3776,7 +3776,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser1");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         ResponseEntity<InputStreamResource> responseEntityExpected = ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(null);
@@ -3802,7 +3802,7 @@ public class SSLCertificateMockServiceTest {
         certResponse.setResponse(null);
         certResponse.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), any(), any(), any())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(certResponse);
 
         String policyList [] = {};
         VaultTokenLookupDetails lookupDetails = null;
@@ -3812,7 +3812,7 @@ public class SSLCertificateMockServiceTest {
         lookupDetails.setToken(token);
         lookupDetails.setValid(true);
         lookupDetails.setAdmin(true);
-        when(controllerUtil.areDownloadInputsValid(any(),any())).thenReturn(true);
+        when(controllerUtil.areDownloadInputsValid(Mockito.any(),Mockito.any())).thenReturn(true);
         when(tokenValidator.getVaultTokenLookupDetails(Mockito.any())).thenReturn(lookupDetails);
         SSLCertificateMetadataDetails certDetails = new SSLCertificateMetadataDetails();
         certDetails.setCertType("internal");
@@ -3821,7 +3821,7 @@ public class SSLCertificateMockServiceTest {
         certDetails.setCertOwnerNtid("normaluser1");
         certDetails.setCertOwnerEmailId("normaluser@test.com");
         certDetails.setExpiryDate("10-20-2030");
-        when(certificateUtils.getCertificateMetaData(Mockito.any(), eq("certname"), anyString())).thenReturn(certDetails);
+        when(certificateUtils.getCertificateMetaData(Mockito.any(), Mockito.eq("certname"), Mockito.anyString())).thenReturn(certDetails);
 
         ResponseEntity<InputStreamResource> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(null);
@@ -3866,28 +3866,28 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
         CertResponse renewResponse = new CertResponse();
         renewResponse.setHttpstatus(HttpStatus.OK);
         renewResponse.setResponse(null);
         renewResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/renew"), anyObject(), anyString(), anyString())).thenReturn(renewResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/renew"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(renewResponse);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
         ResponseEntity<?> renewCertResponse =
                 sSLCertificateService.renewCertificate(certficateType,certficateName, userDetails, token);
@@ -3929,28 +3929,28 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
         CertResponse renewResponse = new CertResponse();
         renewResponse.setHttpstatus(HttpStatus.OK);
         renewResponse.setResponse(null);
         renewResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/renew"), anyObject(), anyString(), anyString())).thenReturn(renewResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/renew"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(renewResponse);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
         ResponseEntity<?> renewCertResponse =
                 sSLCertificateService.renewCertificate(certficateType, certficateName, userDetails, token);
@@ -3992,28 +3992,28 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
         CertResponse renewResponse = new CertResponse();
         renewResponse.setHttpstatus(HttpStatus.OK);
         renewResponse.setResponse(null);
         renewResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/renew"), anyObject(), anyString(), anyString())).thenReturn(renewResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/renew"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(renewResponse);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
         ResponseEntity<?> renewCertResponse =
                 sSLCertificateService.renewCertificate(certficateType, certficateName, userDetails, token);
@@ -4058,7 +4058,7 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJsonError);
         response.setSuccess(false);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
 
 
@@ -4066,21 +4066,21 @@ public class SSLCertificateMockServiceTest {
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
         CertResponse renewResponse = new CertResponse();
         renewResponse.setHttpstatus(HttpStatus.OK);
         renewResponse.setResponse(null);
         renewResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/renew"), anyObject(), anyString(), anyString())).thenReturn(renewResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certificates/renew"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(renewResponse);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
         ResponseEntity<?> revocResponse =
                 sSLCertificateService.issueRevocationRequest(certficateType, certficateName, userDetails, token, revocationRequest);
@@ -4108,10 +4108,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),any())).thenReturn(responseNoContent);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.any())).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com","internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
 
@@ -4138,10 +4138,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),any())).thenReturn(responseNoContent);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.any())).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com","internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
         //oidc test cases
@@ -4180,9 +4180,9 @@ public class SSLCertificateMockServiceTest {
         when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
 
         Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-        when(OIDCUtil.updateOIDCEntity(any(), any()))
+        when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any()))
                 .thenReturn(responseEntity3);
-        when(OIDCUtil.oidcFetchEntityDetails(anyString(), anyString(), any(), eq(true))).thenReturn(responseEntity2);
+        when(OIDCUtil.oidcFetchEntityDetails(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
         ResponseEntity<String> responseEntity = sSLCertificateService.removeUserFromCertificate(certUser, userDetail);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
@@ -4202,10 +4202,10 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("w_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),any())).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.any())).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com","internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
         String expectedResponse = "{\"messages\":[\"Successfully removed user from the certificate\"]}";
@@ -4293,8 +4293,8 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(responseNotFound);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(responseNotFound);
 
         ResponseEntity<String> responseEntity = sSLCertificateService.removeUserFromCertificate(certUser, userDetail);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -4321,9 +4321,9 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
-        when(ControllerUtil.configureLDAPUser(eq("testuser2"),any(),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),any())).thenReturn(responseNotFound);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.any())).thenReturn(responseNotFound);
 
         ResponseEntity<String> responseEntity = sSLCertificateService.removeUserFromCertificate(certUser, userDetail);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -4346,21 +4346,21 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com","internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
         when(reqProcessor.process("/auth/ldap/groups","{\"groupname\":\"testgroup\"}", token)).thenReturn(groupResp);
 
-        when(ControllerUtil.configureLDAPGroup(any(),any(),any())).thenReturn(responseNoContent);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureLDAPGroup(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseNoContent);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
 
         String metaDataJson = "{\"data\":{\"groups\": {\"testgroup\": \"read\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"akmid\":\"102463\",\"applicationName\":\"tvs\",\"applicationOwnerEmailId\":\"certificatename.t-mobile.com\",\"applicationTag\":\"TVS\",\"authority\":\"T-Mobile Issuing CA 01 - SHA2\",\"certCreatedBy\":\"nnazeer1\",\"certOwnerNtid\": \"testusername1\",\"certOwnerEmailId\":\"ltest@smail.com\",\"certType\":\"internal\",\"certificateId\":59880,\"certificateName\":\"certtest260630.t-mobile.com\",\"certificateStatus\":\"Revoked\",\"containerName\":\"VenafiBin_12345\",\"createDate\":\"2020-06-26T05:10:41-07:00\",\"expiryDate\":\"2021-06-26T05:10:41-07:00\",\"projectLeadEmailId\":\"Daniel.Urrutia@T-Mobile.Com\",\"users\":{\"normaluser\":\"write\",\"certuser\":\"read\",\"safeadmin\":\"deny\",\"testsafeuser\":\"write\",\"testuser1\":\"deny\",\"testuser2\":\"read\"}}}";
 		Response readResponse = new Response();
 		readResponse.setHttpstatus(HttpStatus.OK);
 		readResponse.setResponse(metaDataJson);
 		readResponse.setSuccess(true);
-		when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 		Map<String,Object> reqparams = null;
         try {
             reqparams = new ObjectMapper().readValue(metaDataJson, new TypeReference<Map<String, Object>>(){});
@@ -4437,7 +4437,7 @@ public class SSLCertificateMockServiceTest {
 		readResponse.setHttpstatus(HttpStatus.OK);
 		readResponse.setResponse(metaDataJson);
 		readResponse.setSuccess(true);
-		when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 		Map<String,Object> reqparams = null;
         try {
             reqparams = new ObjectMapper().readValue(metaDataJson, new TypeReference<Map<String, Object>>(){});
@@ -4469,17 +4469,17 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
         when(reqProcessor.process("/auth/ldap/groups","{\"groupname\":\"testgroup\"}", token)).thenReturn(groupResp);
-        when(ControllerUtil.configureLDAPGroup(any(),any(),any())).thenReturn(responseNotFound);
+        when(ControllerUtil.configureLDAPGroup(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseNotFound);
 
         String metaDataJson = "{\"data\":{\"groups\": {\"testgroup\": \"read\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"akmid\":\"102463\",\"applicationName\":\"tvs\",\"applicationOwnerEmailId\":\"certificatename.t-mobile.com\",\"applicationTag\":\"TVS\",\"authority\":\"T-Mobile Issuing CA 01 - SHA2\",\"certCreatedBy\":\"nnazeer1\",\"certOwnerNtid\": \"testusername1\",\"certOwnerEmailId\":\"ltest@smail.com\",\"certType\":\"internal\",\"certificateId\":59880,\"certificateName\":\"certtest260630.t-mobile.com\",\"certificateStatus\":\"Revoked\",\"containerName\":\"VenafiBin_12345\",\"createDate\":\"2020-06-26T05:10:41-07:00\",\"expiryDate\":\"2021-06-26T05:10:41-07:00\",\"projectLeadEmailId\":\"Daniel.Urrutia@T-Mobile.Com\",\"users\":{\"normaluser\":\"write\",\"certuser\":\"read\",\"safeadmin\":\"deny\",\"testsafeuser\":\"write\",\"testuser1\":\"deny\",\"testuser2\":\"read\"}}}";
 		Response readResponse = new Response();
 		readResponse.setHttpstatus(HttpStatus.OK);
 		readResponse.setResponse(metaDataJson);
 		readResponse.setSuccess(true);
-		when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 		Map<String,Object> reqparams = null;
         try {
             reqparams = new ObjectMapper().readValue(metaDataJson, new TypeReference<Map<String, Object>>(){});
@@ -4512,11 +4512,11 @@ public class SSLCertificateMockServiceTest {
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_certificatename.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
         when(reqProcessor.process("/auth/ldap/groups","{\"groupname\":\"testgroup\"}", token)).thenReturn(groupResp);
-        when(ControllerUtil.configureLDAPGroup(any(),any(),any())).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),any())).thenReturn(responseNotFound);
+        when(ControllerUtil.configureLDAPGroup(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.any())).thenReturn(responseNotFound);
 
         when(certificateUtils.getCertificateMetaData(token, "testCert@t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.getCertificateMetaData(token, "testCert@t-mobile.com", "external")).thenReturn(certificateMetadata);
@@ -4526,7 +4526,7 @@ public class SSLCertificateMockServiceTest {
 		readResponse.setHttpstatus(HttpStatus.OK);
 		readResponse.setResponse(metaDataJson);
 		readResponse.setSuccess(true);
-		when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 		Map<String,Object> reqparams = null;
         try {
             reqparams = new ObjectMapper().readValue(metaDataJson, new TypeReference<Map<String, Object>>(){});
@@ -4552,20 +4552,20 @@ public class SSLCertificateMockServiceTest {
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
         when(ControllerUtil.arecertificateGroupInputsValid(certificateGroup)).thenReturn(true);
         ReflectionTestUtils.setField(sSLCertificateService, "vaultAuthMethod", "ldap");
-        when(ControllerUtil.canAddCertPermission(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.canAddCertPermission(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(reqProcessor.process("/auth/ldap/groups","{\"groupname\":\"r_safe_w_vault_demo\"}",token)).thenReturn(userResponse);
         try {
             List<String> resList = new ArrayList<>();
             String groupName="r_safe_w_vault_demo";
             when(ControllerUtil.getPoliciesAsListFromJson(obj,policies)).thenReturn(resList);
             when(ControllerUtil.arecertificateGroupInputsValid(certificateGroup)).thenReturn(true);
-            when(ControllerUtil.canAddCertPermission(any(), any(), eq(token))).thenReturn(true);
+            when(ControllerUtil.canAddCertPermission(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
             when(ControllerUtil.configureLDAPGroup(groupName, policies, token)).thenReturn(responseNoContent);
             when(reqProcessor.process("/auth/ldap/groups/configure",policies, token)).thenReturn(userResponse);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        when(ControllerUtil.updateSslCertificateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.updateSslCertificateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         ResponseEntity<String> responseEntity = sSLCertificateService.addingGroupToCertificate( token, certificateGroup, userDetails);
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -4583,20 +4583,20 @@ public class SSLCertificateMockServiceTest {
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
         when(ControllerUtil.arecertificateGroupInputsValid(certificateGroup)).thenReturn(true);
         ReflectionTestUtils.setField(sSLCertificateService, "vaultAuthMethod", "ldap");
-        when(ControllerUtil.canAddCertPermission(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.canAddCertPermission(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(reqProcessor.process("/auth/ldap/groups","{\"groupname\":\"r_safe_w_vault_demo\"}",token)).thenReturn(userResponse);
         try {
             List<String> resList = new ArrayList<>();
             String groupName="r_safe_w_vault_demo";
             when(ControllerUtil.getPoliciesAsListFromJson(obj,policies)).thenReturn(resList);
             when(ControllerUtil.arecertificateGroupInputsValid(certificateGroup)).thenReturn(true);
-            when(ControllerUtil.canAddCertPermission(any(), any(), eq(token))).thenReturn(true);
+            when(ControllerUtil.canAddCertPermission(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
             when(ControllerUtil.configureLDAPGroup(groupName, policies, token)).thenReturn(responseNoContent);
             when(reqProcessor.process("/auth/ldap/groups/configure",policies, token)).thenReturn(userResponse);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        when(ControllerUtil.updateSslCertificateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.updateSslCertificateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
 
         ReflectionTestUtils.setField(sSLCertificateService, "vaultAuthMethod", "oidc");
         List<String> policiess = new ArrayList<>();
@@ -4608,11 +4608,11 @@ public class SSLCertificateMockServiceTest {
         currentpolicies.add("w_shared_mysafe01");
         currentpolicies.add("w_shared_mysafe02");
         OIDCGroup oidcGroup = new OIDCGroup("123-123-123", currentpolicies);
-        when(OIDCUtil.getIdentityGroupDetails(any(), any())).thenReturn(oidcGroup);
+        when(OIDCUtil.getIdentityGroupDetails(Mockito.any(), Mockito.any())).thenReturn(oidcGroup);
 
         Response response = new Response();
         response.setHttpstatus(HttpStatus.NO_CONTENT);
-        when(OIDCUtil.updateGroupPolicies(any(), any(), any(), any(), any())).thenReturn(response);
+        when(OIDCUtil.updateGroupPolicies(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response);
 
 
         ResponseEntity<String> responseEntity = sSLCertificateService.addingGroupToCertificate( token, certificateGroup, userDetails);
@@ -4633,19 +4633,19 @@ public class SSLCertificateMockServiceTest {
 
 
         when(ControllerUtil.arecertificateGroupInputsValid(certGroup)).thenReturn(true);
-        when(ControllerUtil.canAddCertPermission(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.canAddCertPermission(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(reqProcessor.process("/auth/ldap/groups","{\"groupname\":\"r_vault_demo\"}",token)).thenReturn(userResponse);
         try {
             List<String> resList = new ArrayList<>();
             resList.add("default");
             resList.add("r_cert_certificatename.t-mobile.com");
-            when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
             when(ControllerUtil.arecertificateGroupInputsValid(certGroup)).thenReturn(true);
-            when(ControllerUtil.canAddCertPermission(any(), any(), eq(token))).thenReturn(true);
+            when(ControllerUtil.canAddCertPermission(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
 
         ResponseEntity<String> responseEntity = sSLCertificateService.addingGroupToCertificate(token, certGroup, userDetail);
@@ -4737,16 +4737,16 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
@@ -4759,7 +4759,7 @@ public class SSLCertificateMockServiceTest {
         objList.setValues(values);
         obj.setData(objList);
 
-        when(directoryService.searchByUPNInGsmAndCorp(anyString())).
+        when(directoryService.searchByUPNInGsmAndCorp(Mockito.anyString())).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(obj));
 
         ResponseEntity<?> transferCertResponse =
@@ -4804,21 +4804,21 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
 
-        when(reqProcessor.process(eq("/auth/userpass/read"),anyObject(), anyString())).thenReturn(userResponse);
+        when(reqProcessor.process(Mockito.eq("/auth/userpass/read"),Mockito.any(), Mockito.anyString())).thenReturn(userResponse);
 
         Response idapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-        when(ControllerUtil.configureUserpassUser(eq("testusername1"),any(),eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testusername1"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
 
         DirectoryUser directoryUser = new DirectoryUser();
         directoryUser.setDisplayName("testusername1,testusername1");
@@ -4834,7 +4834,7 @@ public class SSLCertificateMockServiceTest {
         usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
         users.setData(usersList);
         Mockito.doNothing().when(emailUtils).sendTransferEmail(Mockito.any(),Mockito.any(),Mockito.any());
-        when(directoryService.searchByUPNInGsmAndCorp(anyString())).
+        when(directoryService.searchByUPNInGsmAndCorp(Mockito.anyString())).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(users));
 
         ResponseEntity<?> transferCertResponse =
@@ -4877,16 +4877,16 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
         DirectoryObjects obj =new DirectoryObjects();
         DirectoryObjectsList objList = new DirectoryObjectsList();
         DirectoryUser user = new DirectoryUser();
@@ -4896,7 +4896,7 @@ public class SSLCertificateMockServiceTest {
         objList.setValues(values);
         obj.setData(objList);
 
-        when(directoryService.searchByUPNInGsmAndCorp(anyString())).
+        when(directoryService.searchByUPNInGsmAndCorp(Mockito.anyString())).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(obj));
 
         ResponseEntity<?> transferCertResponse =
@@ -4938,16 +4938,16 @@ public class SSLCertificateMockServiceTest {
         response.setResponse(metaDataJson);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(response);
 
         CertResponse certResponse = new CertResponse();
         certResponse.setHttpstatus(HttpStatus.OK);
         certResponse.setResponse(jsonStr);
         certResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(certResponse);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(certResponse);
 
 
-        when(ControllerUtil.updateMetaDataOnPath(anyString(), anyMap(), anyString())).thenReturn(Boolean.TRUE);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.anyString(), Mockito.anyMap(), Mockito.anyString())).thenReturn(Boolean.TRUE);
         DirectoryObjects obj =new DirectoryObjects();
         DirectoryObjectsList objList = new DirectoryObjectsList();
         DirectoryUser user = new DirectoryUser();
@@ -4957,7 +4957,7 @@ public class SSLCertificateMockServiceTest {
         objList.setValues(values);
         obj.setData(objList);
 
-        when(directoryService.searchByUPNInGsmAndCorp(anyString())).
+        when(directoryService.searchByUPNInGsmAndCorp(Mockito.anyString())).
                 thenReturn(ResponseEntity.status(HttpStatus.OK).body(obj));
 
         ResponseEntity<?> transferCertResponse =
@@ -5027,17 +5027,17 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString())).thenReturn(response);
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
         response1.setResponse(jsonStr);
         response1.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystem"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystem"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         String createTargetSystemResponse = "{  \"name\": \"TARGET SYSTEM1\",  \"password\": \"testpassword1\"," +
                 "\"targetSystemID\": \"29\"}";
         response1.setResponse(createTargetSystemResponse);
@@ -5047,13 +5047,13 @@ public class SSLCertificateMockServiceTest {
         createTargetSystemMap.put("description", "TARGET SYSTEM1");
         createTargetSystemMap.put("address", "address");
         when(ControllerUtil.parseJson(createTargetSystemResponse)).thenReturn(createTargetSystemMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystem/create"), anyObject(), anyString(), anyString())).thenReturn(response1);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystem/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response1);
         CertResponse response2 = new CertResponse();
         String jsonStr1 = "{  \"name\": \"targetService\",  \"address\": \"targetServiceaddress\"}";
         response2.setHttpstatus(HttpStatus.OK);
         response2.setResponse(jsonStr1);
         response2.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findTargetSystemService"), anyObject(), anyString(), anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findTargetSystemService"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
         String createTargetSystemServiceResponse =
                 "{  \"name\": \"TARGET SYSTEM Service\",  \"password\": , \"testpassword1\"}";
         response2.setResponse(createTargetSystemServiceResponse);
@@ -5072,37 +5072,37 @@ public class SSLCertificateMockServiceTest {
         createCertPolicyMap.put("certType", "internal");
         createCertPolicyMap.put("certOwnerNtid", "testusername1");
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
         when(ControllerUtil.parseJson(createTargetSystemServiceResponse)).thenReturn(createTargetSystemServiceMap);
-        when(reqProcessor.processCert(eq("/certmanager/targetsystemservice/create"), anyObject(), anyString(), anyString())).thenReturn(response2);
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCA"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCAResponse());
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollTemplates"), anyObject(), anyString(), anyString())).thenReturn(getEnrollTemplateResponse());
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollkeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollKeys"), anyObject(), anyString(), anyString())).thenReturn(getEnrollKeysResponse());
-        when(reqProcessor.processCert(eq("/certmanager/getEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
-        when(reqProcessor.processCert(eq("/certmanager/putEnrollCSR"), anyObject(), anyString(), anyString())).thenReturn(getEnrollCSRResponse());
-        when(reqProcessor.processCert(eq("/certmanager/enroll"), anyObject(), anyString(), anyString())).thenReturn(getEnrollResonse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/targetsystemservice/create"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(response2);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCA"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCAResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollTemplates"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollTemplateResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollkeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollKeys"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollKeysResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/getEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/putEnrollCSR"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollCSRResponse());
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/enroll"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(getEnrollResonse());
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         Response responseObj = new Response();
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(metaDataStr);
         response.setSuccess(true);
 
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(responseObj);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(responseObj);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
         String certType = "external";
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "external")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
@@ -5140,14 +5140,14 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         Map<String, Object> requestCertMap = new HashMap<>();
@@ -5166,7 +5166,7 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
@@ -5177,16 +5177,16 @@ public class SSLCertificateMockServiceTest {
         Map<String, Object> requestCertMap1 = new HashMap<>();
         requestCertMap1.put("conclusion", "waiting");
         when(ControllerUtil.parseJson(metaDataJson1)).thenReturn(requestCertMap1);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
         Response metadataDeleteResponse = new Response();
         metadataDeleteResponse.setHttpstatus(HttpStatus.NO_CONTENT);
         metadataDeleteResponse.setResponse(null);
         metadataDeleteResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/delete"), anyObject(), anyString())).thenReturn(metadataDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataDeleteResponse);
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         ResponseEntity<?> enrollResponse = sSLCertificateService
                 .validateApprovalStatusAndGetCertificateDetails(certName, certType, userDetail);
@@ -5222,14 +5222,14 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         Map<String, Object> requestCertMap = new HashMap<>();
@@ -5248,7 +5248,7 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
@@ -5259,16 +5259,16 @@ public class SSLCertificateMockServiceTest {
         Map<String, Object> requestCertMap1 = new HashMap<>();
         requestCertMap1.put("conclusion", "rejected");
         when(ControllerUtil.parseJson(metaDataJson1)).thenReturn(requestCertMap1);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
         Response metadataDeleteResponse = new Response();
         metadataDeleteResponse.setHttpstatus(HttpStatus.NO_CONTENT);
         metadataDeleteResponse.setResponse(null);
         metadataDeleteResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/delete"), anyObject(), anyString())).thenReturn(metadataDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataDeleteResponse);
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         certificateMetadata.setRequestStatus(SSLCertificateConstants.RENEW_PENDING);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         ResponseEntity<?> enrollResponse = sSLCertificateService
@@ -5305,14 +5305,14 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         Map<String, Object> requestCertMap = new HashMap<>();
@@ -5331,7 +5331,7 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
@@ -5342,25 +5342,25 @@ public class SSLCertificateMockServiceTest {
         Map<String, Object> requestCertMap1 = new HashMap<>();
         requestCertMap1.put("conclusion", "rejected");
         when(ControllerUtil.parseJson(metaDataJson1)).thenReturn(requestCertMap1);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
         Response metadataDeleteResponse = new Response();
         metadataDeleteResponse.setHttpstatus(HttpStatus.NO_CONTENT);
         metadataDeleteResponse.setResponse(null);
         metadataDeleteResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/delete"), anyObject(), anyString())).thenReturn(metadataDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataDeleteResponse);
 
 
-        when(reqProcessor.process(eq("/access/delete"), anyObject(), anyString())).thenReturn(metadataDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/access/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataDeleteResponse);
 
 
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         String metadatajson =  "{\"path\":{\"sslcerts/certtest.int.delete01.t-mobile.com\":{\"policy\":\"sudo\"}," +
                 "\"metadata/sslcerts/certtest.int.delete01.t-mobile.com\":{\"policy\":\"write\"}}}";
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
 
 
         ResponseEntity<?> enrollResponse = sSLCertificateService
@@ -5393,13 +5393,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
         Map<String, Object> requestCertMap = new HashMap<>();
         Map<String, Object> certificates = new HashMap<>();
@@ -5416,7 +5416,7 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
         reqStatusResponse.setHttpstatus(HttpStatus.OK);
@@ -5426,7 +5426,7 @@ public class SSLCertificateMockServiceTest {
         Map<String, Object> requestCertMap1 = new HashMap<>();
         requestCertMap1.put("conclusion", "rejected");
         when(ControllerUtil.parseJson(metaDataJson1)).thenReturn(requestCertMap1);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
         String path="externalcerts/certificatename.t-mobile.com";
         String pathjson ="{\"path\":\"metadata/"+path+"\"}";
@@ -5437,7 +5437,7 @@ public class SSLCertificateMockServiceTest {
         when(reqProcessor.process("/delete", pathjson, "5PDrOhsy4ig8L3EpsJZSLAMg")).thenReturn(metadataDeleteResponse);
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         ResponseEntity<?> enrollResponse = sSLCertificateService
                 .validateApprovalStatusAndGetCertificateDetails(certName, certType, userDetail);
@@ -5469,13 +5469,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
         Map<String, Object> requestCertMap = new HashMap<>();
         Map<String, Object> certificates = new HashMap<>();
@@ -5492,7 +5492,7 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
         reqStatusResponse.setHttpstatus(HttpStatus.OK);
@@ -5502,7 +5502,7 @@ public class SSLCertificateMockServiceTest {
         Map<String, Object> requestCertMap1 = new HashMap<>();
         requestCertMap1.put("conclusion", "rejected");
         when(ControllerUtil.parseJson(metaDataJson1)).thenReturn(requestCertMap1);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
         String path="externalcerts/certificatename.t-mobile.com";
         String pathjson ="{\"path\":\"metadata/"+path+"\"}";
@@ -5519,7 +5519,7 @@ public class SSLCertificateMockServiceTest {
         when(reqProcessor.process("/delete", pathjson1, "5PDrOhsy4ig8L3EpsJZSLAMg")).thenReturn(metadataDeleteResponse1);
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         ResponseEntity<?> enrollResponse = sSLCertificateService
                 .validateApprovalStatusAndGetCertificateDetails(certName, certType, userDetail);
@@ -5559,21 +5559,21 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
         reqStatusResponse.setHttpstatus(HttpStatus.OK);
         reqStatusResponse.setResponse(metaDataJson1);
         reqStatusResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         when(ControllerUtil.parseJson(findCertResponse.getResponse())).thenReturn(null);
@@ -5611,7 +5611,7 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
@@ -5619,13 +5619,13 @@ public class SSLCertificateMockServiceTest {
         reqStatusResponse.setResponse(metaDataJson1);
         reqStatusResponse.setSuccess(true);
 
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         when(ControllerUtil.parseJson(findCertResponse.getResponse())).thenReturn(null);
@@ -5682,21 +5682,21 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         Response metadataDeleteResponse = new Response();
         metadataDeleteResponse.setHttpstatus(HttpStatus.OK);
         metadataDeleteResponse.setResponse(null);
         metadataDeleteResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/delete"), anyObject(), anyString())).thenReturn(metadataDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataDeleteResponse);
         Map<String, Object> requestCertMap = new HashMap<>();
         Map<String, Object> certificates = new HashMap<>();
         certificates.put("sortedSubjectName", "certificatename.t-mobile.com");
@@ -5713,18 +5713,18 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.FORBIDDEN);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
         reqStatusResponse.setHttpstatus(HttpStatus.OK);
         reqStatusResponse.setResponse(metaDataJson1);
         reqStatusResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
 
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         ResponseEntity<?> enrollResponse = sSLCertificateService
                 .validateApprovalStatusAndGetCertificateDetails(certName, certType, userDetail);
@@ -5762,14 +5762,14 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         Map<String, Object> requestCertMap = new HashMap<>();
@@ -5789,18 +5789,18 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
         String metaDataJson1 = "{\"conclusion\":\"rejected\"}" ;
         CertResponse reqStatusResponse = new CertResponse();
         reqStatusResponse.setHttpstatus(HttpStatus.OK);
         reqStatusResponse.setResponse(metaDataJson1);
         reqStatusResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/actionRequestStatus"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/actionRequestStatus"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(reqStatusResponse);
 
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(false);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(false);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
         ResponseEntity<?> enrollResponse = sSLCertificateService
                 .validateApprovalStatusAndGetCertificateDetails(certName, certType, userDetail);
@@ -5851,14 +5851,14 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
 
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
 
         Map<String, Object> requestCertMap = new HashMap<>();
@@ -5877,38 +5877,38 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 
         String certType = "internal";
         String certName = "certificatename.t-mobile.com";
-        when(ControllerUtil.updateMetaDataOnPath(any(), any(), eq(token))).thenReturn(true);
+        when(ControllerUtil.updateMetaDataOnPath(Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(true);
         when(certificateUtils.getCertificateMetaData(token, certName, certType)).thenReturn(certificateMetadata);
 
         CertResponse unassignCertResponse = new CertResponse();
         unassignCertResponse.setHttpstatus(HttpStatus.OK);
         unassignCertResponse.setResponse(jsonStr3);
         unassignCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates/services/assigned"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certificates/services/assigned"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(unassignCertResponse);
 
         CertResponse deleteCertResponse = new CertResponse();
         deleteCertResponse.setHttpstatus(HttpStatus.NO_CONTENT);
         deleteCertResponse.setResponse(null);
         deleteCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certificates"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certificates"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(deleteCertResponse);
 
         Response metadataDeleteResponse = new Response();
         metadataDeleteResponse.setHttpstatus(HttpStatus.OK);
         metadataDeleteResponse.setResponse(null);
         metadataDeleteResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/delete"), anyObject(), anyString())).thenReturn(metadataDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataDeleteResponse);
 
         Response metadataPathDeleteResponse = new Response();
         metadataPathDeleteResponse.setHttpstatus(HttpStatus.OK);
         metadataPathDeleteResponse.setResponse(null);
         metadataPathDeleteResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/delete"), anyObject(), anyString())).thenReturn(metadataPathDeleteResponse);
+        when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(metadataPathDeleteResponse);
 
         ResponseEntity<?> enrollResponse = sSLCertificateService
                 .deleteCertificate(token, certType, certName, userDetail);
@@ -5990,13 +5990,13 @@ public class SSLCertificateMockServiceTest {
         response.setHttpstatus(HttpStatus.OK);
         response.setResponse(jsonStr);
         response.setSuccess(true);
-        when(reqProcessor.processCert(eq("/auth/certmanager/login"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/auth/certmanager/login"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(response);
         CertResponse findCertResponse = new CertResponse();
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString()))
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(findCertResponse);
         Map<String, Object> requestCertMap = new HashMap<>();
         Map<String, Object> certificates = new HashMap<>();
@@ -6013,7 +6013,7 @@ public class SSLCertificateMockServiceTest {
         readResponse.setHttpstatus(HttpStatus.OK);
         readResponse.setResponse(metaDataJson);
         readResponse.setSuccess(true);
-        when(reqProcessor.process(eq("/read"), anyObject(), anyString())).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.anyString())).thenReturn(readResponse);
 
         String certType = "external";
         String certName = "certificatename.t-mobile.com";
@@ -6048,10 +6048,10 @@ public class SSLCertificateMockServiceTest {
 
         when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
         when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setSSLContext(Mockito.any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setRedirectStrategy(Mockito.any())).thenReturn(httpClientBuilder);
         when(httpClientBuilder.build()).thenReturn(httpClient1);
-        when(httpClient1.execute(any())).thenReturn(httpResponse);
+        when(httpClient1.execute(Mockito.any())).thenReturn(httpResponse);
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
@@ -6063,10 +6063,10 @@ public class SSLCertificateMockServiceTest {
 
         when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
         when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setSSLContext(Mockito.any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setRedirectStrategy(Mockito.any())).thenReturn(httpClientBuilder);
         when(httpClientBuilder.build()).thenReturn(httpClient1);
-        when(httpClient1.execute(any())).thenReturn(httpResponse);
+        when(httpClient1.execute(Mockito.any())).thenReturn(httpResponse);
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
@@ -6096,7 +6096,7 @@ public class SSLCertificateMockServiceTest {
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.NOT_FOUND);
@@ -6113,24 +6113,24 @@ public class SSLCertificateMockServiceTest {
 
         String userDetailToken = "strToken";
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
 
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
 
@@ -6164,10 +6164,10 @@ public class SSLCertificateMockServiceTest {
 
         when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
         when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setSSLContext(Mockito.any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setRedirectStrategy(Mockito.any())).thenReturn(httpClientBuilder);
         when(httpClientBuilder.build()).thenReturn(httpClient1);
-        when(httpClient1.execute(any())).thenReturn(httpResponse);
+        when(httpClient1.execute(Mockito.any())).thenReturn(httpResponse);
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
@@ -6179,10 +6179,10 @@ public class SSLCertificateMockServiceTest {
 
         when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
         when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setSSLContext(Mockito.any())).thenReturn(httpClientBuilder);
+        when(httpClientBuilder.setRedirectStrategy(Mockito.any())).thenReturn(httpClientBuilder);
         when(httpClientBuilder.build()).thenReturn(httpClient1);
-        when(httpClient1.execute(any())).thenReturn(httpResponse);
+        when(httpClient1.execute(Mockito.any())).thenReturn(httpResponse);
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
@@ -6212,7 +6212,7 @@ public class SSLCertificateMockServiceTest {
         findCertResponse.setHttpstatus(HttpStatus.OK);
         findCertResponse.setResponse(jsonStr2);
         findCertResponse.setSuccess(true);
-        when(reqProcessor.processCert(eq("/certmanager/findCertificate"), anyObject(), anyString(), anyString())).thenReturn(findCertResponse);
+        when(reqProcessor.processCert(Mockito.eq("/certmanager/findCertificate"), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(findCertResponse);
 
         CertResponse response1 = new CertResponse();
         response1.setHttpstatus(HttpStatus.OK);
@@ -6229,24 +6229,24 @@ public class SSLCertificateMockServiceTest {
 
         String userDetailToken = "strToken";
         Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(ControllerUtil.createMetadata(Mockito.any(), any())).thenReturn(true);
-        when(reqProcessor.process(eq("/access/update"),any(),eq(userDetailToken))).thenReturn(responseNoContent);
+        when(ControllerUtil.createMetadata(Mockito.any(), Mockito.any())).thenReturn(true);
+        when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(userDetailToken))).thenReturn(responseNoContent);
 
 
         when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser2\"}",token)).thenReturn(userResponse);
 
         when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
         when(ControllerUtil.parseJson(metaDataStr)).thenReturn(createCertPolicyMap);
-        when(ControllerUtil.convetToJson(any())).thenReturn(metadatajson);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
         when(reqProcessor.process("/write", metadatajson, token)).thenReturn(responseNoContent);
 
         List<String> resList = new ArrayList<>();
         resList.add("default");
         resList.add("r_cert_CertificateName.t-mobile.com");
-        when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+        when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 
-        when(ControllerUtil.configureUserpassUser(eq("testuser2"),any(),eq(token))).thenReturn(idapConfigureResponse);
-        when(ControllerUtil.updateMetadata(any(),eq(token))).thenReturn(responseNoContent);
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetails, certificateMetadata)).thenReturn(true);
 

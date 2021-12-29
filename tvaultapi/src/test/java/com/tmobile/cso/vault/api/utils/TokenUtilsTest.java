@@ -177,7 +177,7 @@ public class TokenUtilsTest {
 
         when(JSONUtil.getJSON(Mockito.any(AppRoleIdSecretId.class))).thenReturn(jsonStr);
         Response response = getMockResponse(HttpStatus.OK, true, "{\"auth\":{\"client_token\":\"6WcC0r5Nw9z0RILHEJnn0OCB\",\"accessor\":\"2xmlSRCSxGb0AlopA1JfQyuY\",\"policies\":[\"default\",\"selfservicesupport\"],\"token_policies\":[\"default\",\"selfservicesupport\"],\"metadata\":{\"role_name\":\"selfservicesupportrole\"},\"lease_duration\":2764800,\"renewable\":true,\"entity_id\":\"eb74b6b1-b9a0-fd59-ff33-5813be3fdbbf\"},\"data\":null,\"lease_duration\":0,\"lease_id\":\"\"}");
-        when(reqProcessor.process(eq("/auth/approle/login"),Mockito.any(),eq(""))).thenReturn(response);
+        when(reqProcessor.process(Mockito.eq("/auth/approle/login"),Mockito.any(),Mockito.eq(""))).thenReturn(response);
         String token = tokenUtils.getSelfServiceToken();
         assertEquals("6WcC0r5Nw9z0RILHEJnn0OCB", token);
     }
