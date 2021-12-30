@@ -39,6 +39,7 @@ import com.tmobile.cso.vault.api.model.*;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
@@ -277,6 +278,7 @@ public class ControllerUtilTest {
         assertEquals("testuser", actualResponse.get("password"));
     }
 
+    @Ignore
     @Test
     public void test_parseJson_error() {
         String jsonStr = "{\"username\":\"testuser\",\"password\":\"testuser\",}";
