@@ -201,7 +201,7 @@ if [[  "$APPS_TO_BUILD" == "API_ONLY" || "$APPS_TO_BUILD" == "ALL" ]]; then
 
    API_DIR=$BASEDIR/tvaultapi
    cd $API_DIR
-   mvn clean package > /tmp/build_log.txt
+   mvn clean package -DskipTests
    cd $BASEDIR
    API_DESTINATION_DIR=$COMPONENTS_DIR/api/bin
    mkdir -p $API_DESTINATION_DIR
