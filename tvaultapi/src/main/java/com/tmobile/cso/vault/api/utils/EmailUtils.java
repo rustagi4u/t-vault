@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,8 +65,7 @@ public class EmailUtils {
 			for (Map.Entry<String, String> entry : TVaultConstants.EMAIL_TEMPLATE_IMAGE_IDS.entrySet()) {
 				variables.put(entry.getKey(), entry.getKey());
 			}
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			try {
 				// add each inline image byte scream
@@ -123,8 +121,7 @@ public class EmailUtils {
 			for (Map.Entry<String, String> entry : TVaultConstants.EMAIL_EXT_TEMPLATE_IMAGE_IDS.entrySet()) {
 				variables.put(entry.getKey(), entry.getKey());
 			}
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			try {
 				// add each inline image byte scream
@@ -178,8 +175,7 @@ public class EmailUtils {
 			helper.setTo(to);
 			helper.setSubject(subject);
 			String templateFileName = TVaultConstants.EMAIL_TEMPLATE_NAME_DELETE_CERT;
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			try {
 				// add each inline image byte scream
@@ -240,8 +236,7 @@ public class EmailUtils {
 			for (Map.Entry<String, String> entry : TVaultConstants.EMAIL_EXT_TEMPLATE_IMAGE_IDS.entrySet()) {
 				variables.put(entry.getKey(), entry.getKey());
 			}
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			try {
 				// add each inline image byte scream
@@ -296,8 +291,7 @@ public class EmailUtils {
 			helper.setCc(variables.get("oldOwnerEmail"));
 			helper.setSubject(subject);
 			String templateFileName = TVaultConstants.EMAIL_TEMPLATE_NAME_TRANSFER;
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			javaMailSender.send(message);
 		} catch (MessagingException e) {
@@ -357,8 +351,8 @@ public class EmailUtils {
 				helper.setCc(cc.toArray(new String[cc.size()]));
 			}
 			helper.setSubject(subject);
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			extractImageBytesFromByteArray(helper);
 			javaMailSender.send(message);
@@ -398,8 +392,7 @@ public class EmailUtils {
 			for (Map.Entry<String, String> entry : IAMServiceAccountConstants.IAM_EMAIL_TEMPLATE_IMAGE_IDS.entrySet()) {
 				variables.put(entry.getKey(), entry.getKey());
 			}
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			extractImageBytesFromByteArray(helper);
 			javaMailSender.send(message);
@@ -437,8 +430,7 @@ public class EmailUtils {
 			for (Map.Entry<String, String> entry : AzureServiceAccountConstants.AZURE_EMAIL_TEMPLATE_IMAGE_IDS.entrySet()) {
 				variables.put(entry.getKey(), entry.getKey());
 			}
-			Map<String, Object> variableMapObj = new HashMap<>(variables);
-			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variableMapObj));
+			String content = this.templateEngine.process(templateFileName, new Context(Locale.getDefault(), variables));
 			helper.setText(content, true);
 			extractImageBytesFromByteArrayAzureService(helper);
 			javaMailSender.send(message);

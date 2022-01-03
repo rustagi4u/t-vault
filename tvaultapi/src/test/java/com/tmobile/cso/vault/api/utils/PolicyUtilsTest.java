@@ -114,7 +114,7 @@ public class PolicyUtilsTest {
 
         Response response =  getMockResponse(HttpStatus.OK, true, "{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}");
         when(ControllerUtil.getReqProcessor().process("/auth/userpass/read","{\"username\":\"normaluser\"}",token)).thenReturn(response);
-        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenReturn("s_shared_mysafe01,s_shared_mysafe02");
+        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenReturn("s_shared_mysafe01,s_shared_mysafe02");
         String[] policies = policyUtils.getCurrentPolicies(token, "normaluser", getMockUser(true));
         assertEquals(expectedPolicies, policies);
     }
@@ -127,7 +127,7 @@ public class PolicyUtilsTest {
 
         Response response =  getMockResponse(HttpStatus.OK, true, "{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}");
         when(ControllerUtil.getReqProcessor().process("/auth/ldap/users","{\"username\":\"normaluser\"}",token)).thenReturn(response);
-        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenReturn("s_shared_mysafe01,s_shared_mysafe02");
+        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenReturn("s_shared_mysafe01,s_shared_mysafe02");
         String[] policies = policyUtils.getCurrentPolicies(token, "normaluser", getMockUser(true));
         assertEquals(expectedPolicies, policies);
     }
@@ -138,7 +138,7 @@ public class PolicyUtilsTest {
         ReflectionTestUtils.setField(policyUtils, "vaultAuthMethod", "userpass");
         Response response =  getMockResponse(HttpStatus.OK, true, "{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}");
         when(ControllerUtil.getReqProcessor().process("/auth/userpass/read","{\"username\":\"normaluser\"}",token)).thenReturn(response);
-        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenThrow(IOException.class);
+        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenThrow(IOException.class);
         String[] policies = policyUtils.getCurrentPolicies(token, "normaluser", getMockUser(true));
         String[] expectedPolicies = {};
         assertEquals(expectedPolicies, policies);
@@ -186,10 +186,10 @@ public class PolicyUtilsTest {
 		oidcEntityResponse.setPolicies(policies1);
 		ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.OK)
 				.body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(false))).thenReturn(responseEntity2);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), eq(false))).thenReturn(responseEntity2);
 
         Response response =  getMockResponse(HttpStatus.OK, true, "{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}");
-        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenReturn("s_shared_mysafe01,s_shared_mysafe02");
+        when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), eq("{\"data\":{\"policies\":\"s_shared_mysafe01,s_shared_mysafe02\"}}"))).thenReturn("s_shared_mysafe01,s_shared_mysafe02");
         String[] policies = policyUtils.getCurrentPolicies(token, "normaluser", getMockUser(true));
         assertEquals(expectedPolicies, policies);
     }
