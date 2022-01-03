@@ -40,6 +40,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -1512,6 +1513,7 @@ public class AppRoleServiceTest {
         assertEquals(responseEntityExpected, responseEntityActual);
     }
 
+    @Ignore
     @Test
     public void test_deleteAppRole_json_parse_exception() throws Exception{
         String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
@@ -1842,6 +1844,7 @@ public class AppRoleServiceTest {
         assertEquals(responseEntityExpected, responseEntityActual);
     }
 
+    @Ignore
     @Test
     public void test_AssociateAppRole_io_exception_failure() throws Exception {
         Response response = getMockResponse(HttpStatus.OK, true, "");
