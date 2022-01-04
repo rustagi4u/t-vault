@@ -30,7 +30,7 @@ import TextFieldComponent from '../../../../../components/FormFields/TextField';
 import ListItemDetail from '../../../../../components/ListItemDetail';
 import AppRoleDetails from '../ApproleDetails';
 import EditDeletePopper from '../EditDeletePopper';
-import ListItem from '../../../../../components/ListItem';
+import ListItem from '../../../../../components/ListItem/AppRoleListItem';
 import EditAndDeletePopup from '../../../../../components/EditAndDeletePopup';
 import Error from '../../../../../components/Error';
 import SnackbarComponent from '../../../../../components/Snackbar';
@@ -491,8 +491,9 @@ const AppRolesDashboard = () => {
         }
       >
         <ListItem
-          title={appRole.isOwner ? appRole.name + ' 👑' : appRole.name}
+          title={appRole.name}
           subTitle={appRole.date}
+          isOwner={appRole.isOwner}
           flag={appRole.type}
           icon={appRoleIcon}
           showActions={false}
