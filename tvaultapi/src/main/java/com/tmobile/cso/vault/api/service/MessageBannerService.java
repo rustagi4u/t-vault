@@ -62,10 +62,10 @@ public class MessageBannerService {
 		if(metadataMap.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message & SSL-message cannot be empty\"]}");
 		}
-		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("")) {
+		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
 		}
-		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("")) {
+		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
 		}
 		String metadataJson = "";
@@ -173,10 +173,10 @@ public class MessageBannerService {
 		if(metadataMap.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message & SSL-message cannot be empty\"]}");
 		}
-		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("")) {
+		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
 		}
-		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("")) {
+		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
 		}
 		
