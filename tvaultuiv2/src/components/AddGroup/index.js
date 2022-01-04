@@ -101,7 +101,7 @@ const AddGroup = (props) => {
     isSvcAccount,
     isCertificate,
     isAzureSvcAccount,
-    isIamSvcAccount
+    isIamSvcAccount,
   } = props;
   const [radioValue, setRadioValue] = useState('read');
   const [searchValue, setSearchValue] = useState('');
@@ -276,7 +276,7 @@ const AddGroup = (props) => {
               <InstructionText>
                 Search the T-Mobile system to add groups
               </InstructionText>
-              {isCertificate && (
+              {(isCertificate || isIamSvcAccount || isAzureSvcAccount) && (
                 <InstructionText>
                   Note: Denying the admin will not take any effect for groups.
                 </InstructionText>

@@ -1,9 +1,14 @@
 import api from '../../../services';
 // get calls
 const getAppRole = () => api.get('/ss/approle');
-const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/role/${appRole}`);
+const fetchAppRole = (appRole) => api.get(`/ss/approle/role/${appRole}`);
+const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/${appRole}`);
 const getAccessors = (appRole) => api.get(`/ss/approle/${appRole}/accessors`);
 const getRoleId = (appRole) => api.get(`/ss/approle/${appRole}/role_id`);
+const getAppRoleOwner = (appRole) => api.get(`/ss/approle/${appRole}/owner`);
+const getUserName = (user) => api.get(`/ldap/ntusers?displayName=${user}`);
+const getTmoUsers = (user) => api.get(`/tmo/users?UserPrincipalName=${user}`);
+const getEntitiesAssociatedWithAppRole = (appRole) => api.get(`/ss/approle/list/associations/${appRole}`);
 
 // put calls
 const updateAppRole = (payload) => api.put('/ss/approle', payload);
@@ -20,6 +25,7 @@ const deleteSecretIds = (payload) =>
 
 export default {
   getAppRole,
+  fetchAppRole,
   fetchAppRoleDetails,
   updateAppRole,
   createAppRole,
@@ -28,4 +34,8 @@ export default {
   deleteSecretIds,
   getRoleId,
   deleteAppRole,
+  getAppRoleOwner,
+  getUserName,
+  getTmoUsers,
+  getEntitiesAssociatedWithAppRole,
 };

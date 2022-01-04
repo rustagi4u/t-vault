@@ -780,4 +780,84 @@ public class SecretServiceTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
+    @Test
+    public void test_write_secretinvalid() {
+
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String jsonStr = "{\"path\":\"shared/mysafe01/myfolder\",\"data\":{\"secret3\":\"value1\",\"secret2\":\"value2\"}}";
+        HashMap<String, String> data = new HashMap<>();
+        data.put("secret3", "value1");
+        data.put("secret2", "value2");
+        Secret secret = new Secret("shared/mysafe01/myfolder", data);
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid request.Check json data\"]}");
+
+        when(ControllerUtil.addDefaultSecretKey(jsonStr)).thenReturn("{\"path\":\"shared/mysafe01/myfolder\",\"data\":{\"secret3\":\"value1\",\"secret2\":\"value2\"}}");
+        when(ControllerUtil.areSecretKeysValid(Mockito.any())).thenReturn(false);
+        when(ControllerUtil.isPathValid("shared/mysafe01/myfolder")).thenReturn(true);
+        when(ControllerUtil.isValidFolderPath("shared/mysafe01/myfolder")).thenReturn(true);
+        when(reqProcessor.process("/write",jsonStr,sampletok)).thenReturn(response);
+
+        String path ="shared/mysafe01/myfolder";
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        String policies[] = {"w_shared_mysafe01"};
+        UserDetails userDetails = getMockUser(false);
+        userDetails.setPolicies(policies);
+
+        when(JSONUtil.getJSON(secret)).thenReturn(jsonStr);
+        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"secret1\":\"value1\"}}");
+        when(reqProcessor.process("/read","{\"path\":\""+secret.getPath()+"\"}",sampletok)).thenReturn(readResponse);
+        when(safeUtils.updateActivityInfo(eq(sampletok), eq(path), eq(userDetails), eq(TVaultConstants.UPDATE_ACTION), Mockito.any(), Mockito.any())).thenReturn(response);
+        ResponseEntity<String> responseEntity = secretService.write(sampletok, secret, userDetails);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+    @Test
+    public void test_write_secretfailed() {
+
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String jsonStr = "{\"path\":\"shared/mysafe01/myfolder\",\"data\":{\"secret3\":\"value1\",\"secret2\":\"value2\"}}";
+        HashMap<String, String> data = new HashMap<>();
+        data.put("secret3", "value1");
+        data.put("secret2", "value2");
+        Secret secret = new Secret("shared/mysafe01/myfolder", data);
+        Response response = getMockResponse(HttpStatus.OK, true, "");
+
+
+        when(ControllerUtil.addDefaultSecretKey(jsonStr)).thenReturn("{\"path\":\"shared/mysafe01/myfolder\",\"data\":{\"secret3\":\"value1\",\"secret2\":\"value2\"}}");
+        when(ControllerUtil.areSecretKeysValid(Mockito.any())).thenReturn(true);
+        when(ControllerUtil.isPathValid("shared/mysafe01/myfolder")).thenReturn(true);
+        when(ControllerUtil.isValidFolderPath("shared/mysafe01/myfolder")).thenReturn(true);
+        when(reqProcessor.process("/write",jsonStr,sampletok)).thenReturn(response);
+
+        String path ="shared/mysafe01/myfolder";
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        String policies[] = {"w_shared_mysafe01"};
+        UserDetails userDetails = getMockUser(false);
+        userDetails.setPolicies(policies);
+
+        when(JSONUtil.getJSON(secret)).thenReturn(jsonStr);
+        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"secret1\":\"value1\"}}");
+        when(reqProcessor.process("/read","{\"path\":\""+secret.getPath()+"\"}",sampletok)).thenReturn(readResponse);
+        when(safeUtils.updateActivityInfo(eq(sampletok), eq(path), eq(userDetails), eq(TVaultConstants.UPDATE_ACTION), Mockito.any(), Mockito.any())).thenReturn(response);
+        ResponseEntity<String> responseEntity = secretService.write(sampletok, secret, userDetails);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+    }
+
+    @Test
+    public void test_deleteFromVault_fail() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01/myfolder";
+        Response response = getMockResponse(HttpStatus.OK, true, "");
+
+
+        when(ControllerUtil.isValidDataPath(path)).thenReturn(true);
+        when(reqProcessor.process("/delete","{\"path\":\""+path+"\"}",sampletok)).thenReturn(response);
+        ResponseEntity<String> responseEntity = secretService.deleteFromVault(sampletok, path);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+    }
 }

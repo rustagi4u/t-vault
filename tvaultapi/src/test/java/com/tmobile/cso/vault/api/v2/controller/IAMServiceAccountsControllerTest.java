@@ -35,6 +35,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
+import com.tmobile.cso.vault.api.model.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,18 +55,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tmobile.cso.vault.api.common.TVaultConstants;
-import com.tmobile.cso.vault.api.model.AWSLoginRole;
-import com.tmobile.cso.vault.api.model.IAMSecrets;
-import com.tmobile.cso.vault.api.model.IAMServiceAccount;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountAWSRole;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountAccessKey;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountApprole;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountGroup;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountKey;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountOffboardRequest;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountRotateRequest;
-import com.tmobile.cso.vault.api.model.IAMServiceAccountUser;
-import com.tmobile.cso.vault.api.model.UserDetails;
 import com.tmobile.cso.vault.api.service.IAMServiceAccountsService;
 
 
@@ -169,6 +158,25 @@ public class IAMServiceAccountsControllerTest {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/iamserviceaccounts/all")
 				.header(VAULT_TOKEN_STRING, token).header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)
 				.requestAttr(USER_DETAILS_STRING, userDetails)).andExpect(status().isOk()).andReturn();
+		String actual = result.getResponse().getContentAsString();
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	public void test_transferIAMServiceAccountOwner_successful() throws Exception {
+		IAMServiceAccount serviceAccount = generateIAMServiceAccount("testaccount", "1234567", "normaluser");
+
+		String expected = "{\"messages\":[\"Owner has been successfully transferred for IAM Service Account\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expected);
+		when(iamServiceAccountsService.updateIAMServiceAccount(Mockito.anyString(), Mockito.any(), Mockito.any()))
+				.thenReturn(responseEntityExpected);
+		String inputJson = getJSON(serviceAccount);
+		MvcResult result = mockMvc
+				.perform(MockMvcRequestBuilders.post("/v2/iamserviceaccounts/update").header(VAULT_TOKEN_STRING, token)
+						.header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)
+						.requestAttr(USER_DETAILS_STRING, userDetails).content(inputJson))
+				.andExpect(status().isOk()).andReturn();
+
 		String actual = result.getResponse().getContentAsString();
 		assertEquals(expected, actual);
 	}
@@ -657,7 +665,7 @@ public class IAMServiceAccountsControllerTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
 
-		when(iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token , "testiamsvcacc01", "123456789012"))
+		when(iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token , "testiamsvcacc01", "123456789012", userDetails))
 				.thenReturn(responseEntityExpected);
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/iamserviceaccounts/123456789012/testiamsvcacc01/keys")
 				.header(VAULT_TOKEN_STRING, token).header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)

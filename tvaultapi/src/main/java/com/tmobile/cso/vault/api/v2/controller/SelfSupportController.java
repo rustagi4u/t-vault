@@ -20,10 +20,12 @@ package com.tmobile.cso.vault.api.v2.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.exception.TVaultValidationException;
 import com.tmobile.cso.vault.api.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,8 @@ import com.tmobile.cso.vault.api.service.SelfSupportService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin
@@ -341,7 +345,7 @@ public class SelfSupportController {
 	 * Delete Secret_Ids
 	 * @param request
 	 * @param token
-	 * @param rolename
+	 * @param appRoleAccessorIds
 	 * @return
 	 */
 	@ApiOperation(value = "${SelfSupportController.deleteSecretIds.value}", notes = "${SelfSupportController.deleteSecretIds.notes}")
@@ -359,7 +363,7 @@ public class SelfSupportController {
 	 */
 	@ApiOperation(value = "${SelfSupportController.readAppRoleRoleId.value}", notes = "${SelfSupportController.readAppRoleRoleId.notes}")
 	@GetMapping(value="/v2/ss/approle/{role_name}/role_id",produces="application/json")
-	public ResponseEntity<String> readAppRoleRoleId(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name" ) String rolename){
+	public ResponseEntity<String> readAppRoleRoleId(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String rolename){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.readAppRoleRoleId(token, rolename, userDetails);
 	}
@@ -424,8 +428,8 @@ public class SelfSupportController {
 	 */
 	@ApiOperation(value = "${SelfSupportController.listAppRoles.value}", notes = "${SelfSupportController.listAppRoles.notes}")
 	@GetMapping (value="/v2/ss/approle",produces="application/json")
-	public ResponseEntity<String> listAppRoles(HttpServletRequest request, @RequestHeader(value="vault-token") String token, 
-			@RequestParam(name = "limit", required = false) Integer limit, @RequestParam(name = "offset", required = false) Integer offset){
+	public ResponseEntity<List<AppRoleListObject>> listAppRoles(HttpServletRequest request, @RequestHeader(value="vault-token") String token,
+																@RequestParam(name = "limit", required = false) Integer limit, @RequestParam(name = "offset", required = false) Integer offset){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.listAppRoles(token, userDetails, limit, offset);	
 	}
@@ -442,6 +446,21 @@ public class SelfSupportController {
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.readAppRoles( userDetails);
 	}
+
+	/**
+	 * Retrieves the list of entities that are associated to this AppRole.
+	 * Entities include safes, services accounts, and certs.
+	 * @param token
+	 * @param roleName - The name of the AppRole to get the list of associations for
+	 * @return ResponseEntity
+	 */
+	@ApiOperation(value = "${SelfSupportController.listAppRoleEntityAssociations.value}", notes = "${SelfSupportController.listAppRoleEntityAssociations.notes}")
+	@GetMapping(value="/v2/ss/approle/list/associations/{role_name}", produces="application/json")
+	public ResponseEntity<String> listAppRoleEntityAssociations(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
+		UserDetails userDetails = (UserDetails) request.getAttribute(TVaultConstants.USER_DETAILS);
+		return selfSupportService.listAppRoleEntityAssociations(roleName, userDetails);
+	}
+
 	/**
 	 * READ APPROLE
 	 * @param token
@@ -459,14 +478,28 @@ public class SelfSupportController {
 	 * Create AppRole
 	 * @param request
 	 * @param token
-	 * @param appRole
-	 * @return
+	 * @param appRoleUpdate
+	 * @return ResponseEntity
 	 */
 	@ApiOperation(value = "${SelfSupportController.updateAppRole.value}", notes = "${SelfSupportController.updateAppRole.notes}")
 	@PutMapping(value="/v2/ss/approle", consumes="application/json", produces="application/json")
-	public ResponseEntity<String> updateAppRole(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @Valid @RequestBody AppRole appRole){
+	public ResponseEntity<String> updateAppRole(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @Valid @RequestBody AppRoleUpdate appRoleUpdate){
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
-		return selfSupportService.updateAppRole(token, appRole, userDetails);
+		return selfSupportService.updateAppRole(token, appRoleUpdate, userDetails);
+	}
+
+	/**
+	 * Returns the owner of the AppRole
+	 * @param request
+	 * @param token
+	 * @param roleName
+	 * @return ResponseEntity
+	 */
+	@ApiOperation(value = "${SelfSupportController.getAppRoleOwner.value}", notes = "${SelfSupportController.getAppRoleOwner.notes}")
+	@GetMapping(value="/v2/ss/approle/{role_name}/owner", produces="application/json")
+	public ResponseEntity<String[]> getApproleOwner(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @PathVariable("role_name") String roleName){
+		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
+		return ResponseEntity.status(HttpStatus.OK).body(selfSupportService.getAppRoleOwner(token, userDetails, roleName));
 	}
 
 	/**

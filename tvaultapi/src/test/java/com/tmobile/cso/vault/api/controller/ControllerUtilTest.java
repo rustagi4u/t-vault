@@ -1020,14 +1020,26 @@ public class ControllerUtilTest {
 
     @Test
     public void test_populateAppRoleMetaJson()  {
-        String json = ControllerUtil.populateAppRoleMetaJson("role1", "normalsuer");
+        AppRole appRole = new AppRole();
+        appRole.setRole_name("role1");
+        String json = ControllerUtil.populateAppRoleMetaJson(appRole, "normalsuer");
         assertEquals("{\"path\":\"metadata/approle/role1\"}", json);
     }
 
     @Test
     public void test_populateUserMetaJson()  {
-        String json = ControllerUtil.populateUserMetaJson("role1", "normalsuer");
+        AppRole appRole = new AppRole();
+        appRole.setRole_name("role1");
+        String json = ControllerUtil.populateUserMetaJson(appRole, "normalsuer");
         assertEquals("{\"path\":\"metadata/approle_users/normalsuer/role1\"}", json);
+    }
+
+    @Test
+    public void test_populateSharedToUserMetaJson() {
+        AppRole appRole = new AppRole();
+        appRole.setRole_name("role1");
+        String json = ControllerUtil.populateSharedToUserMetaJson("owneruser", "shareduser", appRole);
+        assertEquals("{\"path\":\"metadata/approle_users/shareduser/role1\"}", json);
     }
     
     @Test
@@ -1152,6 +1164,35 @@ public class ControllerUtilTest {
         when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(metaResponse);
         when(reqProcessor.process(eq("/write"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true, ""));
         Response actualResponse = ControllerUtil.updateMetadataOnSvcUpdate(path, serviceAccount, token);
+        assertEquals(HttpStatus.NO_CONTENT, actualResponse.getHttpstatus());
+    }
+
+    @Test
+    public void test_updateMetadataOnIAMSvcUpdate_successfully() {
+        String token = "7QPMPIGiyDFlJkrK3jFykUqa";
+        String path = TVaultConstants.SVC_ACC_ROLES_PATH + "testacc02";
+        IAMServiceAccount iamSvcAcc = new IAMServiceAccount();
+        iamSvcAcc.setAdSelfSupportGroup("testgroup");
+        iamSvcAcc.setApplicationTag("coolapplicationtag");
+        iamSvcAcc.setOwnerEmail("wow@gmail.com");
+        iamSvcAcc.setOwnerNtid("iamsvcuser1");
+        iamSvcAcc.setApplicationName("NEWAPPNAME2");
+        iamSvcAcc.setApplicationId("NEWAPPID2");
+        iamSvcAcc.setAwsAccountId("21234514117");
+        iamSvcAcc.setAwsAccountName("testaccountname11");
+        iamSvcAcc.setExpiryDateEpoch(605800000L);
+        iamSvcAcc.setExpiryDuration(605800000L);
+        iamSvcAcc.setCreatedAtEpoch(5184000L);
+        iamSvcAcc.setUserName("svc_tvt_test4");
+
+        Response metaResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{ \"ad_group\":\"testgroup\",\"application_id\":\"NEWAPPID2\",\"application_name\":\"NEWAPPNAME2\"," +
+                "\"application_tag\":\"coolapplicationtag\",\"awsAccountId\":\"21234514117\",\"awsAccountName\":\"testaccountname11\"," +
+                "\"createdAtEpoch\":5184000,\"expiryDateEpoch\":605800000,\"expiryDuration\":605800000,\"groups\":{\"testgroup\":\"write\"}," +
+                "\"isActivated\":true,\"owner_email\":\"wow@gmail.com\",\"owner_ntid\":\"iamsvcuser1\",\"secret\":[{\"accessKeyId\":\"123456789123412345\"" +
+                ",\"expiryDuration\":605800000}],\"userName\":\"svc_tvt_test4\",\"users\":{}}}");
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(metaResponse);
+        when(reqProcessor.process(eq("/write"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true, ""));
+        Response actualResponse = ControllerUtil.updateMetadataOnIAMSvcUpdate(path, iamSvcAcc, token);
         assertEquals(HttpStatus.NO_CONTENT, actualResponse.getHttpstatus());
     }
     

@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.tmobile.cso.vault.api.model.*;
 import org.apache.commons.collections.CollectionUtils;
@@ -577,6 +578,20 @@ public class SelfSupportControllerTest {
         		.andExpect(status().isOk())
         		.andExpect(content().string(containsString(responseMessage.toString())));
     }
+
+    @Test
+    public void test_getApproleOwner() throws Exception {
+        String role_name = "testapprole01";
+        String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+
+        when(selfSupportService.getAppRoleOwner(eq(tkn), Mockito.any(), Mockito.any())).thenReturn(new String[]{"someone", "someone@gmail.com"});
+        mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle/"+role_name+"/owner")
+                .header("vault-token", tkn)
+                .header("Content-Type", "application/json;charset=UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("[\"someone\",\"someone@gmail.com\"]"));
+    }
+
     @Test
     public void test_readAppRoleSecretId() throws Exception {
 		String role_name = "testapprole01";
@@ -657,20 +672,16 @@ public class SelfSupportControllerTest {
     
     @Test
     public void test_listAppRoles() throws Exception {
-		String vaultToken = "5PDrOhsy4ig8L3EpsJZSLAMg";
-    	String role_id_response = "{\n" + 
-    			"  \"keys\": [\n" + 
-    			"    \"testapprole01\"\n" + 
-    			"  ]\n" + 
-    			"}";
-    	StringBuilder responseMessage = new StringBuilder(role_id_response);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseMessage.toString());
-        when(selfSupportService.listAppRoles(eq(vaultToken), Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseEntityExpected);
+		String vaultTkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
+        appRoleListObjects.add(new AppRoleListObject("somename", true));
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        when(selfSupportService.listAppRoles(eq(vaultTkn), Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseEntityExpected);
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle")
-                .header("vault-token", vaultToken)
+                .header("vault-token", vaultTkn)
                 .header("Content-Type", "application/json;charset=UTF-8"))
         		.andExpect(status().isOk())
-        		.andExpect(content().string(containsString(responseMessage.toString())));
+        		.andExpect(content().string(containsString("somename")));
     }
 
     @Test
@@ -701,15 +712,35 @@ public class SelfSupportControllerTest {
         String responseMessage = "{\"messages\":[\"AppRole updated successfully \"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseMessage);
         UserDetails userDetails = getMockUser(false);
-        when(selfSupportService.updateAppRole(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AppRole.class), eq(userDetails))).thenReturn(responseEntityExpected);
+        when(selfSupportService.updateAppRole(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AppRoleUpdate.class), eq(userDetails))).thenReturn(responseEntityExpected);
 
+        String tkn = "vault-token";
         mockMvc.perform(MockMvcRequestBuilders.put("/v2/ss/approle").requestAttr("UserDetails", userDetails)
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
+                .header(tkn, "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8")
                 .content(inputJson))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(responseMessage)));
     }
+
+    @Test
+    public void test_listSafesAssociatedWithAppRole() throws Exception {
+        String responseMessage = "{messages\": [\"[sharedsafe, denysafe, coolsafe]\"]}";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String roleName = "testAppRole";
+        userDetails.setUsername("testuser");
+        userDetails.setAdmin(false);
+        userDetails.setClientToken(token);
+        userDetails.setSelfSupportToken(token);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+
+        when(selfSupportService.listAppRoleEntityAssociations(roleName, userDetails)).thenReturn(responseEntityExpected);
+        mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle/list/associations/" + roleName)
+                .header("vault-token", token)
+                .header("Content-Type", "application/json;charset=UTF-8"))
+                .andExpect(status().isOk());
+    }
+
     @Test
     public void test_listRoles() throws Exception {
 

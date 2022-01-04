@@ -266,4 +266,20 @@ public class UserPassServiceTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
+    @Test
+    public void test_login_failure() {
+        UserLogin user = new UserLogin("testuser", "testuser");
+        String jsonStr = "{\"username\":\"testuser\",\"password\":\"testuser\"}";
+
+        String responseJson = "{\"client_token\":\"1sGWOpjPOuZezcIgxVFAm1Oh\",\"admin\":\"no\",\"access\":{},\"policies\":[\"default\"],\"lease_duration\":1800000}";
+        Response response = getMockResponse(HttpStatus.NOT_FOUND, true, responseJson);
+        response.setAdminPolicies(null);
+
+        when(JSONUtil.getJSON(user)).thenReturn(jsonStr);
+        when(reqProcessor.process("/auth/userpass/login",jsonStr,"")).thenReturn(response);
+
+        ResponseEntity<String> responseEntity = userPassService.login(user);
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+
+    }
 }

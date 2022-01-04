@@ -22,10 +22,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.tmobile.cso.vault.api.common.IAMServiceAccountConstants;
 import com.tmobile.cso.vault.api.model.*;
 import com.tmobile.cso.vault.api.utils.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,7 +205,12 @@ public class AzureServicePrincipalAccountsService {
 			boolean azureSvcAccCreationStatus = addSudoPermissionToOwner(token, azureServiceAccount, userDetails,
 					azureSvcAccName);
 			if (azureSvcAccCreationStatus) {
-				sendMailToAzureSvcAccOwner(azureServiceAccount, azureSvcAccName);
+				Map<String, String> mailTemplateVariables = new HashMap<>();
+				mailTemplateVariables.put("azureSvcAccName", azureSvcAccName);
+				mailTemplateVariables.put("contactLink", supportEmail);
+				sendMailToAzureSvcAccOwner(azureServiceAccount, azureSvcAccName,
+						AzureServiceAccountConstants.AZURE_ONBOARD_EMAIL_SUBJECT,
+						AzureServiceAccountConstants.AZURE_EMAIL_TEMPLATE_NAME, mailTemplateVariables,null);
 				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 						.put(LogMessage.ACTION, AzureServiceAccountConstants.AZURE_SVCACC_CREATION_TITLE)
@@ -500,41 +508,41 @@ public class AzureServicePrincipalAccountsService {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION, "createAzureServiceAccountPolicies")
-					.put(LogMessage.MESSAGE, "Successfully created policies for Azure service account.")
+					.put(LogMessage.MESSAGE, "Successfully created policies for Azure Service Principal.")
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			return ResponseEntity.status(HttpStatus.OK)
-					.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
+					.body("{\"messages\":[\"Successfully created policies for Azure Service Principal\"]}");
 		}
 		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, "createAzureServiceAccountPolicies")
-				.put(LogMessage.MESSAGE, "Failed to create some of the policies for Azure service account.")
+				.put(LogMessage.MESSAGE, "Failed to create some of the policies for Azure Service Principal.")
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		return ResponseEntity.status(HttpStatus.MULTI_STATUS)
-				.body("{\"messages\":[\"Failed to create some of the policies for Azure service account\"]}");
+				.body("{\"messages\":[\"Failed to create some of the policies for Azure Service Principal\"]}");
 	}
-	
+
 	/**
 	 * Method to send mail to Azure Service account owner
-	 *
-	 * @param ServiceAccount
-	 * @param SvcAccName
+	 * @param azureServiceAccount
+	 * @param azureSvcAccName
+	 * @param subject
+	 * @param templateFileName
+	 * @param mailTemplateVariables
+	 * @param cc
 	 */
-	private void sendMailToAzureSvcAccOwner(AzureServiceAccount azureServiceAccount, String azureSvcAccName) {
+	private void sendMailToAzureSvcAccOwner(AzureServiceAccount azureServiceAccount, String azureSvcAccName, String subject,
+											String templateFileName, Map<String, String> mailTemplateVariables, List<String> cc) {
 		// send email notification to Azure service account owner
 		DirectoryUser directoryUser = getUserDetails(azureServiceAccount.getOwnerNtid());
 		if (directoryUser != null) {
 			String from = supportEmail;
 			List<String> to = new ArrayList<>();
 			to.add(azureServiceAccount.getOwnerEmail());
-			String mailSubject = String.format(AzureServiceAccountConstants.AZURE_ONBOARD_EMAIL_SUBJECT, azureSvcAccName);
+			String mailSubject = String.format(subject, azureSvcAccName!=null?azureSvcAccName:"");
 
 			// set template variables
-			Map<String, String> mailTemplateVariables = new HashMap<>();
 			mailTemplateVariables.put("name", directoryUser.getDisplayName());
-			mailTemplateVariables.put("azureSvcAccName", azureSvcAccName);
-
-			mailTemplateVariables.put("contactLink", supportEmail);
 
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -544,7 +552,7 @@ public class AzureServicePrincipalAccountsService {
 									azureSvcAccName, azureServiceAccount.getOwnerEmail(), mailSubject))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 
-			emailUtils.sendAzureSvcAccHtmlEmalFromTemplate(from, to, mailSubject, mailTemplateVariables);
+			emailUtils.sendAzureSvcAccHtmlEmalFromTemplate(from, to, cc, mailSubject, mailTemplateVariables, templateFileName);
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -2275,13 +2283,18 @@ public class AzureServicePrincipalAccountsService {
 				.put(LogMessage.MESSAGE, "Trying to get list of onboaded Azure service accounts")
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
-		String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
-				userDetails.getUsername(), userDetails);
 		List<String> onboardedlist = new ArrayList<>();
-		for (String policy : latestPolicies) {
-			
-			if (policy.startsWith("o_azuresvcacc")) {
-				onboardedlist.add(policy.substring(14));
+		if (userDetails.isAdmin()) {
+			onboardedlist = getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
+		}
+		else {
+			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
+					userDetails.getUsername(), userDetails);
+			for (String policy : latestPolicies) {
+
+				if (policy.startsWith("o_azuresvcacc")) {
+					onboardedlist.add(policy.substring(14));
+				}
 			}
 		}
 		response = new Response();
@@ -2454,6 +2467,7 @@ public class AzureServicePrincipalAccountsService {
 			policies.remove(readPolicy);
 			policies.remove(writePolicy);
 			policies.remove(denyPolicy);
+			policies.remove(ownerPolicy);
 		}
 		String policiesString = org.apache.commons.lang3.StringUtils.join(policies, ",");
 		String currentpoliciesString = org.apache.commons.lang3.StringUtils.join(currentpolicies, ",");
@@ -4461,4 +4475,307 @@ public class AzureServicePrincipalAccountsService {
 						.body("{\"errors\":[\"Access denied: No permission to remove approle from Service Account\"]}");
 			}
 		}
+
+	/**
+	 * ransfers an Azure service principal from one owner to another.
+	 * @param token
+	 * @param userDetails
+	 * @param aspTransferRequest
+	 * @return
+	 */
+	public ResponseEntity<String> transferAzureServicePrincipal(String token, UserDetails userDetails, ASPTransferRequest aspTransferRequest) {
+		List<String> onboardedList = getOnboardedAzureServiceAccountList(token);
+		String servicePrincipalName = aspTransferRequest.getServicePrincipalName();
+		if (!onboardedList.contains(servicePrincipalName)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Failed to transfer Azure Service Principal. Could not find Azure Service Principal [%s]", servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"Unable to transfer Azure Service Principal. "+ servicePrincipalName + " not found. \"]}");
+		}
+		if (!isAuthorizedForAzureOnboardAndOffboard(token)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Access denied: No permission to transfer this Azure Service Principal [%s]", servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Access denied: No permission to transfer this Azure Service Principal\"]}");
+		}
+
+		String azureAccPath = AzureServiceAccountConstants.AZURE_SVCC_ACC_PATH + servicePrincipalName;
+		Response metaResponse = getMetadata(token, userDetails, azureAccPath);
+		AzureServiceAccountMetadataDetails currentAzureServiceAccountMetadata = constructAzureServiceAccountFromMetadata(metaResponse);
+		if (!HttpStatus.OK.equals(metaResponse.getHttpstatus()) || currentAzureServiceAccountMetadata == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Failed to read metadata for this Azure Service Principal [%s]", servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Failed to read metadata for this Azure Service Principal\"]}");
+		}
+		AzureServiceAccount currentAzureServiceAccount = constructAzureServiceAccount(currentAzureServiceAccountMetadata);
+		AzureServiceAccount newAzureServiceAccount = (AzureServiceAccount) SerializationUtils.clone(currentAzureServiceAccount);
+
+		if (aspTransferRequest.getOwnerNtid().equalsIgnoreCase(currentAzureServiceAccount.getOwnerNtid())) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Failed to transfer the owner. " +
+							"The owner given is already the current owner on account [%s]", servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{\"errors\":[\"Failed to transfer Azure Service Principal owner. The owner given is already the current owner.\"]}");
+		}
+
+		newAzureServiceAccount.setOwnerEmail(aspTransferRequest.getOwnerEmail());
+		newAzureServiceAccount.setOwnerNtid(aspTransferRequest.getOwnerNtid());
+
+		if (!StringUtils.isEmpty(aspTransferRequest.getApplicationId())) {
+			newAzureServiceAccount.setApplicationId(aspTransferRequest.getApplicationId());
+		}
+		if (!StringUtils.isEmpty(aspTransferRequest.getApplicationName())) {
+			newAzureServiceAccount.setApplicationName(aspTransferRequest.getApplicationName());
+		}
+		if (!StringUtils.isEmpty(aspTransferRequest.getApplicationTag())) {
+			newAzureServiceAccount.setApplicationTag(aspTransferRequest.getApplicationTag());
+		}
+		boolean addSudoPermissionToOwnerResponse = addSudoPermissionToOwner(token, newAzureServiceAccount, userDetails, servicePrincipalName);
+
+		if (addSudoPermissionToOwnerResponse) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Successfully added sudo permission for new owner [%s] on " +
+									"account [%s]",
+							currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE,
+							String.format("Failed to add sudo permission to owner [%s] on account [%s]",
+									currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Transfer Azure Service " +
+					"Principal failed. New owner association failed.\"]}");
+		}
+
+		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+
+		AzureServiceAccountUser oldOwner = new AzureServiceAccountUser(servicePrincipalName,
+				currentAzureServiceAccountMetadata.getOwnerNtid(), TVaultConstants.SUDO_POLICY);
+		ResponseEntity<String> removeOldOwnerSudoPermissionResponse =
+				processAndRemoveUserPermissionFromAzureSvcAcc(tokenUtils.getSelfServiceToken(), oldOwner, userDetails,
+				oidcEntityResponse, servicePrincipalName);
+
+		oldOwner = new AzureServiceAccountUser(servicePrincipalName,
+				currentAzureServiceAccountMetadata.getOwnerNtid(), TVaultConstants.WRITE_POLICY);
+		ResponseEntity<String> removeOldOwnerWritePermissionResponse =
+				processAndRemoveUserPermissionFromAzureSvcAcc(tokenUtils.getSelfServiceToken(), oldOwner, userDetails,
+				oidcEntityResponse, servicePrincipalName);
+
+		if (HttpStatus.OK.equals(removeOldOwnerSudoPermissionResponse.getStatusCode()) &&
+				HttpStatus.OK.equals(removeOldOwnerWritePermissionResponse.getStatusCode())) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Successfully removed old owner [%s] from " +
+									"Azure Service Principal [%s]",
+							currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE,
+							String.format("Failed to remove old owner [%s] from Azure Service Principal [%s]",
+									currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			revertTransferOnFailure(newAzureServiceAccount, servicePrincipalName, userDetails, tokenUtils.getSelfServiceToken());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Transfer Azure Service " +
+					"Principal failed. Failed to remove current owner permission.\"]}");
+		}
+
+		// Update Metadata
+		Response metadataUpdateResponse = ControllerUtil.updateMetadataOnASPUpdate(azureAccPath, newAzureServiceAccount, token);
+		if (metadataUpdateResponse !=null && HttpStatus.NO_CONTENT.equals(metadataUpdateResponse.getHttpstatus())) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE,
+							String.format("Successfully updated Metadata for the Azure Service Principal [%s] on transfer",
+									servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Updating metadata for Azure Service Principal on transfer [%s] failed.", servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS)
+					.body("{\"errors\":[\"Metadata updating failed for Azure Service Account.\"]}");
+		}
+
+		DirectoryUser oldOwnerObj = getUserDetails(currentAzureServiceAccount.getOwnerNtid());
+		Map<String, String> mailTemplateVariables = new HashMap<>();
+		mailTemplateVariables.put("azureSvcAccName", servicePrincipalName);
+		mailTemplateVariables.put("oldOwnerName", oldOwnerObj!=null?oldOwnerObj.getDisplayName():"");
+		mailTemplateVariables.put("contactLink", supportEmail);
+		List<String> cc = new ArrayList<>();
+		cc.add(currentAzureServiceAccount.getOwnerEmail());
+
+		sendMailToAzureSvcAccOwner(newAzureServiceAccount, servicePrincipalName, AzureServiceAccountConstants.ASP_TRANSFER_EMAIL_SUBJECT,
+				AzureServiceAccountConstants.AZURE_TRANSFER_EMAIL_TEMPLATE_NAME, mailTemplateVariables, cc);
+
+		return ResponseEntity.status(HttpStatus.OK)
+				.body("{\"messages\":[\"Owner has been successfully transferred for Azure Service Principal\"]}");
+	}
+
+	/**
+	 * Revert new owner association on ASP transfer failure.
+	 * @param azureServiceAccount
+	 * @param servicePrincipalName
+	 * @param userDetails
+	 * @param token
+	 * @return
+	 */
+	private ResponseEntity<String> revertTransferOnFailure(AzureServiceAccount azureServiceAccount, String servicePrincipalName,
+														   UserDetails userDetails, String token) {
+
+		OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+		AzureServiceAccountUser oldOwner = new AzureServiceAccountUser(servicePrincipalName,
+				azureServiceAccount.getOwnerNtid(), TVaultConstants.SUDO_POLICY);
+		ResponseEntity<String> removeOldOwnerSudoPermissionResponse =
+				processAndRemoveUserPermissionFromAzureSvcAcc(token, oldOwner, userDetails,
+						oidcEntityResponse, servicePrincipalName);
+
+		oldOwner = new AzureServiceAccountUser(servicePrincipalName,
+				azureServiceAccount.getOwnerNtid(), TVaultConstants.WRITE_POLICY);
+		ResponseEntity<String> removeOldOwnerWritePermissionResponse =
+				processAndRemoveUserPermissionFromAzureSvcAcc(token, oldOwner, userDetails,
+						oidcEntityResponse, servicePrincipalName);
+
+		if (HttpStatus.OK.equals(removeOldOwnerSudoPermissionResponse.getStatusCode()) && HttpStatus.OK.equals(removeOldOwnerWritePermissionResponse.getStatusCode())) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Reverted permission from new owner [%s] back to the old owner.",
+							azureServiceAccount.getOwnerNtid()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Failed to revert permission from new owner [%s] back to the old owner.",
+							azureServiceAccount.getOwnerNtid()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
+					"{\"errors\":[\"Failed to revert permissions from the new owner back to the old owner on Azure Service Principal transfer failure.\"]}");
+		}
+		return ResponseEntity.status(HttpStatus.OK).body(
+				"{\"errors\":[\"Successfully reverted transfer of Azure Service Principal.\"]}");
+	}
+
+	private AzureServiceAccount constructAzureServiceAccount(AzureServiceAccountMetadataDetails currentAzureServiceAccountMetadata) {
+		AzureServiceAccount azureServiceAccount = new AzureServiceAccount();
+		azureServiceAccount.setServicePrincipalName(currentAzureServiceAccountMetadata.getServicePrincipalName());
+		azureServiceAccount.setServicePrincipalId(currentAzureServiceAccountMetadata.getServicePrincipalId());
+		azureServiceAccount.setServicePrincipalClientId(currentAzureServiceAccountMetadata.getServicePrincipalClientId());
+		azureServiceAccount.setApplicationId(currentAzureServiceAccountMetadata.getApplicationId());
+		azureServiceAccount.setApplicationName(currentAzureServiceAccountMetadata.getApplicationName());
+		azureServiceAccount.setApplicationTag(currentAzureServiceAccountMetadata.getApplicationTag());
+		azureServiceAccount.setCreatedAtEpoch(currentAzureServiceAccountMetadata.getCreatedAtEpoch());
+		azureServiceAccount.setOwnerEmail(currentAzureServiceAccountMetadata.getOwnerEmail());
+		azureServiceAccount.setOwnerNtid(currentAzureServiceAccountMetadata.getOwnerNtid());
+		azureServiceAccount.setTenantId(currentAzureServiceAccountMetadata.getTenantId());
+		return azureServiceAccount;
+	}
+
+	/**
+	 * To construct Azure Service Principal metadata object.
+	 * @param metaResponse
+	 * @return
+	 */
+	private AzureServiceAccountMetadataDetails constructAzureServiceAccountFromMetadata(Response metaResponse) {
+		AzureServiceAccountMetadataDetails azureServiceAccount = new AzureServiceAccountMetadataDetails();
+
+		if (metaResponse !=null && HttpStatus.OK.equals(metaResponse.getHttpstatus())) {
+			try {
+				JsonNode jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("servicePrincipalName");
+				if (jsonNode != null) {
+					azureServiceAccount.setServicePrincipalName(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("createdAtEpoch");
+				if (jsonNode != null) {
+					azureServiceAccount.setCreatedAtEpoch(jsonNode.asLong());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("owner_ntid");
+				if (jsonNode != null) {
+					azureServiceAccount.setOwnerNtid(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("owner_email");
+				if (jsonNode != null) {
+					azureServiceAccount.setOwnerEmail(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("application_id");
+				if (jsonNode != null) {
+					azureServiceAccount.setApplicationId(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("application_name");
+				if (jsonNode != null) {
+					azureServiceAccount.setApplicationName(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("application_tag");
+				if (jsonNode != null) {
+					azureServiceAccount.setApplicationTag(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("isActivated");
+				if (jsonNode != null) {
+					azureServiceAccount.setAccountActivated(jsonNode.asBoolean());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("servicePrincipalClientId");
+				if (jsonNode != null) {
+					azureServiceAccount.setServicePrincipalClientId(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("servicePrincipalId");
+				if (jsonNode != null) {
+					azureServiceAccount.setServicePrincipalId(jsonNode.asText());
+				}
+				jsonNode = new ObjectMapper().readTree(metaResponse.getResponse()).get("data").get("tenantId");
+				if (jsonNode != null) {
+					azureServiceAccount.setTenantId(jsonNode.asText());
+				}
+				JsonParser jsonParser = new JsonParser();
+				JsonArray dataSecret = ((JsonObject) jsonParser.parse(new ObjectMapper().readTree(metaResponse.getResponse()).get("data").toString()))
+						.getAsJsonArray("secret");
+
+				List<AzureSecretsMetadata> secrets = new ArrayList<>();
+				for (int i = 0; i < dataSecret.size(); i++) {
+					AzureSecretsMetadata secret = new AzureSecretsMetadata();
+					JsonElement jsonElement = dataSecret.get(i);
+					JsonObject jsonObject = jsonElement.getAsJsonObject();
+					if (jsonObject.get("expiryDateEpoch") != null) {
+						secret.setExpiryDuration(jsonObject.get("expiryDuration").getAsLong());
+					}
+					if (jsonObject.get("accessKeyId") != null) {
+						secret.setSecretKeyId(jsonObject.get("accessKeyId").getAsString());
+					}
+					secrets.add(secret);
+				}
+				azureServiceAccount.setSecret(secrets);
+			} catch (IOException e) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, "constructAzureServiceAccountFromMetadata").
+						put(LogMessage.MESSAGE, String.format("Failed to parse Azure Service Principal metadata for [%s]", azureServiceAccount.getServicePrincipalName())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+				return null;
+			}
+		}
+		return azureServiceAccount;
+	}
 }

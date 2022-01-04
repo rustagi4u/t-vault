@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.gson.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -34,10 +35,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.tmobile.cso.vault.api.common.SSLCertificateConstants;
 import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.exception.LogMessage;
@@ -492,19 +489,27 @@ public class OIDCUtil {
 				build()));
 		String mountAccessor = fetchMountAccessorForOidc(token);
 		if (!StringUtils.isEmpty(mountAccessor)) {
-			// Get user details from GSM
-			DirectoryUser directoryUser = directoryService.getUserDetailsByCorpId(username);
+			// Fix to for sprint users login with @tmobileusa.onmicrosoft.com. Skip user fetch from GSM/CORP
 
-			if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
-				// Get user details from Corp domain (For sprint users)
-				directoryUser = directoryService.getUserDetailsFromCorp(username);
+			String aliasName = "";
+			// If fetching owner permission and email is @tmobileusa.onmicrosoft.com
+			if (userDetails != null && username.equals(userDetails.getEmail()) && userDetails.getEmail().contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
+					aliasName = userDetails.getEmail();
+			}
+			else {
+				// Get user details from GSM or CORP for users other than @tmobileusa.onmicrosoft.com
+				DirectoryUser directoryUser = directoryService.getUserDetailsByCorpId(username);
 
 				if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
-					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OIDCEntityResponse());
+					// Get user details from Corp domain (For sprint users)
+					directoryUser = directoryService.getUserDetailsFromCorp(username);
+
+					if (StringUtils.isEmpty(directoryUser.getUserEmail())) {
+						return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new OIDCEntityResponse());
+					}
 				}
+				aliasName = directoryUser.getUserEmail();
 			}
-			
-			String aliasName = directoryUser.getUserEmail();
 
 			OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
 			oidcLookupEntityRequest.setAlias_name(aliasName);
@@ -645,7 +650,7 @@ public class OIDCUtil {
      * @param token
      * @return
      */
-    public void renewUserToken(String token) {
+    public Response renewUserToken(String token) {
         Response renewResponse = reqProcessor.process("/auth/tvault/renew", "{}", token);
         if (renewResponse != null && HttpStatus.OK.equals(renewResponse.getHttpstatus())) {
             log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -655,6 +660,7 @@ public class OIDCUtil {
                     put(LogMessage.STATUS, renewResponse.getHttpstatus().toString()).
                     put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
                     build()));
+            return renewResponse;
         } else {
             log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
                     put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
@@ -664,8 +670,8 @@ public class OIDCUtil {
                     put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
                     build()));
         }
+        return null;
     }
-
 
     /**
      * Get Entity LookUp Response
@@ -1211,5 +1217,115 @@ public class OIDCUtil {
 			}
 		}
 		return allGroupEmail;
+	}
+
+	/**
+	 * Method to get the sprint email of users with having email @tmobileusa.onmicrosoft.com
+	 *
+	 * @param userEmail
+	 * @return
+	 */
+	public AADUserObject getExtensionAttribute(String userEmail) {
+		String accessToken = getSSOToken();
+		AADUserObject aadUserObject = new AADUserObject();
+		JsonParser jsonParser = new JsonParser();
+		HttpClient httpClient = httpUtils.getHttpClient();
+		if (httpClient == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, SSLCertificateConstants.GET_ID_USER_STRING)
+					.put(LogMessage.MESSAGE, HTTPFAILMSG)
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return null;
+		}
+
+		String filterSearch = "?$select=id,mail,otherMails,onPremisesExtensionAttributes&ConsistencyLevel=eventual&$search=%22mail:" + userEmail + "%22%20OR%20%22otherMails:" + userEmail + "%22";
+
+		String api = ssoGetUserEndpoint + filterSearch;
+
+		HttpGet getRequest = new HttpGet(api);
+		getRequest.addHeader(AUTHORIZATION, BEARERSTR + accessToken);
+
+		StringBuilder jsonResponse = new StringBuilder();
+
+		try {
+			HttpResponse apiResponse = httpClient.execute(getRequest);
+			if (apiResponse.getStatusLine().getStatusCode() == 200) {
+				aadUserObject = parseSprintUserObjectFromAADResponse(jsonParser, jsonResponse, apiResponse);
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, GETAZUREUSEROBJ)
+						.put(LogMessage.MESSAGE, String.format("Retrieved %s user id from AAD", aadUserObject.getUserId()))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				return aadUserObject;
+			}
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, GETAZUREUSEROBJ)
+					.put(LogMessage.MESSAGE, "Failed to retrieve user id from AAD")
+					.put(LogMessage.STATUS, String.valueOf(apiResponse.getStatusLine().getStatusCode()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} catch (IOException e) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, GETAZUREUSEROBJ)
+					.put(LogMessage.MESSAGE, "Failed to parse AAD user api response")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		}
+		return aadUserObject;
+	}
+
+	/**
+	 *
+	 * @param jsonParser
+	 * @param jsonResponse
+	 * @param apiResponse
+	 * @return
+	 * @throws IOException
+	 */
+	private AADUserObject parseSprintUserObjectFromAADResponse(JsonParser jsonParser, StringBuilder jsonResponse,
+															HttpResponse apiResponse) {
+		readResponseContent(jsonResponse, apiResponse, GETAZUREUSEROBJ);
+		AADUserObject aadUserObject = new AADUserObject();
+		JsonObject responseJson = (JsonObject) jsonParser.parse(jsonResponse.toString());
+		if (responseJson != null && responseJson.has("value")) {
+			JsonArray valueArray = responseJson.get("value").getAsJsonArray();
+			if (valueArray.size() > 0) {
+				JsonObject userObject = valueArray.get(0).getAsJsonObject();
+				if (userObject != null && userObject.has("id")) {
+					aadUserObject.setUserId(userObject.get("id").getAsString());
+				}
+				if (userObject != null && userObject.has("mail")) {
+					aadUserObject.setEmail(userObject.get("mail").getAsString());
+				}
+				if (userObject != null && userObject.has("onPremisesExtensionAttributes")) {
+					JsonObject onPremisesExtensionAttributes = userObject.get("onPremisesExtensionAttributes").getAsJsonObject();
+					if (onPremisesExtensionAttributes != null && onPremisesExtensionAttributes.has("extensionAttribute15")) {
+						aadUserObject.setExtensionAttribute(onPremisesExtensionAttributes.get("extensionAttribute15").getAsString());
+					}
+				}
+			}
+		}
+
+		return aadUserObject;
+	}
+
+	/**
+	 * To get Sprint user NTid from @tmobileusa.onmicrosoft.com email.
+	 * @param email
+	 * @return
+	 */
+	public String getSprintUserNtIdUsingExtensionAttribute(String email) {
+		String ntId = "";
+		// get extension attribute 15 from @tmobileusa.onmicrosoft.com
+		AADUserObject aadUserObject = getExtensionAttribute(email);
+		// get ntid using extension attribute
+		if (aadUserObject != null && !StringUtils.isEmpty(aadUserObject.getExtensionAttribute())) {
+			List<DirectoryUser> directoryUserList = directoryService.searchUserInGSMByExtensionAttribute(aadUserObject.getExtensionAttribute());
+			if (!directoryUserList.isEmpty() && directoryUserList.get(0) != null) {
+				ntId = directoryUserList.get(0).getUserName();
+			}
+		}
+		return ntId;
 	}
 }

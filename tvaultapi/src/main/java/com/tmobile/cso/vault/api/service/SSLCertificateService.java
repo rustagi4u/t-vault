@@ -1478,9 +1478,14 @@ public class SSLCertificateService {
                 //Get the DNS names
                 certMetaData = certificateUtils.getCertificateMetaData(token, certName, certType);
             }
-            String keyUsage = (certType.equalsIgnoreCase(SSLCertificateConstants.INTERNAL) ?
-                    getActualKeyUsageValue(certMetaData.getKeyUsageValue()) :
-                    SSLCertificateConstants.EXTERNAL_KEY_USAGE);
+
+            String keyUsage = SSLCertificateConstants.INTERNAL_KEY_USAGE;
+            if (certType.equalsIgnoreCase(SSLCertificateConstants.INTERNAL) && certMetaData != null) {
+                keyUsage = getActualKeyUsageValue(certMetaData.getKeyUsageValue());
+            } else if (certType.equalsIgnoreCase(SSLCertificateConstants.EXTERNAL)){
+                keyUsage = SSLCertificateConstants.EXTERNAL_KEY_USAGE;
+            }
+
             // set template variables
             Map<String, String> mailTemplateVariables = new HashMap<>();
             mailTemplateVariables.put("name", directoryUser.getDisplayName());
@@ -5172,7 +5177,7 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
             } else {
                 renewResponse = nclmMockUtil.getRenewMockResponse();
             }
-			Thread.sleep(renewDelayTime);
+
 			log.debug(
 					JSONUtil.getJSON(
 							ImmutableMap.<String, String> builder()
@@ -5241,6 +5246,9 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
                 }
 
             }else {
+                if (String.valueOf(certificateId).equalsIgnoreCase(String.valueOf(certData.getCertificateId()))) {
+                    certData = getRenewedCertificate(certType, certificateName, nclmAccessToken, containerId, certificateId);
+                }
 				metaDataParams.put(SSLCertificateConstants.CERTIFICATE_ID,((Integer)certData.getCertificateId()).toString()!=null?
 						((Integer)certData.getCertificateId()).toString():String.valueOf(certificateId));
 				metaDataParams.put("createDate", certData.getCreateDate()!=null?certData.getCreateDate():object.get("createDate").getAsString());
@@ -6516,7 +6524,7 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
         if (!StringUtils.isEmpty(notificationEmails) && (notificationEmails.toLowerCase().contains(oldEmailId.toLowerCase()))) {
             notificationEmails = notificationEmails.replaceAll("(?i)" + oldEmailId, certOwnerEmailId).toLowerCase();
             notificationEmails=
-                    new LinkedHashSet<String>(Arrays.asList(notificationEmails.split(","))).toString().replaceAll("(^\\[|\\]$)",
+                    new LinkedHashSet<String>(Arrays.asList(notificationEmails.split(","))).toString().replaceAll("(^\\[)|(\\]$)",
                     "").replace(", ", ",");
 
             metaDataParams.put("notificationEmails", notificationEmails);
@@ -8111,10 +8119,10 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
 	 * @return
 	 */
 	private boolean validateCertficateEmail(String email) {
-		String emailPattern =
-				"^[_A-Za-z0-9-\\+&]+(\\.[_A-Za-z0-9-]+)*@"
-				+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-		Pattern pattern = Pattern.compile(emailPattern);
+		String emailPattern;
+        emailPattern = "^[_A-Za-z0-9-\\+&]+(\\.[_A-Za-z0-9-]+)*@"
+        + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+        Pattern pattern = Pattern.compile(emailPattern);
 		Matcher matcher = pattern.matcher(email);
 		return matcher.matches();
 	}

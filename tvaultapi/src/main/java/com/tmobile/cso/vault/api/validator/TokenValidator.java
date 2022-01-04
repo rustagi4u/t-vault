@@ -19,8 +19,11 @@ package com.tmobile.cso.vault.api.validator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import com.tmobile.cso.vault.api.common.TVaultConstants;
+import com.tmobile.cso.vault.api.controller.OIDCUtil;
+import com.tmobile.cso.vault.api.model.AADUserObject;
 import com.tmobile.cso.vault.api.model.DirectoryObjects;
 import com.tmobile.cso.vault.api.model.DirectoryUser;
 import com.tmobile.cso.vault.api.service.DirectoryService;
@@ -62,6 +65,9 @@ public class TokenValidator {
 	@Value("${vault.auth.method}")
 	private String vaultAuthMethod;
 
+	@Autowired
+	OIDCUtil oidcUtil;
+
 	public TokenValidator() {
 		/**Empty constructor*/
 	}
@@ -95,10 +101,19 @@ public class TokenValidator {
 					// For user token, auth path will be in oidc. Get the user name and user email to set in UserDetails.
 					if (TVaultConstants.OIDC_AUTH_PATH.equalsIgnoreCase(authPath) && !StringUtils.isEmpty(displayName) && displayName.contains("oidc-")) {
 						String email = objNode.get("display_name").asText().substring(5);
-						lookupDetails = addEmailtoLookupDetails(email,lookupDetails);					
-						ResponseEntity<DirectoryObjects> directoryObjectsResponseEntity = directoryService.searchByUPN(email);
-						lookupDetails = addUsername(lookupDetails,directoryObjectsResponseEntity);					
-						
+						lookupDetails = addEmailtoLookupDetails(email,lookupDetails);
+
+						// for sprint user login in with *.@tmobileusa.onmicrosoft.com, take ntid from email
+						if (email.contains(TVaultConstants.NEW_SPRINT_EMAIL_FORMAT)) {
+							String ntId = oidcUtil.getSprintUserNtIdUsingExtensionAttribute(email);
+							lookupDetails.setUsername(ntId);
+							//lookupDetails.setUsername(email.substring(0, email.indexOf("@")).toLowerCase());
+						}
+						else {
+							ResponseEntity<DirectoryObjects> directoryObjectsResponseEntity = directoryService.searchByUPN(email);
+							lookupDetails = addUsername(lookupDetails,directoryObjectsResponseEntity);
+						}
+
 						// if user details not found in GSM1900 and the email is sprint email.
 						// Validating null string also in lookupDetails.getUsername as initially username is set as ("null") from lookup response
 						

@@ -652,8 +652,10 @@ const ViewCertificate = (props) => {
                         : notifyOptions.map(
                             (item) =>
                               `${item?.userEmail?.toLowerCase()}, ${
+                                item?.displayName &&
+                                item?.displayName !== '' &&
                                 getName(item?.displayName?.toLowerCase()) !==
-                                ' '
+                                  ' '
                                   ? `${getName(
                                       item?.displayName?.toLowerCase()
                                     )}, `

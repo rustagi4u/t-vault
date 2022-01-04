@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 
 import com.tmobile.cso.vault.api.model.*;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -853,6 +854,70 @@ public final class ControllerUtil {
 
 			String writeJson =  PATHSTR+_path+DATASTR+ metadataJson +"}";
 			metadataResponse = reqProcessor.process(WRITESTR,writeJson,token);
+			return metadataResponse;
+		}
+		return null;
+
+	}
+
+	/**
+	 * Update metadata on IAM service account update
+	 * @param path
+	 * @param iamServiceAccount
+	 * @param token
+	 * @return Response
+	 */
+	public static Response updateMetadataOnIAMSvcUpdate(String path, IAMServiceAccount iamServiceAccount, String token) {
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, "updateMetadataOnIAMSvcUpdate").
+				put(LogMessage.MESSAGE, "Trying to update metadata on IAM service account.").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+		String _path = METADATASTR + path;
+		ObjectMapper objMapper = new ObjectMapper();
+		String pathjson = PATHSTR + _path + "\"}";
+
+		Response metadataResponse = reqProcessor.process(READSTR,pathjson,token);
+		Map<String,Object> _metadataMap = null;
+		if(HttpStatus.OK.equals(metadataResponse.getHttpstatus())){
+			try {
+				_metadataMap = objMapper.readValue(metadataResponse.getResponse(), new TypeReference<Map<String,Object>>() {});
+			} catch (IOException e) {
+				log.error(e);
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, UPDATEMETADATASTR).
+						put(LogMessage.MESSAGE, String.format ("Error creating _metadataMap for type IAM service account update, name [%s], and path [%s] message [%s]", iamServiceAccount.getUserName(), _path, e.getMessage())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+			}
+
+			@SuppressWarnings("unchecked")
+			Map<String,Object> metadataMap = (Map<String,Object>) _metadataMap.get("data");
+
+			metadataMap.put("ad_group", iamServiceAccount.getAdSelfSupportGroup());
+			metadataMap.put("application_name", iamServiceAccount.getApplicationName());
+			metadataMap.put("application_id", iamServiceAccount.getApplicationId());
+			metadataMap.put("application_tag", iamServiceAccount.getApplicationTag());
+			metadataMap.put("owner_ntid", iamServiceAccount.getOwnerNtid());
+			metadataMap.put("owner_email", iamServiceAccount.getOwnerEmail());
+
+			String metadataJson = "";
+			try {
+				metadataJson = objMapper.writeValueAsString(metadataMap);
+			} catch (JsonProcessingException e) {
+				log.error(e);
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, UPDATEMETADATASTR).
+						put(LogMessage.MESSAGE, String.format ("Error creating _metadataMap for type IAM service account update, name [%s], and path [%s] message [%s]", iamServiceAccount.getUserName(), _path, e.getMessage())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+			}
+
+			String writeJson =  PATHSTR + _path + DATASTR + metadataJson + "}";
+			metadataResponse = reqProcessor.process(WRITESTR, writeJson, token);
 			return metadataResponse;
 		}
 		return null;
@@ -2502,6 +2567,7 @@ public final class ControllerUtil {
 		rqstParams.put("path",_path);
 		return ControllerUtil.convetToJson(rqstParams);
     }
+
 	/**
 	 * Create metadata
 	 * @param metadataJson
@@ -2538,16 +2604,6 @@ public final class ControllerUtil {
 		}
 		return isMetaDataUpdated;
 	}
-
-	/**
-	 * createSSLCertificateMetadata
-	 * @param sslCertificateRequest
-	 * @param userDetails
-	 * @param token
-	 * @return boolean
-	 */
-
-
 
 	/**
 	 * Check whether the current user can delete a role
@@ -2604,20 +2660,25 @@ public final class ControllerUtil {
 
     /**
      * Populate approle metadata json
-     * @param appRoleName
+     * @param appRole
      * @param username
      * @return
      */
-    public static  String populateAppRoleMetaJson(String appRoleName, String username) {
+    public static String populateAppRoleMetaJson(AppRole appRole, String username) {
     	log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "populateAppRoleMetaJson").
 			      put(LogMessage.MESSAGE,"Start populate approle metadata json.").
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-        String _path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + appRoleName;
-        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRoleName);
+        String _path = TVaultConstants.APPROLE_METADATA_MOUNT_PATH + "/" + appRole.getRole_name();
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
         appRoleMetadataDetails.setCreatedBy(username);
+        List<String> sharedTo = appRole.getShared_to();
+        if (CollectionUtils.isNotEmpty(appRole.getShared_to())) {
+			sharedTo.removeIf(StringUtils::isEmpty);
+		}
+        appRoleMetadataDetails.setSharedTo(sharedTo);
         AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
         String jsonStr = JSONUtil.getJSON(appRoleMetadata);
         Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
@@ -2626,26 +2687,55 @@ public final class ControllerUtil {
     }
     /**
      * Populate approle metadata json with the user information
-     * @param appRoleName
+     * @param appRole
      * @param username
-     * @return
+     * @return String
      */
-    public static  String populateUserMetaJson(String appRoleName, String username) {
+    public static  String populateUserMetaJson(AppRole appRole, String username) {
     	log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "populateUserMetaJson").
 			      put(LogMessage.MESSAGE,"Start populating approle metadata json with the user information.").
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
-        String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + username +"/" + appRoleName;
-        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRoleName);
+        String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + username +"/" + appRole.getRole_name();
+        AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
         appRoleMetadataDetails.setCreatedBy(username);
+        appRoleMetadataDetails.setSharedTo(appRole.getShared_to());
         AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
         String jsonStr = JSONUtil.getJSON(appRoleMetadata);
         Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
         rqstParams.put("path",_path);
         return ControllerUtil.convetToJson(rqstParams);
     }
+
+	/**
+	 * Populate approle metadata json with the sharedTo user information
+	 * @param ownerUsername
+	 * @param sharedToUser
+	 * @param appRole
+	 * @return String
+	 */
+	public static String populateSharedToUserMetaJson(String ownerUsername, String sharedToUser, AppRole appRole) {
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, "populateSharedToUserMetaJson").
+				put(LogMessage.MESSAGE,"Start populating approle metadata json with the shared to user information.").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+
+		String _path = TVaultConstants.APPROLE_USERS_METADATA_MOUNT_PATH + "/" + sharedToUser +"/" + appRole.getRole_name();
+		AppRoleMetadataDetails appRoleMetadataDetails = new AppRoleMetadataDetails(appRole.getRole_name());
+		appRoleMetadataDetails.setCreatedBy(ownerUsername);
+		appRoleMetadataDetails.setSharedTo(appRole.getShared_to());
+		AppRoleMetadata appRoleMetadata =  new AppRoleMetadata(_path, appRoleMetadataDetails);
+		String jsonStr = JSONUtil.getJSON(appRoleMetadata);
+		Map<String,Object> rqstParams = ControllerUtil.parseJson(jsonStr);
+		rqstParams.put("path", _path);
+
+		return ControllerUtil.convetToJson(rqstParams);
+	}
+
 	/**
 	 * Reads the SSCred from the location
 	 * @param fileLocation
@@ -3367,6 +3457,7 @@ public final class ControllerUtil {
 			return false;
 		}
 	}
+
 	
 	public static boolean isFolderExisting(String path,String token){
 		Response response = reqProcessor.process("/read","{\"path\":\""+path+"\"}",token);
@@ -3374,5 +3465,70 @@ public final class ControllerUtil {
 					return true;
 				}
 		return false;
+
+
+	/**
+	 * Update metadata on ASP update
+	 * @param path
+	 * @param azureServiceAccount
+	 * @param token
+	 * @return Response
+	 */
+	public static Response updateMetadataOnASPUpdate(String path, AzureServiceAccount azureServiceAccount, String token) {
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+				put(LogMessage.ACTION, "updateMetadataOnASPUpdate").
+				put(LogMessage.MESSAGE, "Trying to update metadata on Azure service principal transfer.").
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+				build()));
+		String _path = METADATASTR + path;
+		ObjectMapper objMapper = new ObjectMapper();
+		String pathjson = PATHSTR + _path + "\"}";
+
+		Response metadataResponse = reqProcessor.process(READSTR,pathjson,token);
+		Map<String,Object> _metadataMap = null;
+		if(HttpStatus.OK.equals(metadataResponse.getHttpstatus())){
+			try {
+				_metadataMap = objMapper.readValue(metadataResponse.getResponse(), new TypeReference<Map<String,Object>>() {});
+			} catch (IOException e) {
+				log.error(e);
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, UPDATEMETADATASTR).
+						put(LogMessage.MESSAGE, String.format ("Error creating _metadataMap for Azure service " +
+								"principal update, name [%s], and path [%s] message [%s]",
+								azureServiceAccount.getServicePrincipalName(), _path, e.getMessage())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+			}
+
+			@SuppressWarnings("unchecked")
+			Map<String,Object> metadataMap = (Map<String,Object>) _metadataMap.get("data");
+
+			metadataMap.put("application_name", azureServiceAccount.getApplicationName());
+			metadataMap.put("application_id", azureServiceAccount.getApplicationId());
+			metadataMap.put("application_tag", azureServiceAccount.getApplicationTag());
+			metadataMap.put("owner_ntid", azureServiceAccount.getOwnerNtid());
+			metadataMap.put("owner_email", azureServiceAccount.getOwnerEmail());
+
+			String metadataJson = "";
+			try {
+				metadataJson = objMapper.writeValueAsString(metadataMap);
+			} catch (JsonProcessingException e) {
+				log.error(e);
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+						put(LogMessage.ACTION, UPDATEMETADATASTR).
+						put(LogMessage.MESSAGE, String.format ("Error creating _metadataMap for Azure service " +
+								"principal update, name [%s], and path [%s] message [%s]",
+								azureServiceAccount.getServicePrincipalName(), _path, e.getMessage())).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+						build()));
+			}
+			String writeJson =  PATHSTR + _path + DATASTR + metadataJson + "}";
+			metadataResponse = reqProcessor.process(WRITESTR, writeJson, token);
+			return metadataResponse;
+		}
+		return null;
 	}
 }
