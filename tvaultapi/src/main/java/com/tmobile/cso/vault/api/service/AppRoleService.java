@@ -2000,7 +2000,7 @@ public class  AppRoleService {
 		appRole.setToken_ttl(appRoleUpdate.getToken_ttl());
 		appRole.setToken_max_ttl(appRoleUpdate.getToken_max_ttl());
 		appRole.setShared_to(appRoleUpdate.getShared_to());
-
+		appRole.setSecret_id_ttl(appRoleUpdate.getSecret_id_ttl());
 		return appRole;
 	}
 
