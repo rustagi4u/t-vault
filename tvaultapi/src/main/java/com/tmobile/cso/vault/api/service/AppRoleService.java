@@ -413,7 +413,7 @@ public class  AppRoleService {
 		List<AppRoleListObject> listObjects = new ArrayList<>();
 		if (appRoleNames != null && !appRoleNames.isEmpty()) {
 			for (String roleName : appRoleNames) {
-				AppRoleMetadata appRoleMetadata = readAppRoleMetadata(token, roleName);
+				AppRoleMetadata appRoleMetadata = readAppRoleMetadata(userDetails.getSelfSupportToken(), roleName);
 				AppRoleMetadataDetails appRoleMetadataDetails = null;
 				if (appRoleMetadata != null) {
 					appRoleMetadataDetails = appRoleMetadata.getAppRoleMetadataDetails();
