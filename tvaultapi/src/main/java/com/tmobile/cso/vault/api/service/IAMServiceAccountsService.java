@@ -673,10 +673,13 @@ public class  IAMServiceAccountsService {
 			String from = supportEmail;
 			List<String> to = new ArrayList<>();
 			to.add(iamServiceAccount.getOwnerEmail());
-			String mailSubject = String.format(subject, iamSvcAccName!=null?iamSvcAccName.substring(13):"");
+			String mailSubject = String.format(subject, iamSvcAccName != null ? iamServiceAccount.getUserName() : "");
 
-			mailTemplateVariables.put("name", directoryUser.getDisplayName());
-
+			if (StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+				mailTemplateVariables.put("name", directoryUser.getUserName());
+			} else {
+				mailTemplateVariables.put("name", directoryUser.getDisplayName());
+			}
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 					.put(LogMessage.ACTION,
@@ -5907,7 +5910,12 @@ public class  IAMServiceAccountsService {
 			DirectoryUser oldOwnerObj = getUserDetails(originalIAMSvcAcc.getOwnerNtid());
 			Map<String, String> mailTemplateVariables = new HashMap<>();
 			mailTemplateVariables.put("iamSvcAccName", iamSvcAcc.getUserName());
-			mailTemplateVariables.put("oldOwnerName", oldOwnerObj != null ? oldOwnerObj.getDisplayName() : "");
+			String oldOwnerName = "";
+			if (oldOwnerObj != null) {
+				oldOwnerName = StringUtils.isEmpty(oldOwnerObj.getDisplayName().trim()) ? oldOwnerObj.getUserName() :
+						oldOwnerObj.getDisplayName();
+			}
+			mailTemplateVariables.put("oldOwnerName", oldOwnerName);
 			mailTemplateVariables.put("contactLink", supportEmail);
 			List<String> cc = new ArrayList<>();
 			cc.add(originalIAMSvcAcc.getOwnerEmail());
