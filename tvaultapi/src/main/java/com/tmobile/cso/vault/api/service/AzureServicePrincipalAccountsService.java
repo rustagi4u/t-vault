@@ -2287,10 +2287,6 @@ public class AzureServicePrincipalAccountsService {
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
 		List<String> onboardedlist = new ArrayList<>();
-		if (userDetails.isAdmin()) {
-			onboardedlist = getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
-		}
-		else {
 			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
 					userDetails.getUsername(), userDetails);
 			for (String policy : latestPolicies) {
@@ -2299,7 +2295,6 @@ public class AzureServicePrincipalAccountsService {
 					onboardedlist.add(policy.substring(14));
 				}
 			}
-		}
 		response = new Response();
 		response.setHttpstatus(HttpStatus.OK);
 		response.setSuccess(true);
