@@ -1436,7 +1436,11 @@ public class SSLCertificateService {
 
                  // set template variables
             Map<String, String> mailTemplateVariables = new HashMap<>();
-            mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            if (StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+                mailTemplateVariables.put("name", directoryUser.getUserName());
+            } else {
+                mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            }
             mailTemplateVariables.put(SSLCertificateConstants.CERT_TYPE, StringUtils.capitalize(certType));
             mailTemplateVariables.put(SSLCertificateConstants.CERT_NAME, certName);
             mailTemplateVariables.put(SSLCertificateConstants.CONTACT_LINK, fromEmail);
@@ -1488,7 +1492,11 @@ public class SSLCertificateService {
 
             // set template variables
             Map<String, String> mailTemplateVariables = new HashMap<>();
-            mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            if (StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+                mailTemplateVariables.put("name", directoryUser.getUserName());
+            } else {
+                mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            }
             mailTemplateVariables.put(SSLCertificateConstants.CERT_TYPE, StringUtils.capitalize(certType));
             mailTemplateVariables.put(SSLCertificateConstants.CERT_NAME, certName);
             mailTemplateVariables.put(SSLCertificateConstants.CONTACT_LINK, fromEmail);
@@ -6541,6 +6549,14 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
         return displayName;
     }
 
+    private String getUserName(DirectoryUser directoryUser) {
+        String userName = "";
+        if (Objects.nonNull(directoryUser)) {
+            userName = directoryUser.getUserName();
+        }
+        return userName;
+    }
+
     //get User Email
     private String getUserEmail(DirectoryUser directoryUser) {
         String emailId = "";
@@ -6559,10 +6575,22 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
      */
     private void sendTransferEmail(Map<String, String> metaDataParams, String newOwner, String oldOwner) {
         Map<String, String> mailTemplateVariables = new HashMap<>();
-        mailTemplateVariables.put("oldOwnerName", getDisplayName(getUserDetails(oldOwner)));
-        mailTemplateVariables.put("newOwnerName", getDisplayName(getUserDetails(newOwner)));
-        mailTemplateVariables.put("oldOwnerEmail", getUserEmail(getUserDetails(oldOwner)));
-        mailTemplateVariables.put("newOwnerEmail", getUserEmail(getUserDetails(newOwner)));
+        DirectoryUser oldOwnerObj = getUserDetails(oldOwner);
+        DirectoryUser newOwnerObj = getUserDetails(newOwner);
+        String oldOwnerName = "";
+        String newOwnerName = "";
+        if (oldOwnerObj != null) {
+            oldOwnerName = StringUtils.isEmpty(getDisplayName(oldOwnerObj).trim()) ? getUserName(oldOwnerObj) :
+                    getDisplayName(oldOwnerObj);
+        }
+        mailTemplateVariables.put("oldOwnerName", oldOwnerName);
+        if (newOwnerObj != null) {
+            newOwnerName = StringUtils.isEmpty(getDisplayName(newOwnerObj).trim()) ? getUserName(newOwnerObj) :
+                    getDisplayName(newOwnerObj);
+        }
+        mailTemplateVariables.put("newOwnerName", newOwnerName);
+        mailTemplateVariables.put("oldOwnerEmail", getUserEmail(oldOwnerObj));
+        mailTemplateVariables.put("newOwnerEmail", getUserEmail(newOwnerObj));
         mailTemplateVariables.put(SSLCertificateConstants.CERT_TYPE, StringUtils.capitalize(metaDataParams.get(SSLCertificateConstants.CERT_TYPE)));
         mailTemplateVariables.put(SSLCertificateConstants.CERT_NAME, metaDataParams.get("certificateName"));
         mailTemplateVariables.put("certStartDate", (Objects.nonNull(metaDataParams.get("createDate"))) ?
