@@ -20,7 +20,9 @@ import ScaledLoader from '../../../../../components/Loaders/ScaledLoader';
 import CertificatesReviewDetails from '../CertificatesReviewDetails';
 import CertificateItemDetail from '../CertificateItemDetail';
 import apiService from '../../apiService';
+import EditCertificate from '../EditCertificate';
 import TransferCertificate from '../TransferCertificateOwner';
+import CreateCertificates from '../../CreateCertificates';
 import LeftColumn from './components/LeftColumn';
 import { useStateValue } from '../../../../../contexts/globalState';
 import SelectWithCountComponent from '../../../../../components/FormFields/SelectWithCount';
@@ -35,8 +37,6 @@ import OnboardCertificates from '../OnboardCertificate';
 import DeletionConfirmationModal from './components/DeletionConfirmationModal';
 import SuccessAndErrorModal from '../../../../../components/SuccessAndErrorModal';
 import SearchboxWithDropdown from '../../../../../components/FormFields/SearchboxWithDropdown';
-import EditCertificate from '../EditCertificate';
-import CreateCertificates from '../../CreateCertificates';
 
 const ColumnSection = styled('section')`
   position: relative;

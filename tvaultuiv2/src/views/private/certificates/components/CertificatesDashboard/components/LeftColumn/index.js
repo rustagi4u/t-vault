@@ -51,6 +51,10 @@ const ListFolderWrap = styled(Link)`
       display: ${(props) =>
         props.certificate === props.selectedCert ? 'block' : 'none'};
     }
+    ${CertificateStatus} {
+      display: ${(props) =>
+        props.certificate === props.selectedCert ? 'none' : 'flex'};
+    }
   }
 `;
 const StatusActionWrapper = styled.div`
@@ -223,6 +227,11 @@ const LeftColumn = (props) => {
                     </ClickAwayListener>
                   </EditDeletePopperWrap>
                 )}
+              {certificate.isOnboardCert && (
+                <OnboardButton onClick={() => onOnboardClicked(certificate)}>
+                  Onboard
+                </OnboardButton>
+              )}
             </StatusActionWrapper>
           </ListFolderWrap>
         ))}
