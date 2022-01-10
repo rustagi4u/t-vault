@@ -53,7 +53,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 @ComponentScan(basePackages = {"com.tmobile.cso.vault.api"})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @PrepareForTest({ControllerUtil.class, JSONUtil.class, EntityUtils.class, HttpClientBuilder.class})
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*"})
+@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.script.*"})
 public class WorkloadDetailsServiceTest {
 
     private MockMvc mockMvc;

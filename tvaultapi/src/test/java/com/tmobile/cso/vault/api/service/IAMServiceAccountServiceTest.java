@@ -72,7 +72,7 @@ import com.tmobile.cso.vault.api.process.Response;
 @ComponentScan(basePackages = { "com.tmobile.cso.vault.api" })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @PrepareForTest({ ControllerUtil.class, JSONUtil.class, PolicyUtils.class, OIDCUtil.class })
-@PowerMockIgnore({ "javax.management.*", "javax.net.ssl.*" })
+@PowerMockIgnore({ "javax.management.*", "javax.net.ssl.*", "javax.script.*" })
 public class IAMServiceAccountServiceTest {
 
 	@InjectMocks

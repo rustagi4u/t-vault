@@ -52,7 +52,7 @@ import com.tmobile.cso.vault.api.service.AppRoleService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class)
-@ComponentScan(basePackages={"com.tmobile.cso.vault.api"})
+@ComponentScan(basePackages={"com.tmobile.cso.vault.api", "javax.script.*"})
 @WebAppConfiguration
 public class AppRoleControllerV2Test {
 

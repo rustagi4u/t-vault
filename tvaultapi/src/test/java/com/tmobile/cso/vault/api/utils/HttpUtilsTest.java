@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 @ComponentScan(basePackages={"com.tmobile.cso.vault.api"})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @PrepareForTest({ JSONUtil.class, HttpClientBuilder.class})
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*"})
+@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.script.*"})
 public class HttpUtilsTest {
 
     @InjectMocks
