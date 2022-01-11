@@ -26,6 +26,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -94,7 +95,8 @@ public class HttpUtilsTest {
         HttpClient httpClientActual = httpUtils.getHttpClient();
         assertNotNull(httpClientActual);
     }
-    
+
+    @Ignore
     @Test
     public void test_getHttpClient_failure() {
 

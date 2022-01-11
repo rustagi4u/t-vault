@@ -127,7 +127,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
         Whitebox.setInternalState(ControllerUtil.class, "log", LogManager.getLogger(ControllerUtil.class));
         Whitebox.setInternalState(OIDCUtil.class, "log", LogManager.getLogger(OIDCUtil.class));
-        when(JSONUtil.getJSON(Mockito.any(ImmutableMap.class))).thenReturn("log");
+        when(JSONUtil.getJSON(Mockito.any())).thenReturn("log");
         ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "ldap");
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "azureSelfSupportAdminPolicyName", "azure_admin_policy");
         Map<String, String> currentMap = new HashMap<>();
@@ -237,7 +237,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -261,7 +261,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -277,19 +277,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -384,7 +384,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr13\"]}"));
 
 
@@ -409,7 +409,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure Service Account. Azure Service account is already onboarded\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(expectedResponse);
@@ -457,7 +457,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -481,7 +481,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(false);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(false);
 
 		// System under test
 		String expectedResponse = "{\"errors\":[\"Metadata creation failed for Azure Service Account.\"]}";
@@ -529,7 +529,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -553,19 +553,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 		
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.MULTI_STATUS)
 				.body("{\"messages\":[\"Failed to create some of the policies for Azure service account\"]}");
-		when(accessService.createPolicy(Mockito.anyString(), Mockito.any())).thenReturn(createPolicyResponse);
+		when(accessService.createPolicy(Mockito.any(), Mockito.any())).thenReturn(createPolicyResponse);
 
 		// delete policy mock
 		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
-		when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
+		when(accessService.deletePolicyInfo(Mockito.any(), Mockito.any())).thenReturn(deletePolicyResponse);
 
-		when(reqProcessor.process(eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,""));		
+		when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.any())).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,""));
 
 		// System under test
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure service account. Policy creation failed.\"]}";
@@ -612,7 +612,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -637,12 +637,12 @@ public class AzureServicePrincipalAccountsServiceTest {
 		
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
-		when(accessService.createPolicy(Mockito.anyString(), Mockito.any())).thenReturn(createPolicyResponse);
+		when(accessService.createPolicy(Mockito.any(), Mockito.any())).thenReturn(createPolicyResponse);
 
 		// Add User to Service Account
 		Response userResponse = getMockResponse(HttpStatus.OK, true,
@@ -653,25 +653,25 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
 
 		// delete policy mock
 		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
-		when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
+		when(accessService.deletePolicyInfo(Mockito.any(), Mockito.any())).thenReturn(deletePolicyResponse);
 
-		when(reqProcessor.process(eq("/delete"), Mockito.any(), Mockito.anyString())).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,""));		
+		when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.any())).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,""));
 
 		// System under test
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure service account. Association of owner permission failed\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		// Mock approle permission check
@@ -713,7 +713,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(
 					"{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
 
-			when(reqProcessor.process(eq("/azure/list"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
+			when(reqProcessor.process(Mockito.eq("/azure/list"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 			assertEquals(responseEntityExpected, responseEntity);
@@ -727,7 +727,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(
 					"{\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}");
 
-			when(reqProcessor.process(eq("/azuresvcacct"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}"));
+			when(reqProcessor.process(Mockito.eq("/azuresvcacct"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}"));
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getAzureServiceAccountSecretKey(token, iamSvcaccName, folderName);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		}
@@ -760,7 +760,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -768,7 +768,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
 
 			// metadata mock
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"owner_ntid\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"},\"groups\":{\"testgroup1\":\"read\"},\"app-roles\":{\"approle1\":\"read\"}, \"aws-roles\": {\"aws123\": \"read\"}}}"));
 
 			// Mock user response and config user
@@ -780,24 +780,24 @@ public class AzureServicePrincipalAccountsServiceTest {
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 					.thenReturn(ldapConfigureResponse);
 
 			// Mock group response and config group
 			Response groupResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"testgroup1\"}", token)).thenReturn(groupResponse);
-			when(ControllerUtil.configureLDAPGroup(eq("testgroup1"), any(), eq(token))).thenReturn(ldapConfigureResponse);
+			when(ControllerUtil.configureLDAPGroup(Mockito.eq("testgroup1"), Mockito.any(), Mockito.eq(token))).thenReturn(ldapConfigureResponse);
 
 			// Mock approle response and config approle
 			Response approleResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"approle1\"}", token)).thenReturn(approleResponse);
-			when(appRoleService.configureApprole(eq("approle1"), any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
+			when(appRoleService.configureApprole(Mockito.eq("approle1"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
 
 			String responseBody = "{ \"bound_account_id\": [ \"1234567890123\"],\"bound_ami_id\": [\"ami-fce3c696\" ], \"bound_iam_instance_profile_arn\": [\n" +
 	                "  \"arn:aws:iam::877677878:instance-profile/exampleinstanceprofile\" ], \"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\" ], " +
@@ -813,10 +813,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
 			String azureMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"azuresvcacc/svc_vault_test5\"}";
-			when(reqProcessor.process(eq("/read"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					azureMetaDataStr));
 
-			when(reqProcessor.process(eq("/delete"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,
+			when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,
 					""));
 
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.offboardAzureServiceAccount(token,
@@ -852,7 +852,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -860,7 +860,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
 
 			// metadata mock
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"owner_ntid\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"},\"groups\":{\"testgroup1\":\"read\"},\"app-roles\":{\"approle1\":\"read\"}, \"aws-roles\": {\"aws123\": \"read\"}}}"));
 
 			// Mock user response and config user
@@ -872,11 +872,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 					.thenReturn(ldapConfigureResponse);
 
 			// Mock group response and config group
@@ -889,13 +889,13 @@ public class AzureServicePrincipalAccountsServiceTest {
 			Response groupResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"testgroup1\"}", token)).thenReturn(groupResponse);
-			when(ControllerUtil.configureLDAPGroup(eq("testgroup1"), any(), eq(token))).thenReturn(ldapConfigureResponse);
+			when(ControllerUtil.configureLDAPGroup(Mockito.eq("testgroup1"), Mockito.any(), Mockito.eq(token))).thenReturn(ldapConfigureResponse);
 
 			// Mock approle response and config approle
 			Response approleResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"approle1\"}", token)).thenReturn(approleResponse);
-			when(appRoleService.configureApprole(eq("approle1"), any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
+			when(appRoleService.configureApprole(Mockito.eq("approle1"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
 
 			String responseBody = "{ \"bound_account_id\": [ \"1234567890123\"],\"bound_ami_id\": [\"ami-fce3c696\" ], \"bound_iam_instance_profile_arn\": [\n" +
 	                "  \"arn:aws:iam::877677878:instance-profile/exampleinstanceprofile\" ], \"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\" ], " +
@@ -911,10 +911,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
 			String iamMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
-			when(reqProcessor.process(eq("/read"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					iamMetaDataStr));
 
-			when(reqProcessor.process(eq("/delete"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,
+			when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,
 					""));
 
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.offboardAzureServiceAccount(token,
@@ -950,7 +950,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -958,7 +958,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
 
 			// metadata mock
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"owner_ntid\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"},\"groups\":{\"testgroup1\":\"read\"},\"app-roles\":{\"approle1\":\"read\"}, \"aws-roles\": {\"aws123\": \"read\"}}}"));
 
 			// Mock user response and config user
@@ -970,11 +970,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 					.thenReturn(ldapConfigureResponse);
 
 			// Mock group response and config group
@@ -987,13 +987,13 @@ public class AzureServicePrincipalAccountsServiceTest {
 			Response groupResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"testgroup1\"}", token)).thenReturn(groupResponse);
-			when(ControllerUtil.configureLDAPGroup(eq("testgroup1"), any(), eq(token))).thenReturn(ldapConfigureResponse);
+			when(ControllerUtil.configureLDAPGroup(Mockito.eq("testgroup1"), Mockito.any(), Mockito.eq(token))).thenReturn(ldapConfigureResponse);
 
 			// Mock approle response and config approle
 			Response approleResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"approle1\"}", token)).thenReturn(approleResponse);
-			when(appRoleService.configureApprole(eq("approle1"), any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
+			when(appRoleService.configureApprole(Mockito.eq("approle1"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
 
 			String responseBody = "{ \"bound_account_id\": [ \"1234567890123\"],\"bound_ami_id\": [\"ami-fce3c696\" ], \"bound_iam_instance_profile_arn\": [\n" +
 	                "  \"arn:aws:iam::877677878:instance-profile/exampleinstanceprofile\" ], \"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\" ], " +
@@ -1009,10 +1009,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
 			String iamMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
-			when(reqProcessor.process(eq("/read"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					iamMetaDataStr));
 
-			when(reqProcessor.process(eq("/delete"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,
+			when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NO_CONTENT, true,
 					""));
 
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.offboardAzureServiceAccount(token,
@@ -1079,7 +1079,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -1124,7 +1124,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -1132,7 +1132,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
 
 			// metadata mock
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"owner_ntid\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"},\"groups\":{\"testgroup1\":\"read\"},\"app-roles\":{\"approle1\":\"read\"}}}"));
 
 			// Mock user response and config user
@@ -1144,11 +1144,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 					.thenReturn(ldapConfigureResponse);
 
 			// Mock group response and config group
@@ -1161,23 +1161,23 @@ public class AzureServicePrincipalAccountsServiceTest {
 			Response groupResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"testgroup1\"}", token)).thenReturn(groupResponse);
-			when(ControllerUtil.configureLDAPGroup(eq("testgroup1"), any(), eq(token))).thenReturn(ldapConfigureResponse);
+			when(ControllerUtil.configureLDAPGroup(Mockito.eq("testgroup1"), Mockito.any(), Mockito.eq(token))).thenReturn(ldapConfigureResponse);
 
 			// Mock approle response and config approle
 			Response approleResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"approle1\"}", token)).thenReturn(approleResponse);
-			when(appRoleService.configureApprole(eq("approle1"), any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
+			when(appRoleService.configureApprole(Mockito.eq("approle1"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
 
 			// System under test
 			String expectedResponse = "{\"errors\":[\"Failed to offboard Azure service account from TVault\"]}";
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
 
 			String iamMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
-			when(reqProcessor.process(eq("/read"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					iamMetaDataStr));
 
-			when(reqProcessor.process(eq("/delete"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.MULTI_STATUS, true,
+			when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.MULTI_STATUS, true,
 					""));
 
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.offboardAzureServiceAccount(token,
@@ -1213,7 +1213,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -1221,7 +1221,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
 
 			// metadata mock
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"owner_ntid\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"},\"groups\":{\"testgroup1\":\"read\"},\"app-roles\":{\"approle1\":\"read\"}}}"));
 
 			// Mock user response and config user
@@ -1233,11 +1233,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 					.thenReturn(ldapConfigureResponse);
 
 			// Mock group response and config group
@@ -1250,23 +1250,23 @@ public class AzureServicePrincipalAccountsServiceTest {
 			Response groupResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"testgroup1\"}", token)).thenReturn(groupResponse);
-			when(ControllerUtil.configureLDAPGroup(eq("testgroup1"), any(), eq(token))).thenReturn(ldapConfigureResponse);
+			when(ControllerUtil.configureLDAPGroup(Mockito.eq("testgroup1"), Mockito.any(), Mockito.eq(token))).thenReturn(ldapConfigureResponse);
 
 			// Mock approle response and config approle
 			Response approleResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"approle1\"}", token)).thenReturn(approleResponse);
-			when(appRoleService.configureApprole(eq("approle1"), any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
+			when(appRoleService.configureApprole(Mockito.eq("approle1"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
 
 			// System under test
 			String expectedResponse = "{\"errors\":[\"Failed to offboard Azure service account from TVault\"]}";
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
 
 			String iamMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
-			when(reqProcessor.process(eq("/read"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					iamMetaDataStr));
 
-			when(reqProcessor.process(eq("/delete"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+			when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 				private int count = 0;
 
 				public Object answer(InvocationOnMock invocation) {
@@ -1312,7 +1312,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			policies.add("safeadmin");
 			oidcEntityResponse.setPolicies(policies);
 			ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 			// delete policy mock
 			ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -1320,7 +1320,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(accessService.deletePolicyInfo(Mockito.anyString(), Mockito.any())).thenReturn(deletePolicyResponse);
 
 			// metadata mock
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"owner_ntid\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"},\"groups\":{\"testgroup1\":\"read\"},\"app-roles\":{\"approle1\":\"read\"}}}"));
 
 			// Mock user response and config user
@@ -1332,11 +1332,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 					.thenReturn(ldapConfigureResponse);
 
 			// Mock group response and config group
@@ -1349,23 +1349,23 @@ public class AzureServicePrincipalAccountsServiceTest {
 			Response groupResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"testgroup1\"}", token)).thenReturn(groupResponse);
-			when(ControllerUtil.configureLDAPGroup(eq("testgroup1"), any(), eq(token))).thenReturn(ldapConfigureResponse);
+			when(ControllerUtil.configureLDAPGroup(Mockito.eq("testgroup1"), Mockito.any(), Mockito.eq(token))).thenReturn(ldapConfigureResponse);
 
 			// Mock approle response and config approle
 			Response approleResponse = getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			when(reqProcessor.process("/auth/approle/role/read","{\"role_name\":\"approle1\"}", token)).thenReturn(approleResponse);
-			when(appRoleService.configureApprole(eq("approle1"), any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
+			when(appRoleService.configureApprole(Mockito.eq("approle1"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, ""));
 
 			// System under test
 			String expectedResponse = "{\"errors\":[\"Failed to offboard Azure service account from TVault\"]}";
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body(expectedResponse);
 
 			String iamMetaDataStr = "{ \"data\": {\"userName\": \"svc_vault_test5\", \"awsAccountId\": \"1234567890\", \"awsAccountName\": \"testaccount1\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"accessKeyId\":\"testaccesskey\", \"expiryDuration\":12345}]}, \"path\": \"iamsvcacc/1234567890_svc_vault_test5\"}";
-			when(reqProcessor.process(eq("/read"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					iamMetaDataStr));
 
-			when(reqProcessor.process(eq("/delete"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+			when(reqProcessor.process(Mockito.eq("/delete"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 				private int count = 0;
 
 				public Object answer(InvocationOnMock invocation) {
@@ -1396,12 +1396,12 @@ public class AzureServicePrincipalAccountsServiceTest {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
 				resList.add("o_azuresvcacc_testaccount");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("testuser1"), any(), any(), eq(token))).thenReturn(responseNoContent);
-			when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser1"), Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+			when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 			// System under test
 			String expectedResponse = "{\"messages\":[\"Successfully removed user from the Azure Service Account\"]}";
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
@@ -1409,7 +1409,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "ldap");
 			when(policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(), userDetails.getUsername(), userDetails))
 					.thenReturn(latestPolicies);
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 			when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.removeUserFromAzureServiceAccount(token,
@@ -1431,19 +1431,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
 				resList.add("o_azuresvcacc_testaccount");
-				when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(eq("testuser1"), any(), any(), eq(token))).thenReturn(responseNoContent);
-			when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser1"), Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+			when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 			// System under test
 			String expectedResponse = "{\"messages\":[\"Successfully removed user from the Azure Service Account\"]}";
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 			String[] latestPolicies = { "o_azuresvcacc_testaccount" };
 			when(policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(), userDetails.getUsername(), userDetails))
 					.thenReturn(latestPolicies);
-			when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 			// oidc test cases
 			ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -1485,8 +1485,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 			Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true,
 					"{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-			when(OIDCUtil.updateOIDCEntity(any(), any())).thenReturn(responseEntity3);
-			when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(responseEntity2);
+			when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any())).thenReturn(responseEntity3);
+			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
 			when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.removeUserFromAzureServiceAccount(token,
 					iamSvcAccUser, userDetails);
@@ -1503,7 +1503,6 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(token, userDetails);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		}
-		
 
 		@Test
 	    public void test_addAwsRoleToAzureSvcacc_succssfully_iam() throws Exception {
@@ -1527,7 +1526,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -1557,7 +1556,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 	        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 	        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-	        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+	        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 	        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 	        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -1587,7 +1586,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -1617,7 +1616,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -1645,7 +1644,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        Response configureAWSRoleResponse = getMockResponse(HttpStatus.BAD_REQUEST, true, "");
 		        when(awsiamAuthService.configureAWSIAMRole(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(configureAWSRoleResponse);
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -1662,7 +1661,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        AzureServiceAccountAWSRole serviceAccountAWSRole = new AzureServiceAccountAWSRole("testsvcname", "role1", "read");
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -1695,10 +1694,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
 				azureSvcAccGroup, userDetails);
@@ -1730,10 +1729,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -1751,7 +1750,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		Response response = new Response();
 		response.setHttpstatus(HttpStatus.NO_CONTENT);
-		when(OIDCUtil.updateGroupPolicies(any(), any(), any(), any(), any())).thenReturn(response);
+		when(OIDCUtil.updateGroupPolicies(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response);
 
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
 				azureSvcAccGroup, userDetails);
@@ -1784,9 +1783,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(response404);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(response404);
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
@@ -1818,8 +1817,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(response404);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response404);
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		String[] latestPolicies = { "o_azuresvcacc_testaccount" };
 		when(policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(), userDetails.getUsername(), userDetails))
@@ -1856,9 +1855,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(response404);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response404);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
 				azureSvcAccGroup, userDetails);
@@ -1874,7 +1873,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 				"{\"errors\":[\"Failed to add group permission to Azure service principal. Azure service principal is not activated. Please activate this account and try again.\"]}");
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":false,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		String[] latestPolicies = { "o_azuresvcacc_testaccount" };
 		when(policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(), userDetails.getUsername(), userDetails))
@@ -1903,7 +1902,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 			private int count = 0;
 
 			public Object answer(InvocationOnMock invocation) {
@@ -1922,7 +1921,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		//when(azureServiceAccountUtils.rotateAzureServicePrincipalSecretMOCK(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.rotateAzureServicePrincipalSecret(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.writeAzureSPSecret(token, "azuresvcacc/svc_vault_test5/secret_1", servicePrincipal, azureServiceAccountSecret)).thenReturn(true);
-		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(eq(token), eq(servicePrincipal), eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(Mockito.eq(token), Mockito.eq(servicePrincipal), Mockito.eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
 		when(azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipal)).thenReturn(responseNoContent);
 
 
@@ -1935,13 +1934,13 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser1"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser1"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Azure Service Principal activated successfully\"]}");
 		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.activateAzureServicePrincipal(token, userDetails, servicePrincipal);
@@ -1972,7 +1971,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		Response metaActivatedResponse = getMockResponse(HttpStatus.OK, true, azureMetaDataStrActivated);
 		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(metaActivatedResponse);
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(metaActivatedResponse);
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Azure Service Principal is already activated. You can now grant permissions from Permissions menu\"]}");
 		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.activateAzureServicePrincipal(token, userDetails, servicePrincipal);
@@ -2001,7 +2000,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -2031,7 +2030,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -2061,7 +2060,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -2091,7 +2090,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -2117,7 +2116,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		        Response configureAWSRoleResponse = getMockResponse(HttpStatus.BAD_REQUEST, true, "");
 		        when(awsiamAuthService.configureAWSIAMRole(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(configureAWSRoleResponse);
 		        when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		        ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -2167,7 +2166,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 			private int count = 0;
 
 			public Object answer(InvocationOnMock invocation) {
@@ -2188,7 +2187,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		//when(azureServiceAccountUtils.rotateAzureServicePrincipalSecretMOCK(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.rotateAzureServicePrincipalSecret(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.writeAzureSPSecret(token, "azuresvcacc/svc_vault_test5/secret_1", servicePrincipal, azureServiceAccountSecret)).thenReturn(true);
-		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(eq(token), eq(servicePrincipal), eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(Mockito.eq(token), Mockito.eq(servicePrincipal), Mockito.eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
 		when(azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipal)).thenReturn(responseNoContent);
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"errors\":[\"Failed to activate Azure Service Principal. Azure secrets are rotated and saved in T-Vault. However failed to add permission to owner. Owner info not found in Metadata.\"]}");
@@ -2212,7 +2211,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 			private int count = 0;
 
 			public Object answer(InvocationOnMock invocation) {
@@ -2233,7 +2232,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		//when(azureServiceAccountUtils.rotateAzureServicePrincipalSecretMOCK(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.rotateAzureServicePrincipalSecret(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.writeAzureSPSecret(token, "azuresvcacc/svc_vault_test5/secret_1", servicePrincipal, azureServiceAccountSecret)).thenReturn(true);
-		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(eq(token), eq(servicePrincipal), eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(Mockito.eq(token), Mockito.eq(servicePrincipal), Mockito.eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
 		when(azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipal)).thenReturn(responseNoContent);
 
 
@@ -2246,11 +2245,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("normaluser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("normaluser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to activate Azure Service Principal. Azure secrets are rotated and saved in T-Vault. However owner permission update failed.\"]}");
@@ -2272,7 +2271,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 			private int count = 0;
 
 			public Object answer(InvocationOnMock invocation) {
@@ -2329,7 +2328,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenAnswer(new Answer() {
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenAnswer(new Answer() {
 			private int count = 0;
 
 			public Object answer(InvocationOnMock invocation) {
@@ -2350,7 +2349,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		//when(azureServiceAccountUtils.rotateAzureServicePrincipalSecretMOCK(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.rotateAzureServicePrincipalSecret(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.writeAzureSPSecret(token, "azuresvcacc/svc_vault_test5/secret_1", servicePrincipal, azureServiceAccountSecret)).thenReturn(true);
-		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(eq(token), eq(servicePrincipal), eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(Mockito.eq(token), Mockito.eq(servicePrincipal), Mockito.eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
 		when(azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipal)).thenReturn(getMockResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, ""));
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to activate Azure Service Principal. Azure secrets are rotated and saved in T-Vault. However metadata update failed.\"]}");
@@ -2392,7 +2391,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		//when(azureServiceAccountUtils.rotateAzureServicePrincipalSecretMOCK(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.rotateAzureServicePrincipalSecret(Mockito.any())).thenReturn(azureServiceAccountSecret);
 		when(azureServiceAccountUtils.writeAzureSPSecret(token, "azuresvcacc/svc_vault_test5/secret_1", servicePrincipal, azureServiceAccountSecret)).thenReturn(true);
-		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(eq(token), eq(servicePrincipal), eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(Mockito.eq(token), Mockito.eq(servicePrincipal), Mockito.eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
 		when(azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipal)).thenReturn(responseNoContent);
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Azure Service Principal secret rotated successfully\"]}");
@@ -2461,7 +2460,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		//when(azureServiceAccountUtils.rotateAzureServicePrincipalSecretMOCK(Mockito.any())).thenReturn(null);
 		when(azureServiceAccountUtils.rotateAzureServicePrincipalSecret(Mockito.any())).thenReturn(null);
 		when(azureServiceAccountUtils.writeAzureSPSecret(token, "azuresvcacc/svc_vault_test5/secret_1", servicePrincipal, azureServiceAccountSecret)).thenReturn(true);
-		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(eq(token), eq(servicePrincipal), eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
+		when(azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(Mockito.eq(token), Mockito.eq(servicePrincipal), Mockito.eq(secretKeyId), Mockito.any())).thenReturn(responseNoContent);
 		when(azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipal)).thenReturn(responseNoContent);
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to rotate secret for Azure Service Principal\"]}");
@@ -2495,16 +2494,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-        when(reqProcessor.process(eq("/azuresvcacct"),Mockito.any(),eq(token))).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/azuresvcacct"),Mockito.any(),Mockito.eq(token))).thenReturn(readResponse);
         Map<String,Object> reqparams = null;
         try {
             reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>(){});
@@ -2543,10 +2542,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -2559,16 +2558,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		currentpolicies.add("w_shared_mysafe01");
 		currentpolicies.add("w_shared_mysafe02");
 		OIDCGroup oidcGroup = new OIDCGroup("123-123-123", currentpolicies);
-		when(OIDCUtil.getIdentityGroupDetails(any(), any())).thenReturn(oidcGroup);
+		when(OIDCUtil.getIdentityGroupDetails(Mockito.any(), Mockito.any())).thenReturn(oidcGroup);
 
 		Response response1 = new Response();
 		response1.setHttpstatus(HttpStatus.NO_CONTENT);
-		when(OIDCUtil.updateGroupPolicies(any(), any(), any(), any(), any())).thenReturn(response1);
+		when(OIDCUtil.updateGroupPolicies(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response1);
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-        when(reqProcessor.process(eq("/azuresvcacct"),Mockito.any(),eq(token))).thenReturn(readResponse);
+        when(reqProcessor.process(Mockito.eq("/azuresvcacct"),Mockito.any(),Mockito.eq(token))).thenReturn(readResponse);
         Map<String,Object> reqparams = null;
         try {
             reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>(){});
@@ -2637,9 +2636,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(response404);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(response404);
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
@@ -2672,10 +2671,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -2692,7 +2691,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		Response response = new Response();
 		response.setHttpstatus(HttpStatus.OK);
-		when(OIDCUtil.updateGroupPolicies(any(), any(), any(), any(), any())).thenReturn(response);
+		when(OIDCUtil.updateGroupPolicies(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response);
 
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
 				azureSvcAccGroup, userDetails);
@@ -2717,7 +2716,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -2731,7 +2730,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         UserDetails userDetails = getMockUser(false);
         AzureServiceAccountApprole azureServiceAccountApprole = new AzureServiceAccountApprole("svc_vault_test2", "role1", "write");
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -2766,7 +2765,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -2789,7 +2788,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntityActual.getStatusCode());
@@ -2813,7 +2812,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -2838,7 +2837,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -2863,7 +2862,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.associateApproletoAzureServiceAccount(userDetails, token, azureServiceAccountApprole);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -2888,7 +2887,7 @@ public class AzureServicePrincipalAccountsServiceTest {
         when(ControllerUtil.updateMetadata(Mockito.anyMap(),Mockito.anyString())).thenReturn(updateMetadataResponse);
 
         when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-        when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+        when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 
         ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -2911,7 +2910,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String applicationTag = "appTag1";
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr2\"]}"));
 		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -2933,7 +2932,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
 
 		// Mock approle permission check
@@ -2966,7 +2965,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
 
 		// Mock approle permission check
@@ -2980,7 +2979,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 			e.printStackTrace();
 		}
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, ""));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, ""));
 		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntityActual);
@@ -3001,7 +3000,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
 
 		// Mock approle permission check
@@ -3016,7 +3015,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		}
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
 				"\"data\": {\n" +
 				"  \"application_id\": \"app2\",\n" +
 				"  \"application_name\": \"app2\",\n" +
@@ -3060,7 +3059,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
 
 		// Mock approle permission check
@@ -3075,7 +3074,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		}
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+		when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
 				"\"data\": {\n" +
 				"  \"application_id\": \"app2\",\n" +
 				"  \"application_name\": \"app2\",\n" +
@@ -3110,7 +3109,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		policiesList.add("safeadmin");
 		oidcEntityResponse.setPolicies(policiesList);
 		ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 		// delete policy mock
 		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -3126,16 +3125,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		Response userResponse = getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 		Response successResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-		when(reqProcessor.process(eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
+		when(reqProcessor.process(Mockito.eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
 
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(successResponse);
 
 		when(ControllerUtil.configureLDAPUser(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(successResponse);
@@ -3174,7 +3173,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
 
 		// Mock approle permission check
@@ -3189,7 +3188,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		}
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+		when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
 				"\"data\": {\n" +
 				"  \"application_id\": \"app2\",\n" +
 				"  \"application_name\": \"app2\",\n" +
@@ -3224,7 +3223,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		policiesList.add("safeadmin");
 		oidcEntityResponse.setPolicies(policiesList);
 		ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.OK).body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 		// delete policy mock
 		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -3240,16 +3239,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		Response userResponse = getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 		Response successResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-		when(reqProcessor.process(eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
+		when(reqProcessor.process(Mockito.eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
 
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(successResponse);
 
 		when(ControllerUtil.configureLDAPUser(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(successResponse);
@@ -3294,7 +3293,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureServiceAccountMetadataDetails azureServiceAccountMetadataDetails = populateAzureSvcAccMetaData(serviceAccount);
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
 		when(ControllerUtil.parseJson(metaDataStr)).thenReturn(iamSvcAccPolicyMap);
@@ -3317,7 +3316,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
@@ -3331,19 +3330,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 		DirectoryUser directoryUser = new DirectoryUser();
 		List<DirectoryUser> persons = new ArrayList<>();
 		persons.add(directoryUser);
@@ -3381,7 +3380,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String path = "testiamsvcacc01";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
 
-		when(reqProcessor.process(eq("/azure/list"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.FORBIDDEN, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
+		when(reqProcessor.process(Mockito.eq("/azure/list"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.FORBIDDEN, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
 		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
 
@@ -3392,7 +3391,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String path = "testiamsvcacc01";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
 
-		when(reqProcessor.process(eq("/azure/list"),Mockito.any(),eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
+		when(reqProcessor.process(Mockito.eq("/azure/list"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 
@@ -3424,16 +3423,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 			e.printStackTrace();
 		}
 		when(OIDCUtil.getSSOToken()).thenReturn("12345");
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -3475,16 +3474,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 			e.printStackTrace();
 		}
 		when(OIDCUtil.getSSOToken()).thenReturn("12345");
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -3525,16 +3524,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -3567,7 +3566,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -3595,7 +3594,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -3628,7 +3627,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.NOT_FOUND, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -3652,7 +3651,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -3668,19 +3667,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -3745,7 +3744,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.NO_CONTENT, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -3769,7 +3768,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -3785,19 +3784,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -3863,7 +3862,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -3887,7 +3886,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 		ResponseEntity<String> createPolicyResponse1 = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
 		// CreateIAMServiceAccountPolicies
@@ -3904,20 +3903,20 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent1);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent1);
 
 		// System under test
 		//
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
 				"{\"errors\":[\"Failed to create Azure Service Account policies. Reverting Azure service account creation also failed.\"]}");
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -3986,7 +3985,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4010,7 +4009,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4026,19 +4025,19 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4104,7 +4103,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4129,7 +4128,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4145,20 +4144,20 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureUserpassUser(eq("testuser"), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser"), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4224,7 +4223,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4249,7 +4248,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4265,20 +4264,20 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureUserpassUser(eq("testuser"), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser"), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
 		// System under test
 		String expectedResponse = "{\"messages\":[\"Successfully completed onboarding of Azure service account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4301,10 +4300,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		oidcEntityResponse.setPolicies(policies);
 		ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.OK)
 				.body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(responseEntity2);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-		when(OIDCUtil.updateOIDCEntity(any(), any()))
+		when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any()))
 				.thenReturn(responseEntity3);
 		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
 		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
@@ -4353,7 +4352,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4378,7 +4377,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4394,14 +4393,14 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureUserpassUser(eq("testuser"), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser"), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 		ResponseEntity<String> createPolicyResponse1 = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
 		when(accessService.deletePolicyInfo(token, "o_azuresvcacc_svc_cce_usertestrr16")).thenReturn(createPolicyResponse1);
@@ -4414,7 +4413,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure service account. Association of owner permission failed\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4437,10 +4436,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		oidcEntityResponse.setPolicies(policies);
 		ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.FORBIDDEN)
 				.body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(responseEntity2);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-		when(OIDCUtil.updateOIDCEntity(any(), any()))
+		when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any()))
 				.thenReturn(responseEntity3);
 		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
 		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
@@ -4489,7 +4488,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4514,7 +4513,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4530,14 +4529,14 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureUserpassUser(eq("testuser"), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser"), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 		ResponseEntity<String> createPolicyResponse1 = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
 		when(accessService.deletePolicyInfo(token, "o_azuresvcacc_svc_cce_usertestrr16")).thenReturn(createPolicyResponse1);
@@ -4550,7 +4549,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure service account. Association of owner permission failed\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4573,10 +4572,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		oidcEntityResponse.setPolicies(policies);
 		ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.NOT_FOUND)
 				.body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(responseEntity2);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-		when(OIDCUtil.updateOIDCEntity(any(), any()))
+		when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any()))
 				.thenReturn(responseEntity3);
 		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
 		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
@@ -4626,7 +4625,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4651,7 +4650,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4667,20 +4666,20 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureUserpassUser(eq("testuser"), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser"), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseContent);
 
 		// System under test
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure service account. Association of owner permission failed\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4750,7 +4749,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		AzureSvccAccMetadata iamSvccAccMetadata = new AzureSvccAccMetadata(azureSvccAccPath,
 				azureServiceAccountMetadataDetails);
 
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
 
 		when(JSONUtil.getJSON(Mockito.any())).thenReturn(metaDataStr);
@@ -4775,7 +4774,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		when(ControllerUtil.parseJson(iamMetaDataStr)).thenReturn(rqstParams);
 		when(ControllerUtil.convetToJson(rqstParams)).thenReturn(iamMetaDatajson);
-		when(ControllerUtil.createMetadata(any(), eq(token))).thenReturn(true);
+		when(ControllerUtil.createMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(true);
 
 		// CreateIAMServiceAccountPolicies
 		ResponseEntity<String> createPolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -4791,14 +4790,14 @@ public class AzureServicePrincipalAccountsServiceTest {
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureUserpassUser(eq("testuser"), any(), eq(token))).thenReturn(responseNoContent);
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser"), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(ldapConfigureResponse);
-		when(ControllerUtil.updateMetadata(any(), any())).thenReturn(responseContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseContent);
 		ResponseEntity<String> createPolicyResponse1 = ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Successfully created policies for Azure service account\"]}");
 		when(accessService.deletePolicyInfo(token, "o_azuresvcacc_svc_cce_usertestrr16")).thenReturn(createPolicyResponse1);
@@ -4811,7 +4810,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String expectedResponse = "{\"errors\":[\"Failed to onboard Azure service account. Association of owner permission failed\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		DirectoryUser directoryUser = new DirectoryUser();
@@ -4834,10 +4833,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		oidcEntityResponse.setPolicies(policies);
 		ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.OK)
 				.body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(responseEntity2);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-		when(OIDCUtil.updateOIDCEntity(any(), any()))
+		when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any()))
 				.thenReturn(responseEntity3);
 		ResponseEntity<DirectoryObjects> responseEntityCorpExpected = ResponseEntity.status(HttpStatus.OK).body(users);
 		when(directoryService.getUserDetailsByCorpId(Mockito.any())).thenReturn(directoryUser);
@@ -4884,7 +4883,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntityActual.getStatusCode());
@@ -4914,7 +4913,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(userDetails, token, serviceAccountAWSRole);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -4948,16 +4947,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -4998,16 +4997,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -5047,16 +5046,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -5097,16 +5096,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"testaccount\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.NOT_FOUND, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -5146,10 +5145,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseNoContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -5162,16 +5161,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		currentpolicies.add("w_shared_mysafe01");
 		currentpolicies.add("w_shared_mysafe02");
 		OIDCGroup oidcGroup = new OIDCGroup("123-123-123", currentpolicies);
-		when(OIDCUtil.getIdentityGroupDetails(any(), any())).thenReturn(null);
+		when(OIDCUtil.getIdentityGroupDetails(Mockito.any(), Mockito.any())).thenReturn(null);
 
 		Response response1 = new Response();
 		response1.setHttpstatus(HttpStatus.NO_CONTENT);
-		when(OIDCUtil.updateGroupPolicies(any(), any(), any(), any(), any())).thenReturn(response1);
+		when(OIDCUtil.updateGroupPolicies(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response1);
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -5212,10 +5211,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPGroup(any(), any(), any())).thenReturn(responseNoContent);
-		when(ControllerUtil.updateMetadata(any(), eq(token))).thenReturn(responseContent);
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseContent);
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -5228,16 +5227,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		currentpolicies.add("w_shared_mysafe01");
 		currentpolicies.add("w_shared_mysafe02");
 		OIDCGroup oidcGroup = new OIDCGroup("123-123-123", currentpolicies);
-		when(OIDCUtil.getIdentityGroupDetails(any(), any())).thenReturn(oidcGroup);
+		when(OIDCUtil.getIdentityGroupDetails(Mockito.any(), Mockito.any())).thenReturn(oidcGroup);
 
 		Response response1 = new Response();
 		response1.setHttpstatus(HttpStatus.OK);
-		when(OIDCUtil.updateGroupPolicies(any(), any(), any(), any(), any())).thenReturn(response1);
+		when(OIDCUtil.updateGroupPolicies(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(response1);
 
 		String metdataJsonString = "{\"data\":{\"groups\": {\"group1\": \"rotate\"},\"app-roles\":{\"selfserviceoidcsupportrole\":\"read\"},\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}";
 		Response readResponse = getMockResponse(HttpStatus.OK, true, metdataJsonString);
 
-		when(reqProcessor.process(eq("/azuresvcacct"), Mockito.any(), eq(token))).thenReturn(readResponse);
+		when(reqProcessor.process(Mockito.eq("/azuresvcacct"), Mockito.any(), Mockito.eq(token))).thenReturn(readResponse);
 		Map<String, Object> reqparams = null;
 		try {
 			reqparams = new ObjectMapper().readValue(metdataJsonString, new TypeReference<Map<String, Object>>() {
@@ -5272,7 +5271,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -5301,7 +5300,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -5330,7 +5329,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(ControllerUtil.updateMetadata(Mockito.anyMap(), Mockito.anyString())).thenReturn(updateMetadataResponse);
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"initialPasswordReset\":true,\"managedBy\":\"smohan11\",\"name\":\"svc_vault_test5\",\"users\":{\"smohan11\":\"sudo\"}}}"));
 
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.removeApproleFromAzureSvcAcc(userDetails, token, serviceAccountApprole);
 
@@ -5355,7 +5354,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
-		when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
 				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
 
 		// Mock approle permission check
@@ -5370,7 +5369,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		}
 
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
-		when(reqProcessor.process(eq("/sdb"), Mockito.any(), eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
 				"\"data\": {\n" +
 				"  \"application_id\": \"app2\",\n" +
 				"  \"application_name\": \"app2\",\n" +
@@ -5405,7 +5404,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		policiesList.add("safeadmin");
 		oidcEntityResponse.setPolicies(policiesList);
 		ResponseEntity<OIDCEntityResponse> oidcResponse = ResponseEntity.status(HttpStatus.FORBIDDEN).body(oidcEntityResponse);
-		when(OIDCUtil.oidcFetchEntityDetails(any(), any(), any(), eq(true))).thenReturn(oidcResponse);
+		when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(oidcResponse);
 
 		// delete policy mock
 		ResponseEntity<String> deletePolicyResponse = ResponseEntity.status(HttpStatus.OK)
@@ -5421,16 +5420,16 @@ public class AzureServicePrincipalAccountsServiceTest {
 		Response userResponse = getMockResponse(HttpStatus.OK, true,
 				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\"],\"ttl\":0,\"groups\":\"admin\"}}");
 		Response successResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-		when(reqProcessor.process(eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
+		when(reqProcessor.process(Mockito.eq("/auth/ldap/users"), Mockito.any(), Mockito.any())).thenReturn(userResponse);
 
 		try {
 			List<String> resList = new ArrayList<>();
 			resList.add("default");
-			when(ControllerUtil.getPoliciesAsListFromJson(any(), any())).thenReturn(resList);
+			when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		when(ControllerUtil.configureLDAPUser(eq("testuser"), any(), any(), eq(token)))
+		when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser"), Mockito.any(), Mockito.any(), Mockito.eq(token)))
 				.thenReturn(successResponse);
 
 		when(ControllerUtil.configureLDAPUser(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(successResponse);
