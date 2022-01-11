@@ -132,7 +132,7 @@ public class SSLCertificateAWSRoleServiceTest {
         PowerMockito.mockStatic(JSONUtil.class);
         Whitebox.setInternalState(ControllerUtil.class, "log", LogManager.getLogger(ControllerUtil.class));
         Whitebox.setInternalState(OIDCUtil.class, "log", LogManager.getLogger(OIDCUtil.class));
-        when(JSONUtil.getJSON(Mockito.any(ImmutableMap.class))).thenReturn("log");
+        when(JSONUtil.getJSON(any(ImmutableMap.class))).thenReturn("log");
 
         Map<String, String> currentMap = new HashMap<>();
         currentMap.put("apiurl", "http://localhost:8080/v2/sslcert");

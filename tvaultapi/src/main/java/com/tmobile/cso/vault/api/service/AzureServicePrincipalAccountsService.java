@@ -541,8 +541,11 @@ public class AzureServicePrincipalAccountsService {
 			to.add(azureServiceAccount.getOwnerEmail());
 			String mailSubject = String.format(subject, azureSvcAccName!=null?azureSvcAccName:"");
 
-			// set template variables
-			mailTemplateVariables.put("name", directoryUser.getDisplayName());
+			if (StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+				mailTemplateVariables.put("name", directoryUser.getUserName());
+			} else {
+				mailTemplateVariables.put("name", directoryUser.getDisplayName());
+			}
 
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -2284,10 +2287,6 @@ public class AzureServicePrincipalAccountsService {
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
 		List<String> onboardedlist = new ArrayList<>();
-		if (userDetails.isAdmin()) {
-			onboardedlist = getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
-		}
-		else {
 			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
 					userDetails.getUsername(), userDetails);
 			for (String policy : latestPolicies) {
@@ -2296,7 +2295,6 @@ public class AzureServicePrincipalAccountsService {
 					onboardedlist.add(policy.substring(14));
 				}
 			}
-		}
 		response = new Response();
 		response.setHttpstatus(HttpStatus.OK);
 		response.setSuccess(true);
@@ -4622,7 +4620,12 @@ public class AzureServicePrincipalAccountsService {
 		DirectoryUser oldOwnerObj = getUserDetails(currentAzureServiceAccount.getOwnerNtid());
 		Map<String, String> mailTemplateVariables = new HashMap<>();
 		mailTemplateVariables.put("azureSvcAccName", servicePrincipalName);
-		mailTemplateVariables.put("oldOwnerName", oldOwnerObj!=null?oldOwnerObj.getDisplayName():"");
+		String oldOwnerName = "";
+		if (oldOwnerObj != null) {
+			oldOwnerName = StringUtils.isEmpty(oldOwnerObj.getDisplayName().trim()) ? oldOwnerObj.getUserName() :
+					oldOwnerObj.getDisplayName();
+		}
+		mailTemplateVariables.put("oldOwnerName", oldOwnerName);
 		mailTemplateVariables.put("contactLink", supportEmail);
 		List<String> cc = new ArrayList<>();
 		cc.add(currentAzureServiceAccount.getOwnerEmail());

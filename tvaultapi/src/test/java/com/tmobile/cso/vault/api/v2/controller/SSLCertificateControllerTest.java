@@ -219,7 +219,7 @@ public class SSLCertificateControllerTest {
         CertificateUser certUser = new CertificateUser("testuser1","read", "certificatename.t-mobile.com", "internal");
 
         String inputJson =new ObjectMapper().writeValueAsString(certUser);
-        when(sslCertificateService.addUserToCertificate(Mockito.any(CertificateUser.class), Mockito.eq(userDetails), Mockito.anyBoolean())).thenReturn(responseEntityExpected);
+        when(sslCertificateService.addUserToCertificate(Mockito.any(CertificateUser.class), eq(userDetails), Mockito.anyBoolean())).thenReturn(responseEntityExpected);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/v2/sslcert/user").requestAttr("UserDetails", userDetails)
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -237,7 +237,7 @@ public class SSLCertificateControllerTest {
         String responseJson = "{\"messages\":[\"Approle successfully associated with Certificate\"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 
-        when(sslCertificateService.associateApproletoCertificate(Mockito.any(CertificateApprole.class), Mockito.eq(userDetails))).thenReturn(responseEntityExpected);
+        when(sslCertificateService.associateApproletoCertificate(Mockito.any(CertificateApprole.class), eq(userDetails))).thenReturn(responseEntityExpected);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/v2/sslcert/approle").requestAttr("UserDetails", userDetails)
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -255,7 +255,7 @@ public class SSLCertificateControllerTest {
         String responseJson = "{\"messages\":[\"Approle successfully deleted from Certificate\"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 
-        when(sslCertificateService.deleteApproleFromCertificate(Mockito.any(CertificateApprole.class), Mockito.eq(userDetails))).thenReturn(responseEntityExpected);
+        when(sslCertificateService.deleteApproleFromCertificate(Mockito.any(CertificateApprole.class), eq(userDetails))).thenReturn(responseEntityExpected);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/v2/sslcert/approle").requestAttr("UserDetails", userDetails)
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -284,7 +284,7 @@ public class SSLCertificateControllerTest {
         ResponseEntity<InputStreamResource> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(resource);
 
         UserDetails userDetails = getMockUser(true);
-        when(sslCertificateService.downloadCertificateWithPrivateKey(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), Mockito.eq(userDetails))).thenReturn(responseEntityExpected);
+        when(sslCertificateService.downloadCertificateWithPrivateKey(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), eq(userDetails))).thenReturn(responseEntityExpected);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/v2/sslcert/certificates/download").requestAttr("UserDetails", userDetails)
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -299,8 +299,8 @@ public class SSLCertificateControllerTest {
         InputStreamResource resource = null;
         ResponseEntity<InputStreamResource> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(resource);
 
-        when(sslCertificateService.downloadCertificate(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), Mockito.eq("12345"),
-                Mockito.eq("pem"),Mockito.eq("external"))).thenReturn(responseEntityExpected);
+        when(sslCertificateService.downloadCertificate(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(), eq("12345"),
+                eq("pem"),eq("external"))).thenReturn(responseEntityExpected);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/certificates/12345/pem/external")
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -371,7 +371,7 @@ public class SSLCertificateControllerTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		CertificateGroup certGroup = new CertificateGroup("certificatename.t-mobile.com","testgroup","read", "internal");
 		String inputJson =new ObjectMapper().writeValueAsString(certGroup);
-		when(sslCertificateService.addingGroupToCertificate(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(CertificateGroup.class), Mockito.any(UserDetails.class))).thenReturn(responseEntityExpected);
+		when(sslCertificateService.addingGroupToCertificate(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(CertificateGroup.class), Mockito.any(UserDetails.class))).thenReturn(responseEntityExpected);
 		 mockMvc.perform(MockMvcRequestBuilders.post("/v2/ss/certificate/group").requestAttr("UserDetails", userDetails)
 	                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
 	                .header("Content-Type", "application/json;charset=UTF-8")
@@ -488,7 +488,7 @@ public class SSLCertificateControllerTest {
 		String inputJson = new ObjectMapper().writeValueAsString(certificateAWSRole);
 		String responseJson = "{\"messages\":[\"AWS Role created \"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);		
-		when(sslCertificateAWSRoleService.createAWSRoleForSSL(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
+		when(sslCertificateAWSRoleService.createAWSRoleForSSL(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
 				Mockito.any(AWSLoginRole.class))).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/sslcert/aws/role")
@@ -504,7 +504,7 @@ public class SSLCertificateControllerTest {
 		String inputJson = new ObjectMapper().writeValueAsString(certificateAWSRole);
 		String responseJson = "{\"messages\":[\"AWS Role created \"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);		
-		when(sslCertificateAWSRoleService.createIAMRoleForSSL(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
+		when(sslCertificateAWSRoleService.createIAMRoleForSSL(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
 				Mockito.any(AWSIAMRole.class))).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/sslcert/aws/iam/role")
@@ -520,7 +520,7 @@ public class SSLCertificateControllerTest {
         String inputJson =new ObjectMapper().writeValueAsString(certificateAWSRole);
         String responseJson = "{\"messages\":[\"AWS Role successfully associated with SSL Certificate\"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-        when(sslCertificateAWSRoleService.addAwsRoleToSSLCertificate(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(CertificateAWSRole.class))).thenReturn(responseEntityExpected);
+        when(sslCertificateAWSRoleService.addAwsRoleToSSLCertificate(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(CertificateAWSRole.class))).thenReturn(responseEntityExpected);
         mockMvc.perform(MockMvcRequestBuilders.post("/v2/sslcert/aws").requestAttr("UserDetails", userDetails)
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8")
@@ -536,7 +536,7 @@ public class SSLCertificateControllerTest {
 		String inputJson = new ObjectMapper().writeValueAsString(certificateAWSRoleRequest);
         String responseJson = "{\"messages\":[\"AWS Role is successfully removed from SSL Certificate\"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);        
-        when(sslCertificateAWSRoleService.removeAWSRoleFromSSLCertificate(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(CertificateAWSRoleRequest.class))).thenReturn(responseEntityExpected);
+        when(sslCertificateAWSRoleService.removeAWSRoleFromSSLCertificate(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(CertificateAWSRoleRequest.class))).thenReturn(responseEntityExpected);
         mockMvc.perform(MockMvcRequestBuilders.delete("/v2/sslcert/aws").requestAttr("UserDetails", userDetails)
                 .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8")
@@ -603,7 +603,7 @@ public class SSLCertificateControllerTest {
 				+ "    \"projectLeadEmailId\": \"project@email.com\"    }  ]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
-		when(sslCertificateService.getAllSSLCertificatesToManage(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(sslCertificateService.getAllSSLCertificatesToManage(Mockito.anyString(), Mockito.anyObject(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString()))
 				.thenReturn(responseEntityExpected);
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert?certificateName=CertificateName.t-mobile.com&certType=internal").header("vault-token", token)
 				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)
@@ -708,7 +708,7 @@ public class SSLCertificateControllerTest {
 				+ "    \"projectLeadEmailId\": \"project@email.com\"    }  ]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
-		when(sslCertificateService.getListOfCertificates(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(sslCertificateService.getListOfCertificates(Mockito.anyString(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt()))
 				.thenReturn(responseEntityExpected);
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/certificates/internal").header("vault-token", token)
 				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)
@@ -759,7 +759,7 @@ public class SSLCertificateControllerTest {
 				+ "    \"projectLeadEmailId\": \"project@email.com\"    }  ]}}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
-		when(sslCertificateService.getAllCertificates(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(sslCertificateService.getAllCertificates(Mockito.anyString(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt()))
 				.thenReturn(responseEntityExpected);
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/list?certificateName=CertificateName.t-mobile.com").header("vault-token", token)
 				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)
@@ -773,7 +773,7 @@ public class SSLCertificateControllerTest {
 		String responseJson = "{\"data\":[{\"cert\":\"certificateName.t-mobile.com\"},{\"cert\":\"certificateName1.t-mobile.com\"}]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
-		when(sslCertificateService.getAllCertificatesOnCertType(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(sslCertificateService.getAllCertificatesOnCertType(Mockito.anyObject(), Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt()))
 				.thenReturn(responseEntityExpected);
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/list/internal").header("vault-token", token)
 				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)

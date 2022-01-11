@@ -188,7 +188,7 @@ public class AzureServiceAccountUtilsTest {
         when(statusLine.getStatusCode()).thenReturn(200);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
         String inputJson = "{\"servicePrincipalId\":\"781998f7-43d0-4c99-9d78-600ce1b6086c\",\"secretKeyId\":\"f36cbb1f-32bb-4063-9cc3-fa305fa4d967\",\"expiryDurationMs\":604800000,\"tenantId\":\"b0163331-70a6-4edc-9bbb-40c3ad1cd965\"}";
-        when(JSONUtil.getJSON(Mockito.any())).thenReturn(inputJson);
+        when(JSONUtil.getJSON(Mockito.any(ImmutableMap.class))).thenReturn(inputJson);
 
         String responseString = "{\"accessKeyId\": \"testaccesskey\", \"userName\": \"svc_vault_test5\", \"accessKeySecret\": \"abcdefgh\", \"expiryDateEpoch\": \"1609754282000\"}";
         String responseStringToken = "{\"auth\": {\"client_token\": \"" + token + "\"}}";
@@ -238,7 +238,7 @@ public class AzureServiceAccountUtilsTest {
         when(statusLine.getStatusCode()).thenReturn(200);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
         String inputJson = "{\"servicePrincipalId\":\"781998f7-43d0-4c99-9d78-600ce1b6086c\",\"secretKeyId\":\"f36cbb1f-32bb-4063-9cc3-fa305fa4d967\",\"expiryDurationMs\":604800000,\"tenantId\":\"b0163331-70a6-4edc-9bbb-40c3ad1cd965\"}";
-        when(JSONUtil.getJSON(Mockito.any())).thenReturn(inputJson);
+        when(JSONUtil.getJSON(Mockito.any(ImmutableMap.class))).thenReturn(inputJson);
 
         String responseString = "{\"accessKeyId\": \"testaccesskey\", \"userName\": \"svc_vault_test5\", \"accessKeySecret\": \"abcdefgh\", \"expiryDateEpoch\": \"1609754282000\"}";
         String responseStringToken = "{\"client_token\": \""+token+"\",\"servicePrincipalId\": \""+servicePrincipalId+"\",\"tenantId\": \""+tenantId+"\",\"secretKeyId\": \""+secretKeyId+"\",\"secretText\": \""+secretText+"\",\"expiryDateEpoch\": \""+expiryDateEpoch+"\"}";
@@ -282,7 +282,7 @@ public class AzureServiceAccountUtilsTest {
         when(statusLine.getStatusCode()).thenReturn(500);
         when(httpResponse.getEntity()).thenReturn(mockHttpEntity);
         String inputJson = "{\"servicePrincipalId\":\"781998f7-43d0-4c99-9d78-600ce1b6086c\",\"secretKeyId\":\"f36cbb1f-32bb-4063-9cc3-fa305fa4d967\",\"expiryDurationMs\":604800000,\"tenantId\":\"b0163331-70a6-4edc-9bbb-40c3ad1cd965\"}";
-        when(JSONUtil.getJSON(Mockito.any())).thenReturn(inputJson);
+        when(JSONUtil.getJSON(Mockito.any(ImmutableMap.class))).thenReturn(inputJson);
         String responseString = "{\"accessKeyId\": \"testaccesskey\", \"userName\": \"svc_vault_test5\", \"accessKeySecret\": \"abcdefgh\", \"expiryDateEpoch\": \"1609754282000\"}";
         String responseStringToken = "{\"auth\": {\"client_token\": \""+token+"\"}}";
         when(mockHttpEntity.getContent()).thenAnswer(new Answer() {
@@ -449,7 +449,7 @@ public class AzureServiceAccountUtilsTest {
         String tenantId = "101";
         AzureServiceAccountSecret iamServiceAccountSecret = new AzureServiceAccountSecret(azureSecret, azureSecret, expiryDateEpoch, expiryDate, servicePrincipalId, tenantId);
         Response response = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(response);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(response);
         boolean actualStatus = azureServiceAccountUtils.writeAzureSPSecret(token, path, iamServiceAccountName, iamServiceAccountSecret);
         assertTrue(actualStatus);
     }
@@ -465,10 +465,10 @@ public class AzureServiceAccountUtilsTest {
         String accessKeyId = "testaccesskey";
 
         Response response = getMockResponse(HttpStatus.OK, true, "{ \"data\": { \"isActivated\": false}}");
-        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(response);
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(response);
         Response response204 = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(response204);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(response204);
         Response actualResponse = azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipalName);
         assertEquals(HttpStatus.NO_CONTENT, actualResponse.getHttpstatus());
     }
@@ -490,10 +490,10 @@ public class AzureServiceAccountUtilsTest {
         String tenantId = "101";
 
         Response response = getMockResponse(HttpStatus.OK, true, "{ \"data\": {\"secret\": [{\"secretKeyId\": \"testaccesskey\", \"expiryDuration\": 1609668443000}]}}");
-        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(response);
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(response);
         Response response204 = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(response204);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(response204);
 
         AzureServiceAccountSecret azureServiceAccountSecret = new AzureServiceAccountSecret(azureSecret, azureSecret, expiryDateEpoch, expiryDate, servicePrincipalId, tenantId);
 
@@ -512,7 +512,7 @@ public class AzureServiceAccountUtilsTest {
         String azureSecret = "abcdefgh";
         AzureServiceAccountSecret azureServiceAccountSecret = new AzureServiceAccountSecret(secretKeyId, azureSecret,  1609754282000L, "20201215", servicePrincipalId, tenantId);
         Response responseData = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(responseData);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(responseData);
         boolean actualStatus = azureServiceAccountUtils.writeAzureSPSecret(token, path, azureSvcAccName, azureServiceAccountSecret);
         assertTrue(actualStatus);
     }
@@ -528,7 +528,7 @@ public class AzureServiceAccountUtilsTest {
         String azureSecret = "abcdefgh";
         AzureServiceAccountSecret azureServiceAccountSecret = new AzureServiceAccountSecret(secretKeyId, azureSecret,  1609754282000L, "20201215", servicePrincipalId, tenantId);
         Response responseData = getMockResponse(HttpStatus.BAD_REQUEST, true, "");
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(responseData);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(responseData);
         boolean actualStatus = azureServiceAccountUtils.writeAzureSPSecret(token, path, azureSvcAccName, azureServiceAccountSecret);
         assertFalse(actualStatus);
     }
@@ -542,9 +542,9 @@ public class AzureServiceAccountUtilsTest {
         String tenantId = "testtenantId";
         String azureSecret = "abcdefgh";
         Response responseData = getMockResponse(HttpStatus.OK, true, "{ \"data\": {\"secret\": [{\"secretKeyId\": \"testaccesskey\", \"expiryDuration\": 1609668443000}]}}");
-        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(responseData);
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(responseData);
         Response response204 = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(response204);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(response204);
         AzureServiceAccountSecret azureServiceAccountSecret = new AzureServiceAccountSecret(secretKeyId, azureSecret,  1609754282000L, "20201215", servicePrincipalId, tenantId);
 
         Response actualResponse = azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(token, azureSvcAccName, secretKeyId, azureServiceAccountSecret);
@@ -560,7 +560,7 @@ public class AzureServiceAccountUtilsTest {
 		String tenantId = "testtenantId";
 		String azureSecret = "abcdefgh";
         Response responseData = getMockResponse(HttpStatus.NOT_FOUND, true, "");
-        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(responseData);
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(responseData);
         AzureServiceAccountSecret azureServiceAccountSecret = new AzureServiceAccountSecret(secretKeyId, azureSecret,  1609754282000L, "20201215", servicePrincipalId, tenantId);
         Response actualResponse = azureServiceAccountUtils.updateAzureSPSecretKeyInfoInMetadata(token, azureSvcAccName, secretKeyId, azureServiceAccountSecret);
         assertNull(actualResponse);
@@ -571,9 +571,9 @@ public class AzureServiceAccountUtilsTest {
 		String token = "123123123123";
 		String azureSvcAccName = "svc_vault_test5";
         Response responseData = getMockResponse(HttpStatus.OK, true, "{ \"data\": { \"isActivated\": false}}");
-        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(responseData);
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(responseData);
         Response response204 = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        when(reqProcessor.process(Mockito.eq("/write"), Mockito.any(), Mockito.eq(token))).thenReturn(response204);
+        when(reqProcessor.process(eq("/write"), Mockito.any(), eq(token))).thenReturn(response204);
         Response actualResponse = azureServiceAccountUtils.updateActivatedStatusInMetadata(token, azureSvcAccName);
         assertEquals(HttpStatus.NO_CONTENT, actualResponse.getHttpstatus());
     }
@@ -583,7 +583,7 @@ public class AzureServiceAccountUtilsTest {
 		String token = "123123123123";
 		String azureSvcAccName = "svc_vault_test5";
         Response responseData = getMockResponse(HttpStatus.NOT_FOUND, true, "");
-        when(reqProcessor.process(Mockito.eq("/read"),Mockito.any(),Mockito.eq(token))).thenReturn(responseData);
+        when(reqProcessor.process(eq("/read"),Mockito.any(),eq(token))).thenReturn(responseData);
         Response actualResponse = azureServiceAccountUtils.updateActivatedStatusInMetadata(token, azureSvcAccName);
         assertNull(actualResponse);
     }
