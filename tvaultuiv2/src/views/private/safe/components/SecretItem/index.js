@@ -21,6 +21,8 @@ const Titles = styled('div')``;
 const Title = styled.div`
   font-size: 1.6rem;
   margin-left: 1.6rem;
+  inline-size: 88%;
+  overflow-wrap: anywhere;
 `;
 
 const SubTitle = styled.span`
