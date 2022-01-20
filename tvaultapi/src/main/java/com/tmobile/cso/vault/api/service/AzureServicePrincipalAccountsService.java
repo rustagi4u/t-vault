@@ -2875,6 +2875,18 @@ public class AzureServicePrincipalAccountsService {
 					.body("{\"errors\":[\"This operation is not supported for Userpass authentication. \"]}");
 		}
 
+		if (isOwnerDeniedViaGroupPermission(token, userDetails, azureServiceAccountGroup)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.ADD_GROUP_TO_AZURESVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("Failed to add group permission to Azure service principal [%s] because.",
+							azureServiceAccountGroup.getAzureSvcAccName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Failed to add group because it would deny the owner. " +
+							"Please remove the owner from this group before proceeding.\"]}");
+		}
+
 		boolean canAddGroup = isAuthorizedToAddPermissionInAzureSvcAcc(userDetails, azureServiceAccountGroup.getAzureSvcAccName(), false);
 		if (canAddGroup) {
 			// Only Sudo policy can be added (as part of onbord) before activation.
@@ -4562,7 +4574,7 @@ public class AzureServicePrincipalAccountsService {
 					.body("{\"errors\":[\"Failed to remove user permissions for Azure Service Principal.\"]}");
 		}
 
-		boolean isNewOwnerDeniedViaGroup = isOwnerDeniedViaGroup(userDetails, aspTransferRequest.getOwnerNtid(), metaResponse);
+		boolean isNewOwnerDeniedViaGroup = isOwnerDeniedViaGroupPermission(userDetails, aspTransferRequest.getOwnerNtid(), metaResponse);
 
 		if (isNewOwnerDeniedViaGroup) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
@@ -4697,8 +4709,39 @@ public class AzureServicePrincipalAccountsService {
 				.body("{\"messages\":[\"Owner has been successfully transferred for Azure Service Principal\"]}");
 	}
 
+	/**
+	 * Overloaded method which checks if <i>one particular</i> group associated with
+	 * the Azure Service Principal would deny the owner from having rotate permissions.
+	 * @param token The current token
+	 * @param userDetails Information about the current user
+	 * @param azureServiceAccountGroup The group to check against
+	 * @return boolean
+	 */
+	private boolean isOwnerDeniedViaGroupPermission(String token, UserDetails userDetails, AzureServiceAccountGroup azureServiceAccountGroup) {
+		boolean isOwnerDenied = false;
+		if (azureServiceAccountGroup.getAccess().equals(TVaultConstants.DENY_POLICY)) {
+			List<String> usersInGroup;
+			usersInGroup = getUsersFromADGroup(userDetails, azureServiceAccountGroup.getGroupname());
+			if (CollectionUtils.isNotEmpty(usersInGroup)) {
+				String ownerNtid = getOwnerNTIdFromMetadata(token, azureServiceAccountGroup.getAzureSvcAccName());
+				if (usersInGroup.contains(ownerNtid)) {
+					isOwnerDenied = true;
+				}
+			}
+		}
+		return isOwnerDenied;
+	}
+
+	/**
+	 * Overloaded method which checks if <i>any</i> group associated with
+	 * the Azure Service Principal would deny the owner from having rotate permissions.
+	 * @param userDetails Information about the current user
+	 * @param ownerNtid The owner to check against
+	 * @param metaResponse Metadata from which the groups will be fetched from
+	 * @return boolean
+	 */
 	@SuppressWarnings("unchecked")
-	private boolean isOwnerDeniedViaGroup(UserDetails userDetails, String ownerNtid, Response metaResponse) {
+	private boolean isOwnerDeniedViaGroupPermission(UserDetails userDetails, String ownerNtid, Response metaResponse) {
 		boolean isOwnerDenied = false;
 		Map<String, Object> responseMap = ControllerUtil.parseJson(metaResponse.getResponse());
 		Map<String, Object> groupsMap = null;

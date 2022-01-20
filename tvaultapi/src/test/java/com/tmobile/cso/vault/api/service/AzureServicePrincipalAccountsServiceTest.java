@@ -1756,6 +1756,53 @@ public class AzureServicePrincipalAccountsServiceTest {
 	}
 
 	@Test
+	public void testAddGroupToAzureSvcAccOwnerDeniedFailure() {
+		AzureServiceAccountGroup azureSvcAccGroup = new AzureServiceAccountGroup("testaccount", "group1", "deny");
+		userDetails = getMockUser(false);
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body("{\"errors\":[\"Failed to add group because it would deny the owner. Please remove the owner from this group before proceeding.\"]}");
+		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+		String[] policies = { "o_azuresvcacc_testaccount" };
+		when(policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails)).thenReturn(policies);
+		Response groupResp = getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+		when(reqProcessor.process("/auth/ldap/groups", "{\"groupname\":\"group1\"}", token)).thenReturn(groupResp);
+		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "ldap");
+		ObjectMapper objMapper = new ObjectMapper();
+		String responseJson = groupResp.getResponse();
+		try {
+			List<String> resList = new ArrayList<>();
+			resList.add("default");
+			resList.add("w_shared_mysafe01");
+			resList.add("w_shared_mysafe02");
+			when(ControllerUtil.getPoliciesAsListFromJson(objMapper, responseJson)).thenReturn(resList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		when(ControllerUtil.configureLDAPGroup(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
+				"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
+
+		OIDCGroup oidcGroup = new OIDCGroup();
+		oidcGroup.setMember_entity_ids(Collections.singletonList("1234"));
+		when(OIDCUtil.getIdentityGroupDetails(Mockito.any(), Mockito.any())).thenReturn(oidcGroup);
+		ResponseEntity<String> readEntity = ResponseEntity.status(HttpStatus.OK)
+				.body("{\"data\":{\"aliases\":[{\"name\": \"Someone@T-Mobile.com\"}]}}");
+		when(OIDCUtil.readEntityById(Mockito.any(), Mockito.eq("1234"))).thenReturn(readEntity);
+		when(directoryService.getNtidForUser("Someone@T-Mobile.com")).thenReturn("testuser1");
+		when(reqProcessor.process(Mockito.eq("/read"), Mockito.any(), Mockito.any())).thenReturn(getMockResponse(HttpStatus.OK, true,
+				getAzureMockMetadata(true)));
+
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.addGroupToAzureServiceAccount(token,
+				azureSvcAccGroup, userDetails);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(responseEntityExpected, responseEntity);
+	}
+
+	@Test
 	public void testAddGroupToAzureSvcAccMetadataFailure() {
 		AzureServiceAccountGroup azureSvcAccGroup = new AzureServiceAccountGroup("testaccount", "group1", "rotate");
 		userDetails = getMockUser(false);
