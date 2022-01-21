@@ -27,6 +27,7 @@ public class OIDCGroup implements Serializable {
 
 	private String id;
 	private List<String> policies;
+	private List<String> member_entity_ids;
 
 	public OIDCGroup() {
 	}
@@ -34,6 +35,12 @@ public class OIDCGroup implements Serializable {
 	public OIDCGroup(String id, List<String> policies) {
 		this.id = id;
 		this.policies = policies;
+	}
+
+	public OIDCGroup(String id, List<String> policies, List<String> member_entity_ids) {
+		this.id = id;
+		this.policies = policies;
+		this.member_entity_ids = member_entity_ids;
 	}
 
 	/**
@@ -62,6 +69,14 @@ public class OIDCGroup implements Serializable {
 	 */
 	public void setPolicies(List<String> policies) {
 		this.policies = policies;
+	}
+
+	public List<String> getMember_entity_ids() {
+		return member_entity_ids;
+	}
+
+	public void setMember_entity_ids(List<String> member_entity_ids) {
+		this.member_entity_ids = member_entity_ids;
 	}
 
 	@Override

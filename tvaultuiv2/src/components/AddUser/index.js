@@ -328,7 +328,7 @@ const AddUser = (props) => {
                     effect for users.
                   </InstructionText>
                 )}
-              {(isCertificate || isIamSvcAccount || isAzureSvcAccount) && (
+              {(isCertificate || isIamSvcAccount) && (
                 <InstructionText>
                   Note: Denying the admin will not take any effect for users.
                 </InstructionText>

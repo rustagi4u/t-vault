@@ -31,11 +31,13 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tomcat.jni.Directory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -930,7 +932,7 @@ public class AzureServicePrincipalAccountsService {
 		String azureMetaDataPath = "metadata/" + path;
 		return reqProcessor.process("/sdb", PATHSTR + azureMetaDataPath + "\"}", token);
 	}
-	
+
 	/**
 	 * Method to verify the user for add user to Azure service account.
 	 * @param token
@@ -1402,8 +1404,7 @@ public class AzureServicePrincipalAccountsService {
 			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 		} 
 	}
-	
-	
+
 	/**
 	 * Find Azure service account from metadata.
 	 * 
@@ -1411,8 +1412,9 @@ public class AzureServicePrincipalAccountsService {
 	 * @param azureSvcaccName
 	 * @return
 	 */
-	public ResponseEntity<String> getAzureServiceAccountSecretKey(String token, String azureSvcaccName, String folderName) {
+	public ResponseEntity<String> getAzureServiceAccountSecretKey(String token, String azureSvcaccName, String folderName) throws IOException {
 		String path = AzureServiceAccountConstants.AZURE_SVCC_ACC_PATH + azureSvcaccName + "/" + folderName;
+
 		Response response = reqProcessor.process("/azuresvcacct", PATHSTR + path + "\"}", token);
 		if (response.getHttpstatus().equals(HttpStatus.OK)) {
 			JsonParser jsonParser = new JsonParser();
@@ -2871,6 +2873,18 @@ public class AzureServicePrincipalAccountsService {
 		if (TVaultConstants.USERPASS.equals(vaultAuthMethod)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body("{\"errors\":[\"This operation is not supported for Userpass authentication. \"]}");
+		}
+
+		if (isOwnerDeniedViaGroupPermission(token, userDetails, azureServiceAccountGroup)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.ADD_GROUP_TO_AZURESVCACC_MSG)
+					.put(LogMessage.MESSAGE, String.format("Failed to add group permission to Azure service principal [%s] because.",
+							azureServiceAccountGroup.getAzureSvcAccName()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Failed to add group because it would deny the owner. " +
+							"Please remove the owner from this group before proceeding.\"]}");
 		}
 
 		boolean canAddGroup = isAuthorizedToAddPermissionInAzureSvcAcc(userDetails, azureServiceAccountGroup.getAzureSvcAccName(), false);
@@ -4481,7 +4495,7 @@ public class AzureServicePrincipalAccountsService {
 	 * @param aspTransferRequest
 	 * @return
 	 */
-	public ResponseEntity<String> transferAzureServicePrincipal(String token, UserDetails userDetails, ASPTransferRequest aspTransferRequest) {
+	public ResponseEntity<String> transferAzureServicePrincipal(String token, UserDetails userDetails, ASPTransferRequest aspTransferRequest) throws JsonProcessingException {
 		List<String> onboardedList = getOnboardedAzureServiceAccountList(token);
 		String servicePrincipalName = aspTransferRequest.getServicePrincipalName();
 		if (!onboardedList.contains(servicePrincipalName)) {
@@ -4539,8 +4553,42 @@ public class AzureServicePrincipalAccountsService {
 		if (!StringUtils.isEmpty(aspTransferRequest.getApplicationTag())) {
 			newAzureServiceAccount.setApplicationTag(aspTransferRequest.getApplicationTag());
 		}
-		boolean addSudoPermissionToOwnerResponse = addSudoPermissionToOwner(token, newAzureServiceAccount, userDetails, servicePrincipalName);
 
+		boolean removedUsersSuccess = removeRedundantUserPermissionsAfterTransfer(userDetails, currentAzureServiceAccount,
+				newAzureServiceAccount, servicePrincipalName, metaResponse);
+
+		if (removedUsersSuccess) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Successfully removed user permissions from Azure Service Principal [%s] on transfer",
+							servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+		} else {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("Removing user permissions for Azure Service Principal [%s] on transfer failed.", servicePrincipalName))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS)
+					.body("{\"errors\":[\"Failed to remove user permissions for Azure Service Principal.\"]}");
+		}
+
+		boolean isNewOwnerDeniedViaGroup = isOwnerDeniedViaGroupPermission(userDetails, aspTransferRequest.getOwnerNtid(), metaResponse);
+
+		if (isNewOwnerDeniedViaGroup) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+					.put(LogMessage.MESSAGE, String.format("New owner [%s] is denied via group permission, which is not allowed.",
+							aspTransferRequest.getOwnerNtid()))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return ResponseEntity.status(HttpStatus.MULTI_STATUS)
+					.body("{\"errors\":[\"New owner is denied via group deny permission. Please remove them from this group before transferring.\"]}");
+		}
+
+		boolean addSudoPermissionToOwnerResponse = addSudoPermissionToOwner(token, newAzureServiceAccount,
+				userDetails, servicePrincipalName);
 		if (addSudoPermissionToOwnerResponse) {
 			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -4549,6 +4597,30 @@ public class AzureServicePrincipalAccountsService {
 									"account [%s]",
 							currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
 					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+
+			//Add rotate permisson to the Azure service account owner
+			AzureServiceAccountUser azureServiceAccountUser = new AzureServiceAccountUser(newAzureServiceAccount.getServicePrincipalName(),
+					newAzureServiceAccount.getOwnerNtid(), AzureServiceAccountConstants.AZURE_ROTATE_MSG_STRING);
+			ResponseEntity<String> addUserToAzureSvcAccResponse = addUserToAzureServiceAccount(token, userDetails,
+					azureServiceAccountUser, true);
+			if (addUserToAzureSvcAccResponse.getStatusCode().equals(HttpStatus.OK)) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+						.put(LogMessage.MESSAGE, String.format("Successfully added write permission for new owner [%s] on account [%s]",
+								currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			} else {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+						.put(LogMessage.ACTION, AzureServiceAccountConstants.TRANSFER_ASP_METHOD_NAME)
+						.put(LogMessage.MESSAGE, String.format("Failed to add write permission to owner [%s] on account [%s]",
+										currentAzureServiceAccount.getOwnerNtid(), servicePrincipalName))
+						.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+				revertTransferOnFailure(newAzureServiceAccount, servicePrincipalName, userDetails, tokenUtils.getSelfServiceToken());
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Transfer Azure Service " +
+						"Principal failed. Failed to associate write permission with owner.\"]}");
+			}
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -4635,6 +4707,137 @@ public class AzureServicePrincipalAccountsService {
 
 		return ResponseEntity.status(HttpStatus.OK)
 				.body("{\"messages\":[\"Owner has been successfully transferred for Azure Service Principal\"]}");
+	}
+
+	/**
+	 * Overloaded method which checks if <i>one particular</i> group associated with
+	 * the Azure Service Principal would deny the owner from having rotate permissions.
+	 * @param token The current token
+	 * @param userDetails Information about the current user
+	 * @param azureServiceAccountGroup The group to check against
+	 * @return boolean
+	 */
+	private boolean isOwnerDeniedViaGroupPermission(String token, UserDetails userDetails, AzureServiceAccountGroup azureServiceAccountGroup) {
+		boolean isOwnerDenied = false;
+		if (azureServiceAccountGroup.getAccess().equals(TVaultConstants.DENY_POLICY)) {
+			List<String> usersInGroup;
+			usersInGroup = getUsersFromADGroup(userDetails, azureServiceAccountGroup.getGroupname());
+			if (CollectionUtils.isNotEmpty(usersInGroup)) {
+				String ownerNtid = getOwnerNTIdFromMetadata(token, azureServiceAccountGroup.getAzureSvcAccName());
+				if (usersInGroup.contains(ownerNtid)) {
+					isOwnerDenied = true;
+				}
+			}
+		}
+		return isOwnerDenied;
+	}
+
+	/**
+	 * Overloaded method which checks if <i>any</i> group associated with
+	 * the Azure Service Principal would deny the owner from having rotate permissions.
+	 * @param userDetails Information about the current user
+	 * @param ownerNtid The owner to check against
+	 * @param metaResponse Metadata from which the groups will be fetched from
+	 * @return boolean
+	 */
+	@SuppressWarnings("unchecked")
+	private boolean isOwnerDeniedViaGroupPermission(UserDetails userDetails, String ownerNtid, Response metaResponse) {
+		boolean isOwnerDenied = false;
+		Map<String, Object> responseMap = ControllerUtil.parseJson(metaResponse.getResponse());
+		Map<String, Object> groupsMap = null;
+		if (responseMap != null) {
+			Map<String, Object> dataMap = (Map<String, Object>) responseMap.get("data");
+			if (dataMap != null) {
+				groupsMap = (Map<String, Object>) dataMap.get("groups");
+			}
+		}
+
+		if (groupsMap != null) {
+			List<String> usersInGroup;
+			for (Map.Entry<String, Object> entry : groupsMap.entrySet()) {
+				if (entry.getValue().equals(TVaultConstants.DENY_POLICY)) {
+					usersInGroup = getUsersFromADGroup(userDetails, entry.getKey());
+					if (usersInGroup.contains(ownerNtid)) {
+						isOwnerDenied = true;
+						break;
+					}
+				}
+			}
+		}
+		return isOwnerDenied;
+	}
+
+	private List<String> getUsersFromADGroup(UserDetails userDetails, String groupName) {
+		List<String> users = new ArrayList<>();
+		OIDCGroup oidcGroup = oidcUtil.getIdentityGroupDetails(groupName, userDetails.getSelfSupportToken());
+		if (oidcGroup != null) {
+			for (String memberEntityId : oidcGroup.getMember_entity_ids()) {
+				ResponseEntity<String> entityResponse = oidcUtil.readEntityById(userDetails.getSelfSupportToken(), memberEntityId);
+				if (entityResponse.getStatusCode().equals(HttpStatus.OK)) {
+					try {
+						JsonNode jsonNode = new ObjectMapper().readTree(entityResponse.getBody()).get("data").get("aliases");
+						if (jsonNode != null && jsonNode.get(0) != null) {
+							String email = jsonNode.get(0).get("name").asText();
+							String ntid = directoryService.getNtidForUser(email);
+							if (!ObjectUtils.isEmpty(ntid)) {
+								users.add(ntid);
+							}
+						}
+					} catch (IOException ioException) {
+						log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+								.put(LogMessage.ACTION, "getUsersFromADGroup")
+								.put(LogMessage.MESSAGE, String.format("Error while fetching users for AD group [%s]", groupName))
+								.put(LogMessage.APIURL,	ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+								.build()));
+					}
+				}
+			}
+		}
+		return users;
+	}
+
+	@SuppressWarnings("unchecked")
+	private boolean removeRedundantUserPermissionsAfterTransfer(UserDetails userDetails, AzureServiceAccount currentAzureSvcAcc,
+											   AzureServiceAccount newAzureSvcAcc, String servicePrincipalName, Response metaResponse) {
+		boolean isSuccess = true;
+		Map<String, Object> responseMap;
+		try {
+			responseMap = new ObjectMapper().readValue(metaResponse.getResponse(), new TypeReference<Map<String, Object>>() {});
+		} catch (IOException e) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, AzureServiceAccountConstants.AZURE_SVCACC_OFFBOARD_CREATION_TITLE)
+					.put(LogMessage.MESSAGE, String.format("Error Fetching metadata for azure service account " +
+							" [%s]", servicePrincipalName))
+					.put(LogMessage.APIURL,	ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
+					.build()));
+			return false;
+		}
+		Map<String, Object> userMap = null;
+		if (responseMap != null && responseMap.get("data") != null) {
+			Map<String, Object> metadataMap = (Map<String, Object>) responseMap.get("data");
+			userMap = (Map<String, Object>) metadataMap.get(USERS);
+		}
+
+		if (userMap != null && !userMap.isEmpty()) {
+			for (Map.Entry<String, Object> entry : userMap.entrySet()) {
+				if (entry.getKey().equals(newAzureSvcAcc.getOwnerNtid()) && !entry.getValue().equals(TVaultConstants.WRITE_POLICY)) {
+					String access = (entry.getValue().toString().equals(TVaultConstants.WRITE_POLICY)) ?
+							AzureServiceAccountConstants.AZURE_ROTATE_MSG_STRING : entry.getValue().toString();
+					AzureServiceAccountUser azureServiceAccountUser = new AzureServiceAccountUser(currentAzureSvcAcc.getServicePrincipalName(),
+							entry.getKey(), access);
+					OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+					ResponseEntity<String> removeResponse = processAndRemoveUserPermissionFromAzureSvcAcc(tokenUtils.getSelfServiceToken(),
+							azureServiceAccountUser, userDetails, oidcEntityResponse, servicePrincipalName);
+					if (!removeResponse.getStatusCode().equals(HttpStatus.OK)) {
+						isSuccess = false;
+						break;
+					}
+				}
+			}
+		}
+		return isSuccess;
 	}
 
 	/**
