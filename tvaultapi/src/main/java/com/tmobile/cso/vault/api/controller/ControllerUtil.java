@@ -3459,13 +3459,13 @@ public final class ControllerUtil {
 	}
 
 	
-	public static boolean isFolderExisting(String path,String token){
-		Response response = reqProcessor.process("/read","{\"path\":\""+path+"\"}",token);
-				if(HttpStatus.OK.equals(response.getHttpstatus())){
-					return true;
-				}
+	public static boolean isFolderExisting(String path,String token) {
+		Response response = reqProcessor.process("/read", "{\"path\":\"" + path + "\"}", token);
+		if (HttpStatus.OK.equals(response.getHttpstatus())) {
+			return true;
+		}
 		return false;
-
+	}
 
 	/**
 	 * Update metadata on ASP update

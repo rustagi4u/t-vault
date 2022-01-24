@@ -1107,15 +1107,6 @@
         ],
         "outparams":["data"]
     },
-	 { "#":"****  Read Entity By ID  *****",
-		"apiEndPoint":"/identity/entity/id",
-		"vaultEndPoint":"/identity/entity/id/<id>",
-		"method":"GET",
-		"params":[
-			{"name":"id", "required":true, "appendToPath":true}
-		],
-		"outparams":["data"]
-	},
 	 { "#":"****  Read Entity By Name  *****",
     	"apiEndPoint":"/identity/entity/name",
     	"vaultEndPoint":"/identity/entity/name/<name>",
@@ -1193,7 +1184,7 @@
 		"params":[
 			{"name":"group", "required":true, "appendToPath":true}
 		],
-		"outparams":["data/id", "data/policies", "data/member_entity_ids"]
+		"outparams":["data/id", "data/policies"]
 	},
 	{ "#":"****  Write Entity alias  *****",
 		"apiEndPoint":"/identity/entity-alias",
