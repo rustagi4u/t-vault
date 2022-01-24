@@ -3458,6 +3458,15 @@ public final class ControllerUtil {
 		}
 	}
 
+	
+	public static boolean isFolderExisting(String path,String token){
+		Response response = reqProcessor.process("/read","{\"path\":\""+path+"\"}",token);
+				if(HttpStatus.OK.equals(response.getHttpstatus())){
+					return true;
+				}
+		return false;
+
+
 	/**
 	 * Update metadata on ASP update
 	 * @param path
@@ -3516,7 +3525,6 @@ public final class ControllerUtil {
 						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 						build()));
 			}
-
 			String writeJson =  PATHSTR + _path + DATASTR + metadataJson + "}";
 			metadataResponse = reqProcessor.process(WRITESTR, writeJson, token);
 			return metadataResponse;

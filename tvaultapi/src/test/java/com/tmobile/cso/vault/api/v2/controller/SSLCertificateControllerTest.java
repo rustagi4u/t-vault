@@ -353,17 +353,6 @@ public class SSLCertificateControllerTest {
 		}
 	}
 
-	@Test
-	public void test_renewCertificate_Success() throws ParseException {
-		String certName = "test@t-mobile.com";		
-		String certficateType = "internal";
-		when(sslCertificateService.renewCertificate(certficateType, certName, userDetails, token))
-				.thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(httpServletRequest.getAttribute("UserDetails")).thenReturn(userDetails);
-		assertEquals(HttpStatus.OK,
-				SslCertificateController.renewCertificate(httpServletRequest, token, certficateType, certName).getStatusCode());
-
-	}
 
 	@Test
     public void testAddGrouptoCertificate() throws Exception {
@@ -443,20 +432,6 @@ public class SSLCertificateControllerTest {
 				sslCertificateService.getAllCertificatesOnCertType(userDetails, "internal", 1, 0).getStatusCode());
 	}
 
-	@Test
-	public void testCheckCertificateStatus() throws Exception {
-		String expected = "{\"message\":[\"Certifictae is in Revoked status\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expected);
-		when(sslCertificateService.checkCertificateStatus(Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyObject())).thenReturn(responseEntityExpected);
-		MvcResult result = mockMvc
-				.perform(MockMvcRequestBuilders.get("/v2/sslcert/checkstatus/certificatename.t-mobile.com/external")
-						.header("vault-token", token).header("Content-Type", "application/json;charset=UTF-8")
-						.requestAttr("UserDetails", userDetails).content(expected))
-				.andExpect(status().isOk()).andReturn();
-		String actual = result.getResponse().getContentAsString();
-		assertEquals(expected, actual);
-	}
 	
 	@Test
 	public void test_getAllSelfServiceGroups_success() {
@@ -557,39 +532,8 @@ public class SSLCertificateControllerTest {
 
 	}
 
-    @Test
-    public void testOnboardSSLCertificateSuccess() throws Exception {
-		sslCertOnboardRequest.setCertificateName("CertificateName.t-mobile.com");
-		sslCertOnboardRequest.setAppName("tvt");
-		sslCertOnboardRequest.setCertType("internal");
-		sslCertOnboardRequest.setCertOwnerEmailId("test@test.com");
-		sslCertOnboardRequest.setCertOwnerNtid("testuser");
-
-        when(sslCertificateService.onboardSSLcertificate(userDetails, token, sslCertOnboardRequest)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-        when(httpServletRequest.getAttribute("UserDetails")).thenReturn(userDetails);
-        assertEquals(HttpStatus.OK, SslCertificateController.onboardSSLCertificate(httpServletRequest, token, sslCertOnboardRequest).getStatusCode());
-    }
     
-    @Test
-    public void test_updateCertificate_success_Test() {
 
-        certificateUpdateRequest.setCertificateName("CertificateName");
-        certificateUpdateRequest.setCertType("internal");
-        certificateUpdateRequest.setProjectLeadEmail("user@test.com");
-
-        when(sslCertificateService.updateSSLCertificate(certificateUpdateRequest, userDetails, token)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-        when(httpServletRequest.getAttribute("UserDetails")).thenReturn(userDetails);
-        assertEquals(HttpStatus.OK, SslCertificateController.updateSSLCertificate(httpServletRequest, token, certificateUpdateRequest).getStatusCode());
-    }
-
-    @Test
-    public void test_releaseCertificate_success_Test() {
-        when(sslCertificateService.unLinkCertificate(userDetails,"test.t-mobile.com","internal","TEST")).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-        when(httpServletRequest.getAttribute("UserDetails")).thenReturn(userDetails);
-        assertEquals(HttpStatus.OK,
-                SslCertificateController.unlinkCertificate(httpServletRequest,token,"test.t-mobile.com","internal",
-                        "TEST").getStatusCode());
-    }
 
 	@Test
 	public void testGetServiceCertificates() throws Exception {
@@ -629,51 +573,6 @@ public class SSLCertificateControllerTest {
 		assertEquals(responseJson, actual);
 	}
 
-	@Test
-	public void testGetTargetSystemListSuccess() throws Exception {
-		String responseJson = "{\"targetSystems\": [ {" +
-                "  \"name\" : \"abc.com\"," +
-                "  \"description\" : \"\"," +
-                "  \"address\" : \"abc.com\"," +
-                "  \"targetSystemID\" : \"234\"" +
-                "}, {" +
-                "  \"name\" : \"cde.com\"," +
-                "  \"description\" : \"cde.com\"," +
-                "  \"address\" : \"cde.com\"," +
-                "  \"targetSystemID\" : \"123\"" +
-                "}]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		String expected = responseEntityExpected.getBody();
-		when(sslCertificateService.getTargetSystemList(Mockito.anyString(), Mockito.anyObject(), Mockito.anyString()))
-				.thenReturn(responseEntityExpected);
-		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/internal/targetsystems").header("vault-token", token)
-				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)
-				.content(expected)).andExpect(status().isOk()).andReturn();
-		String actual = result.getResponse().getContentAsString();
-		assertEquals(expected, actual);
-	}
-
-	@Test
-	public void testGetTargetSystemServiceListSuccess() throws Exception {
-		String responseJson = "{\"targetsystemservices\": [ {\n" +
-                "  \"name\" : \"testservice1\",\n" +
-                "  \"description\" : \"\",\n" +
-                "  \"targetSystemServiceId\" : \"1234\",\n" +
-                "  \"hostname\" : \"testhostname\",\n" +
-                "  \"monitoringEnabled\" : false,\n" +
-                "  \"multiIpMonitoringEnabled\" : false,\n" +
-                "  \"port\" : 22\n" +
-                "} ]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		String expected = responseEntityExpected.getBody();
-		when(sslCertificateService.getTargetSystemServiceList(Mockito.anyString(), Mockito.anyObject(), Mockito.anyString()))
-				.thenReturn(responseEntityExpected);
-		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/targetsystems/123/targetsystemservices").header("vault-token", token)
-				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)
-				.content(expected)).andExpect(status().isOk()).andReturn();
-		String actual = result.getResponse().getContentAsString();
-		assertEquals(expected, actual);
-	}
 
 	@Test
 	public void testGetCertificateDetailsSuccess() throws Exception {
@@ -716,36 +615,6 @@ public class SSLCertificateControllerTest {
 		String actual = result.getResponse().getContentAsString();
 		assertEquals(expected, actual);
 	}
-
-	@Test
-    public void testUpdateCertOwnerSuccess() throws Exception {
-		String responseJson = "{\"messages\":[\"Certificate Owner Transferred Successfully\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(sslCertificateService.updateCertOwner( Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyObject()))
-				.thenReturn(responseEntityExpected);
-		MvcResult result = mockMvc
-				.perform(MockMvcRequestBuilders.put("/v2/sslcert/internal/certificatename.t-mobile.com/owneremail@test.com/transferowner")
-						.requestAttr("UserDetails", userDetails).header("vault-token", token)
-						.header("Content-Type", "application/json;charset=UTF-8"))
-				.andExpect(status().isOk()).andReturn();
-		String actual = result.getResponse().getContentAsString();
-		assertEquals(responseJson, actual);
-    }
-
-	@Test
-    public void testDeleteCertificateSuccess() throws Exception {
-		String responseJson = "{\"messages\":[\"Certificate deleted successfully\"]}";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(sslCertificateService.deleteCertificate(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyObject()))
-				.thenReturn(responseEntityExpected);
-		MvcResult result = mockMvc
-				.perform(MockMvcRequestBuilders.delete("/v2/certificates/certificatename.t-mobile.com/internal")
-						.requestAttr("UserDetails", userDetails).header("vault-token", token)
-						.header("Content-Type", "application/json;charset=UTF-8"))
-				.andExpect(status().isOk()).andReturn();
-		String actual = result.getResponse().getContentAsString();
-		assertEquals(responseJson, actual);
-    }
 
 	@Test
 	public void testGetAllCertificatesSuccess() throws Exception {
@@ -803,12 +672,6 @@ public class SSLCertificateControllerTest {
         assertEquals(HttpStatus.OK, SslCertificateController.getAllSelfServiceGroups(httpServletRequest, token).getStatusCode());
     }
     
-    @Test
-    public void testsaveAllAppDetailsForOldCerts() {
-        when(sslCertificateService.saveAllAppDetailsForOldCerts(token, userDetails)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-        when(httpServletRequest.getAttribute("UserDetails")).thenReturn(userDetails);
-        assertEquals(HttpStatus.OK, SslCertificateController.saveAppDetailsfForOlderCerts(httpServletRequest, token).getStatusCode());
-    }
 
     @Test
     public void test_getFullCertificateList() throws Exception {

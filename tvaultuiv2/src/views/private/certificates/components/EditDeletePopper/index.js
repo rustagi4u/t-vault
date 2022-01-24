@@ -50,7 +50,7 @@ const EditDeletePopper = (props) => {
   return (
     <div>
       <FolderIconWrap>
-        <PopperElement
+        {/* <PopperElement
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'right',
@@ -79,7 +79,7 @@ const EditDeletePopper = (props) => {
             <IconDeleteActive />
             <span>Delete</span>
           </PopperItem>
-        </PopperElement>
+        </PopperElement> */}
       </FolderIconWrap>
     </div>
   );
