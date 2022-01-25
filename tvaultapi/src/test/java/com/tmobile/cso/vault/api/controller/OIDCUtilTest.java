@@ -154,14 +154,12 @@ public class OIDCUtilTest {
     public void test_getIdentityGroupDetails_success() {
         String group = "group1";
         String token = "test4ig8L3EpsJZSLAMg";
-        String dataOutput = "{\"id\": \"123-123-123-123\", \"policies\": [\"r_users_safe1\", \"r_users_safe2\"], " +
-                "\"member_entity_ids\":[1234]}";
+        String dataOutput = "{\"id\": \"123-123-123-123\", \"policies\": [\"r_users_safe1\", \"r_users_safe2\"]}";
         Response responsemock = getMockResponse(HttpStatus.OK, true, dataOutput);
 
         List<String> policies = new ArrayList<>();
         policies.add("r_users_safe1");
         policies.add("r_users_safe2");
-        List<String> ids = new ArrayList<>();
         OIDCGroup expectedOidcGroup = new OIDCGroup("123-123-123-123", policies);
 
         when(reqProcessor.process("/identity/group/name", "{\"group\":\""+group+"\"}", token)).thenReturn(responsemock);

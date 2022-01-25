@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.gson.*;
-import com.tmobile.cso.vault.api.service.OIDCAuthService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -239,7 +238,6 @@ public class OIDCUtil {
 			String responseJson = response.getResponse();
 			ObjectMapper objMapper = new ObjectMapper();
 			List<String> policies = new ArrayList<>();
-			List<String> entityIds = new ArrayList<>();
 			try {
 				OIDCGroup oidcGroup = new OIDCGroup();
 				oidcGroup.setId(objMapper.readTree(responseJson).get("id").asText());
@@ -248,11 +246,6 @@ public class OIDCUtil {
 					policies.add(policyNode.asText());
 				}
 				oidcGroup.setPolicies(policies);
-				JsonNode idsArray = objMapper.readTree(responseJson).get("member_entity_ids");
-				for (JsonNode idNode : idsArray) {
-					entityIds.add(idNode.asText());
-				}
-				oidcGroup.setMember_entity_ids(entityIds);
 				return oidcGroup;
 			}catch (IOException e) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -264,23 +257,6 @@ public class OIDCUtil {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Read entity by Id
-	 * @param token
-	 * @param id
-	 * @return
-	 */
-	public ResponseEntity<String> readEntityById(String token, String id) {
-		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
-				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
-				.put(LogMessage.ACTION, "readyEntityById")
-				.put(LogMessage.MESSAGE, "Trying to read entity...").put(LogMessage.APIURL,
-				ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
-				.build()));
-		Response response = reqProcessor.process("/identity/entity/id", "{\"id\":\"" + id + "\"}", token);
-		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
 
 	/**

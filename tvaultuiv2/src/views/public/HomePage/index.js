@@ -82,7 +82,6 @@ const rowCommonCss = css`
 `;
 
 const HeaderWrap = styled.div`
-  margin-top: 2rem;
   width: 100%;
   height: 5rem;
   display: flex;
@@ -103,7 +102,7 @@ const SpeakerWrap = styled.img`
   position: absolute;
   width: 71px;
   left: -11px;
-  top: -1.45rem;
+  top: -1rem;
   ${small} {
     width: 40px;
     left: -5px;
@@ -353,7 +352,7 @@ const MessageBannerWrap = styled.div`
   padding: 5px 0 5px 0;
   width: 100%;
   margin-bottom: 10px;
-  max-height: 43px;
+  max-height: 100%;
 
   ${small} {
     width: 100%;
@@ -364,11 +363,11 @@ const MessageBanner = styled.p`
   line-height: 1.39rem;
   font-size: 1.28rem;
   margin-left: 63px;
-
-  margin-top: 5px;
+  margin-top: 2px;
+  margin-bottom: 5px;
   font-color: #fff;
   width: 89%;
-  height: 28px;
+  height: 40px;
   overflow: auto;
   @media (max-width: 1024px) {
     width: 75%;
@@ -591,12 +590,6 @@ const LoginPage = () => {
             MobRectangle={MobRectangle}
           >
             <MainContainer Union={Union}>
-              <HeaderWrap>
-                <SpeakerText>
-                  <SpeakerWrap src={Speaker} />
-                  <LoginHeaderTextWrap LoginHeaderText={LoginHeaderText} />
-                </SpeakerText>
-              </HeaderWrap>
               <HeaderWrap>
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
