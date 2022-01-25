@@ -1,12 +1,12 @@
 const Resources = {
   tvaultDescription:
-    'T-Vault is a simplified and centralized secrets management solution for securely storing, distributing and tightly controlling access to passwords, certificates, encryption keys, tokens for protecting secrets and other sensitive data using a UI, HTTP API.',
+    'T-Vault is a simplified and centralized secrets management solution for securely storing, distributing and tightly controlling access to passwords, encryption keys and tokens for protecting secrets and other sensitive data using a UI, HTTP API.',
   loginNotes:
-    ' This instance of T-Vault is for the Cloud Security Team to share AD Service account passwords, SSH keys, AWS Access Keys, Certificates and other general sensitive information to Cloud Customers only. Do not use it for Tier1 application integrations.',
+    ' This instance of T-Vault is for the Cloud Security Team to share AD Service account passwords, SSH keys, AWS Access Keys and other general sensitive information to Cloud Customers only. Do not use it for Tier1 application integrations.',
   storeDescription:
-    'Centrally store, access, and distribute secrets like API keys, AWS IAM/STS credentials, SQL/NoSQL databases, X.509 certificates, SSH credentials, and more.',
+    'Centrally store, access, and distribute secrets like API keys, AWS IAM/STS credentials, SQL/NoSQL databases, SSH credentials and more.',
   accessDescription:
-    'Secure and tight access control for accessing passwords, certificates, encryption keys for protecting secrets and other sensitive data using a UI and HTTP API.',
+    'Secure and tight access control for accessing passwords, encryption keys and tokens for protecting secrets and other sensitive data using a UI and HTTP API.',
   distributeDescription:
     'Easily create safes, add secrets and share access to others. Integrate T-Vault with your existing workflows to distribute secrets to users.',
   serviceAccount:
@@ -59,7 +59,8 @@ const Resources = {
     'Once you add a <strong>Certificate</strong> you’ll see the  Corresponding <strong>Details</strong> here!',
   appRoles:
     'AppRoles operate a lot like safes, but they put the application as the logical unit for sharing. Additional Accessor ID and Secret ID pairs can easily be created through T-Vault, Secret IDs can only be accessed when downloaded.',
-  certificateDesc: 'Create internal certificates.',
+  certificateDesc: 'The ability to create/renew NCLM certificates in T-Vault has been decommissioned. Going forward users will need to utilize NCLM directly for certificate management. ' +
+  'You will need to create a new container in NCLM with a security group associated with it. Then you will need to move your certificates from VenafiBin_12345 to your new container. <a style="color: #E20074;" href="https://nclm.t-mobile.com/faq" target="_blank">Helpful docs</a>',
   noTransferOwnerAvailable:
     'Certificate may not be approved or rejected.Please follow the instructions mentioned in email',
   certificateGuide1:
