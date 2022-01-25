@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import styled from 'styled-components';
 import ComponentError from '../../../../../errorBoundaries/ComponentError/component-error';
-import { BackArrow } from '../../../../../assets/SvgIcons';
 import mediaBreakpoints from '../../../../../breakpoints';
-import { TitleThree } from '../../../../../styles/GlobalStyles';
 import Strings from '../../../../../resources';
+import ListDetailHeader from '../../../../../components/ListDetailHeader';
+import ReactDOMServer from 'react-dom/server';
 
 // styled components goes here
 const Section = styled('section')`
@@ -71,6 +71,12 @@ const HeaderBg = styled('div')`
   }
 `;
 
+const AttentionAlert = styled('p')`
+  color: #E20074;
+  display: inline;
+  font-weight: bold;
+`;
+
 const ListTitle = styled('h5')`
   font-size: ${(props) => props.theme.typography.h5};
   margin: 1rem 0 1.2rem;
@@ -94,23 +100,13 @@ const CertificateItemDetail = (props) => {
   return (
     <ComponentError>
       <Section>
-        {isMobileScreen ? (
-          <BackButton onClick={goBackToList}>
-            <BackArrow />
-            <span>{name !== 'N/A' ? name : '...'}</span>
-          </BackButton>
-        ) : null}
-        <ColumnHeader>
-          <HeaderBg bgImage={ListDetailHeaderBg} />
-          <div className="list-title-wrap">
-            {!isMobileScreen && (
-              <ListTitle>{name !== 'N/A' ? name : '...'}</ListTitle>
-            )}
-            <TitleThree color="#c4c4c4">
-              {Strings.Resources.certificateDesc}
-            </TitleThree>
-          </div>
-        </ColumnHeader>
+        <ListDetailHeader
+          title={name !== 'N/A' ? name : '...'}
+          description={`<span>${ReactDOMServer.renderToStaticMarkup(
+            <AttentionAlert>ATTENTION: </AttentionAlert>) + Strings.Resources.certificateDesc} </span>`}
+          bgImage={ListDetailHeaderBg}
+          goBackToList={goBackToList}
+        />
         {renderContent}
       </Section>
     </ComponentError>

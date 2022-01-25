@@ -652,7 +652,7 @@ const LoginPage = () => {
             </MainContainer>
             <ThirdRow>
               <ContactUs>
-                Developed by Cloud TeamContact us on
+                Developed by Cloud Team. Contact us on
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
