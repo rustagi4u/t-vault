@@ -514,11 +514,6 @@ const CertificatesDashboard = () => {
   useEffect(() => {
     // const array = [{ name: 'Internal' }, { name: 'External' }];
     const array = [{ name: 'Internal' }];
-    if (admin || JSON.parse(sessionStorage.getItem('isCertAdmin'))) {
-      array.push({
-        name: 'Onboard',
-      });
-    }
     setMenu([...array]);
   }, [certificateList, admin, allCertList]);
 
@@ -565,37 +560,6 @@ const CertificatesDashboard = () => {
     clearDataAndLoad();
   };
 
-  const fetchOnboardCertificates = useCallback(async () => {
-    apiService
-      .getOnboardCertificates()
-      .then((result) => {
-        const onboardCertArray = [];
-        if (result?.data?.keys) {
-          result.data.keys.map((ele) => {
-            if (ele.certType !== 'external') {
-              ele.name = ele.certificateName;
-              ele.isOnboardCert = true;
-              ele.type = 'pending';
-              return onboardCertArray.push(ele);
-            }
-            return null;
-          });
-        }
-        setOnboardCertificates([...onboardCertArray]);
-        setOnboardStatus({ status: 'success' });
-      })
-      .catch((e) => {
-        setOnboardCertificates([]);
-        if (e?.response?.data?.errors && e?.response?.data?.errors[0]) {
-          setOnboardStatus({
-            status: 'error',
-            message: e?.response?.data?.errors[0],
-          });
-        }
-      });
-    // eslint-disable-next-line
-  }, []);
-
   const searchAllcertApi = useCallback(() => {
     const allSearchCerts = [];
     apiService
@@ -629,10 +593,6 @@ const CertificatesDashboard = () => {
 
   useEffect(() => {
     searchAllcertApi();
-    if (admin || JSON.parse(sessionStorage.getItem('isCertAdmin'))) {
-      setOnboardStatus({ status: 'loading' });
-      fetchOnboardCertificates();
-    }
     // eslint-disable-next-line
   }, []);
 
@@ -820,22 +780,6 @@ const CertificatesDashboard = () => {
     setOpenReleaseModal(false);
     apiService
       .onReleasecertificate(data.name, data.type, data.reason)
-      .then(async (res) => {
-        await fetchOnboardCertificates();
-        if (res?.data?.messages && res?.data?.messages[0]) {
-          setSuccessErrorDetails({
-            title: 'Certificate Status!',
-            desc: res.data.messages[0],
-          });
-        } else {
-          setSuccessErrorDetails({
-            title: 'Certificate Status!',
-            desc: 'Certificate released successfully!',
-          });
-        }
-        setSuccessErrorModal(true);
-        onCloseAllModal(true);
-      })
       .catch((e) => {
         setSuccessErrorModal(true);
         if (e?.response?.data?.errors && e?.response?.data?.errors[0]) {
@@ -872,12 +816,6 @@ const CertificatesDashboard = () => {
     setOpenOnboardModal(false);
     apiService
       .onOnboardcertificate(data)
-      .then(async () => {
-        await fetchOnboardCertificates();
-        setResponseType(1);
-        onCloseAllModal(true);
-        setToastMessage('SSL certificate onboarded successfully!');
-      })
       .catch((e) => {
         if (e?.response?.data?.errors && e?.response?.data?.errors[0]) {
           setToastMessage(e.response.data.errors[0]);
