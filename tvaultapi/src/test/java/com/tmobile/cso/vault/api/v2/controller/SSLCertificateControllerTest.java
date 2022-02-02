@@ -187,17 +187,6 @@ public class SSLCertificateControllerTest {
         when(sslCertificateService.getAllSSLCertificatesToManage("5PDrOhsy4ig8L3EpsJZSLAMg", userDetails, "",1,0,"external")).thenReturn(new ResponseEntity<>(HttpStatus.OK));
         assertEquals(HttpStatus.OK, sslCertificateService.getAllSSLCertificatesToManage("5PDrOhsy4ig8L3EpsJZSLAMg",userDetails,"",1,0,"external").getStatusCode());
     }
-    
-	@Test
-	public void test_getRevocationReasons_Success() {
-		Integer certifcateId = 56123;
-
-		when(sslCertificateService.getRevocationReasons(certifcateId, token))
-				.thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		assertEquals(HttpStatus.OK,
-				SslCertificateController.getRevocationReasons(httpServletRequest, token, certifcateId).getStatusCode());
-
-	}
 	
 	@Test
 	public void test_issueRevocationRequest_Success() {
@@ -519,21 +508,6 @@ public class SSLCertificateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(responseJson)));
     }
-
-	@Test
-	public void testGetAllOnboardPendingCertificates() throws Exception {
-		String expected = "[{\"certificateId\": 83896,\"certificateStatus\": \"Active\",\"expiryDate\": \"2021-11-15T11:22:45-08:00\",\"createDate\": \"2020-11-15T11:22:45-08:00\",\"containerName\": \"VenafiBin_12345\",\"certificateName\": \"certtest-162020-int.t-mobile.com\",\"authority\": \"T-Mobile Issuing CA 01 - SHA2\",\"dnsNames\": [\"certtest-162020-int.t-mobile.com\"],\"certType\": \"internal\"},{\"certificateId\": 82726,\"certificateStatus\": \"Active\",\"expiryDate\": \"2021-11-03T12:38:27-07:00\",\"createDate\": \"2020-11-03T11:38:28-08:00\",\"containerName\": \"VenafiBin_12345\",\"certificateName\": \"tos-metro-qat-ext.dd-stg.kube.t-mobile.com\",\"authority\": \"Entrust CA\",\"dnsNames\": [\"tos-metro-qat-ext.dd-stg.kube.t-mobile.com\"],\"certType\": \"external\"}]";
-		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expected);
-		when(sslCertificateService.getAllOnboardPendingCertificates(Mockito.anyString(), Mockito.anyObject(), Mockito.anyInt(), Mockito.anyInt()))
-				.thenReturn(responseEntityExpected);
-		mockMvc.perform(MockMvcRequestBuilders.get("/v2/sslcert/pendingcertificates").header("vault-token", token)
-				.header("Content-Type", "application/json;charset=UTF-8").requestAttr("UserDetails", userDetails)
-				.content(expected)).andExpect(status().isOk()).andReturn();
-
-	}
-
-    
-
 
 	@Test
 	public void testGetServiceCertificates() throws Exception {

@@ -86,21 +86,6 @@ public class SSLCertificateController {
      }
 	
 	/**
-	 * To Get list of revocation reasons
-	 * 
-	 * @param request
-	 * @param token
-	 * @param certificateId
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.getRevocationReasons.value}", notes = "${SSLCertificateController.getRevocationReasons.notes}")
-	@GetMapping(value = "/v2/certificates/{certificateId}/revocationreasons", produces = "application/json")
-	public ResponseEntity<String> getRevocationReasons(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token, @PathVariable("certificateId") Integer certificateId) {
-		return sslCertificateService.getRevocationReasons(certificateId, token);
-	}
-	
-	/**
 	 * Issue a revocation request for certificate
 	 * 
 	 * @param request
@@ -416,21 +401,6 @@ public class SSLCertificateController {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
 		return sslCertificateAWSRoleService.removeAWSRoleFromSSLCertificate(userDetails, token, certificateAWSRoleRequest);
 	}
-
-
-	/**
-	 * Get all on-board pending certificates from nclm
-	 * @return
-	 */
-	@ApiOperation(value = "${SSLCertificateController.getAllOnboardPendingCertificates.value}", notes = "${SSLCertificateController.getAllOnboardPendingCertificates.notes}")
-	@GetMapping(value = "/v2/sslcert/pendingcertificates", produces = "application/json")
-	public ResponseEntity<String> getAllOnboardPendingCertificates(HttpServletRequest request,
-			@RequestHeader(value = "vault-token") String token, @RequestParam(name = "limit", required = false) Integer limit, @RequestParam(name = "offset", required = false) Integer offset) throws Exception { 
-		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return sslCertificateService.getAllOnboardPendingCertificates(token, userDetails, limit, offset);
-	}
-	
-	
 
 	@ApiOperation(value = "${SSLCertificateController.getFullCertificateList.value}", notes = "${SSLCertificateController.getFullCertificateList.notes}")
 	@GetMapping(value = "/v2/sslcert/allcertificates", produces = "application/json")
