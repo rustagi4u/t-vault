@@ -318,7 +318,7 @@ const CreateAppRole = (props) => {
     dispatch({
       type: 'INPUT_FORM_FIELDS',
       field: e?.target?.name,
-      value: e?.target?.value,
+      value: e?.target?.value.toLowerCase(),
     });
   };
   const {
@@ -422,7 +422,7 @@ const CreateAppRole = (props) => {
 
   const onRoleNameChange = (e) => {
     setApproleError(false);
-    validateRoleName(e.target.value);
+    validateRoleName(e.target.value.toLowerCase());
     onChange(e);
   };
 
@@ -776,7 +776,7 @@ const CreateAppRole = (props) => {
             <IconDescriptionWrapper>
               <SafeIcon src={ApproleIcon} alt="app-role-icon" />
               <TitleThree lineHeight="1.8rem" extraCss={extraCss} color="#ccc">
-                Approles’s operate a lot like safes, but they put the
+                Approles operate a lot like safes, but they put the
                 application at the logical unit for sharing.
               </TitleThree>
             </IconDescriptionWrapper>
