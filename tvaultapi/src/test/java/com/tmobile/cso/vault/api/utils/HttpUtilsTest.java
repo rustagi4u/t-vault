@@ -26,7 +26,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -42,16 +41,13 @@ import org.springframework.context.annotation.ComponentScan;
 
 import org.apache.http.client.HttpClient;
 
-import java.security.KeyManagementException;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.validation.constraints.AssertTrue;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
 @ComponentScan(basePackages={"com.tmobile.cso.vault.api"})
@@ -96,18 +92,10 @@ public class HttpUtilsTest {
         assertNotNull(httpClientActual);
     }
 
-    @Ignore
     @Test
-    public void test_getHttpClient_failure() {
-
-
-        when(HttpClientBuilder.create()).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setSSLContext(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.setRedirectStrategy(any())).thenReturn(httpClientBuilder);
-        when(httpClientBuilder.build()).thenThrow(KeyManagementException.class);
-
-        HttpClient httpClientActual = httpUtils.getHttpClient();
+    public void test_getHttpClient_failure() throws Exception {
+        when(HttpClientBuilder.create()).thenThrow(new RuntimeException());
+        httpUtils.getHttpClient();
         assertTrue(true);
     }
 }

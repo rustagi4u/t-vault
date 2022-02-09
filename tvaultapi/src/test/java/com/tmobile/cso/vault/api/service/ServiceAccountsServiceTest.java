@@ -2344,7 +2344,6 @@ public class ServiceAccountsServiceTest {
         assertEquals(expected, actual);
     }
 
-    @Ignore
     @Test
     public void test_getOnboardedServiceAccounts_admin_success() {
         UserDetails userDetails = getMockUser(true);
@@ -2363,7 +2362,6 @@ public class ServiceAccountsServiceTest {
 
     }
 
-    @Ignore
     @Test
     public void test_getOnboardedServiceAccounts_admin_notfound() {
         UserDetails userDetails = getMockUser(true);
@@ -5294,7 +5292,6 @@ public class ServiceAccountsServiceTest {
 
     }
 
-    @Ignore
     @Test
     public void test_getOnboardedServiceAccounts_admin_failure() {
         UserDetails userDetails = getMockUser(true);

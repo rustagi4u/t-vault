@@ -262,10 +262,9 @@ public class SafeUtilsTest {
 		Safe safeRes = safeUtils.getSafeMetaData("5PDrOhsy4ig8L3EpsJZSLAMg", "users", "mysafe01");
 	}
 
-	@Ignore
     @Test
     public void test_getSafeMetaData_failure() {
-        Response response = getMockResponse(HttpStatus.OK, true, "");
+        Response response = getMockResponse(HttpStatus.OK, true, "{");
 
         when(ControllerUtil.getSafeType("users/ert")).thenReturn("users");
         when(ControllerUtil.getSafeName("users/ert")).thenReturn("ert");
