@@ -5215,11 +5215,10 @@ public class SSLCertificateServiceTest {
 
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
-        try {
-            sSLCertificateService.removeUserFromCertificate(certUser, userDetail);
-        } catch (NullPointerException npe) {
-            assertTrue(true);
-        }
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("{\"errors\":[\"Failed to remove the user from the certificate\"]}");
+        assertEquals(expectedResponse, sSLCertificateService.removeUserFromCertificate(certUser, userDetail));
     }
 
     @Test
@@ -5231,7 +5230,7 @@ public class SSLCertificateServiceTest {
     	CertificateUser certUser = new CertificateUser("testuser2","read", "certificatename.t-mobile.com", "internal");
     	Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"r_cert_certificatename.t-mobile.com\"],\"ttl\":0,\"groups\":\"admin\"}}");
     	Response responseNotFound = getMockResponse(HttpStatus.NOT_FOUND, false, "");
-        String expectedResponse = "{\"errors\":[\"Failed to remvoe the user from the certificate\"]}";
+        String expectedResponse = "{\"errors\":[\"Failed to remove the user from the certificate\"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com","internal")).thenReturn(certificateMetadata);

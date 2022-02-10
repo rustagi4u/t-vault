@@ -4502,16 +4502,13 @@ public class IAMServiceAccountServiceTest {
 		when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any())).thenThrow(new IllegalStateException());
 		when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 
-		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Successfully added user to the IAM Service Account\"]}");
+		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body("{\"errors\":[\"Failed to configure policies for user normaluser\"]}");
 		IAMServiceAccountUser iamServiceAccountUser =  new IAMServiceAccountUser(iamServiceAccountName, "normaluser", "read",awsAccountId);
 		when(reqProcessor.process("/read", "{\"path\":\"metadata/iamsvcacc/1234567_testaccount\"}", tkn)).thenReturn(getMockResponse(HttpStatus.OK, true,
 				iamMetaDataStr));
 
-		try {
-			iamServiceAccountsService.addUserToIAMServiceAccount(tkn, userDetails, iamServiceAccountUser, false);
-		} catch (NullPointerException npe) {
-			assertTrue(true);
-		}
+		assertEquals(expectedResponse, iamServiceAccountsService.addUserToIAMServiceAccount(tkn, userDetails, iamServiceAccountUser, false));
 	}
 
 	@Test
