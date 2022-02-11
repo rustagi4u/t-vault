@@ -278,7 +278,6 @@ public class ControllerUtilTest {
         assertEquals("testuser", actualResponse.get("password"));
     }
 
-    @Ignore
     @Test
     public void test_parseJson_error() {
         String jsonStr = "{\"username\":\"testuser\",\"password\":\"testuser\",}";

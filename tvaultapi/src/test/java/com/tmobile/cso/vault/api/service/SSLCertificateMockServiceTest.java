@@ -4259,7 +4259,6 @@ public class SSLCertificateMockServiceTest {
         assertEquals(responseEntityExpected, responseEntity);
     }
 
-    @Ignore
     @Test
     public void testRemoveUserFromCertificatePolicyDataFailed() {
         CertificateUser certUser = new CertificateUser("testuser2", "deny", "certificatename.t-mobile.com", "internal");
@@ -4273,7 +4272,10 @@ public class SSLCertificateMockServiceTest {
 
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com", "internal")).thenReturn(certificateMetadata);
         when(certificateUtils.hasAddOrRemovePermission(userDetail, certificateMetadata)).thenReturn(true);
-        sSLCertificateService.removeUserFromCertificate(certUser, userDetail);
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("{\"errors\":[\"Failed to remove the user from the certificate\"]}");
+        assertEquals(expectedResponse, sSLCertificateService.removeUserFromCertificate(certUser, userDetail));
     }
 
     @Test
@@ -4285,7 +4287,7 @@ public class SSLCertificateMockServiceTest {
         CertificateUser certUser = new CertificateUser("testuser2","read", "certificatename.t-mobile.com", "internal");
         Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"r_cert_certificatename.t-mobile.com\"],\"ttl\":0,\"groups\":\"admin\"}}");
         Response responseNotFound = getMockResponse(HttpStatus.NOT_FOUND, false, "");
-        String expectedResponse = "{\"errors\":[\"Failed to remvoe the user from the certificate\"]}";
+        String expectedResponse = "{\"errors\":[\"Failed to remove the user from the certificate\"]}";
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(expectedResponse);
 
         when(certificateUtils.getCertificateMetaData(token, "certificatename.t-mobile.com","internal")).thenReturn(certificateMetadata);
