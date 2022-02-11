@@ -106,7 +106,7 @@ public class AzureServicePrincipalAccountsController {
 	@GetMapping(value = "/v2/azureserviceaccounts/secrets/{azure_svc_name}/{folderName}", produces = "application/json")
 	public ResponseEntity<String> getAzureServiceAccountSecretKey(HttpServletRequest request,
 			@RequestHeader(value = "vault-token") String token, @PathVariable("azure_svc_name") String azureServiceAccountName,
-			@PathVariable("folderName") String folderName) {
+			@PathVariable("folderName") String folderName) throws IOException {
 		return azureServicePrincipalAccountsService.getAzureServiceAccountSecretKey(token, azureServiceAccountName, folderName);
 	}
 	

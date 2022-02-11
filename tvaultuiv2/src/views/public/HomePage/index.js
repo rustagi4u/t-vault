@@ -82,7 +82,6 @@ const rowCommonCss = css`
 `;
 
 const HeaderWrap = styled.div`
-  margin-top: 2rem;
   width: 100%;
   height: 5rem;
   display: flex;
@@ -103,7 +102,7 @@ const SpeakerWrap = styled.img`
   position: absolute;
   width: 71px;
   left: -11px;
-  top: -1.45rem;
+  top: -1rem;
   ${small} {
     width: 40px;
     left: -5px;
@@ -346,12 +345,44 @@ const ContactUs = styled.p`
     width: 80%;
   }
 `;
+const MessageBannerWrap = styled.div`
+  background-color: #30323f;
+  border-width: 3px;
+  border-radius: 25px;
+  padding: 5px 0 5px 0;
+  width: 100%;
+  margin-bottom: 10px;
+  max-height: 100%;
+
+  ${small} {
+    width: 100%;
+  }
+`;
+
+const MessageBanner = styled.p`
+  line-height: 1.39rem;
+  font-size: 1.28rem;
+  margin-left: 63px;
+  margin-top: 2px;
+  margin-bottom: 5px;
+  font-color: #fff;
+  width: 89%;
+  height: 40px;
+  overflow: auto;
+  @media (max-width: 1024px) {
+    width: 75%;
+  }
+  ${small} {
+    width: 100%;
+  }
+`;
 
 const LoginPage = () => {
   const [response, setResponse] = useState({ status: 'home' });
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
+  const [bannerMessageSsl, setBannerMessageSsl] = useState('');
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
 
@@ -440,6 +471,12 @@ const LoginPage = () => {
         });
     }
     // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    axios.get(`${configUrl.baseUrl}/bannermessage`).then(async (res) => {
+      setBannerMessageSsl(res.data.data.message2);
+    });
   }, []);
 
   const onDashboardClicked = () => {
@@ -556,7 +593,9 @@ const LoginPage = () => {
               <HeaderWrap>
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
-                  <LoginHeaderTextWrap LoginHeaderText={LoginHeaderText} />
+                  <MessageBannerWrap>
+                    <MessageBanner>{bannerMessageSsl}</MessageBanner>
+                  </MessageBannerWrap>
                 </SpeakerText>
               </HeaderWrap>
               <FirstRow rowCommonCss={rowCommonCss}>
@@ -613,7 +652,7 @@ const LoginPage = () => {
             </MainContainer>
             <ThirdRow>
               <ContactUs>
-                Developed by Cloud TeamContact us on
+                Developed by Cloud Team. Contact us on
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
