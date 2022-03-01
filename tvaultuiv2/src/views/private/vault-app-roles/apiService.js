@@ -1,6 +1,8 @@
 import api from '../../../services';
 // get calls
 const getAppRole = () => api.get('/ss/approle');
+const getAllAppRoles = () => api.get(`/ss/approle/role`);
+const getAppRolesWithLimit = (limit, offset) => api.get(`/ss/approle?limit=${limit}&offset=${offset}`);
 const fetchAppRole = (appRole) => api.get(`/ss/approle/role/${appRole}`);
 const fetchAppRoleDetails = (appRole) => api.get(`/ss/approle/${appRole}`);
 const getAccessors = (appRole) => api.get(`/ss/approle/${appRole}/accessors`);
@@ -25,6 +27,8 @@ const deleteSecretIds = (payload) =>
 
 export default {
   getAppRole,
+  getAppRolesWithLimit,
+  getAllAppRoles,
   fetchAppRole,
   fetchAppRoleDetails,
   updateAppRole,

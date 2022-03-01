@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.tmobile.cso.vault.api.model.*;
 import com.tmobile.cso.vault.api.utils.CommonUtils;
 import com.tmobile.cso.vault.api.utils.EmailUtils;
@@ -347,6 +350,7 @@ public class  AppRoleService {
 		}
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
+
 	/**
 	 * Reads the list of AppRoles
 	 * @param token
@@ -355,7 +359,7 @@ public class  AppRoleService {
 	 * @param offset
 	 * @return ResponseEntity
 	 */
-	public ResponseEntity<List<AppRoleListObject>> listAppRoles(String token,  UserDetails userDetails, Integer limit, Integer offset) {
+	public ResponseEntity<String> listAppRoles(String token, UserDetails userDetails, Integer limit, Integer offset) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 			      put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				  put(LogMessage.ACTION, "listAppRoles").
@@ -379,26 +383,31 @@ public class  AppRoleService {
 			      put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 			      build()));
 		if (HttpStatus.OK.equals(response.getHttpstatus())) {
-			List<AppRoleListObject> listObjects = getAppRoleObjectList(userDetails, token, response);
+			String listObjects = getAppRoleObjectList(userDetails, response, limit, offset);
 
+			if (listObjects.equals("Failed to find AppRoles")) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"errors\":[\"Failed to find AppRoles\"]}");
+			}
 			if (TVaultConstants.HIDESELFSUPPORTADMINAPPROLE) {
 				response = ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(response, limit, offset);
 			}
 			return ResponseEntity.status(response.getHttpstatus()).body(listObjects);
 		}
 		else if (HttpStatus.NOT_FOUND.equals(response.getHttpstatus())) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ArrayList<>());
+			return ResponseEntity.status(HttpStatus.OK).body(response.getResponse());
 		}
-		return ResponseEntity.status(response.getHttpstatus()).body(new ArrayList<>());
+		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 	}
 
 	/**
-	 * Gets list of AppRoleListObjects
-	 * @param token
+	 * Gets list of AppRoleListObjects as String
+	 * @param userDetails
 	 * @param response
-	 * @return List
+	 * @param limit
+	 * @param offset
+	 * @return String
 	 */
-	private List<AppRoleListObject> getAppRoleObjectList(UserDetails userDetails, String token, Response response) {
+	private String getAppRoleObjectList(UserDetails userDetails, Response response, Integer limit, Integer offset) {
 		Map<String, Object> responseMap = ControllerUtil.parseJson(response.getResponse());
 		if(responseMap.isEmpty()) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
@@ -409,7 +418,16 @@ public class  AppRoleService {
 					build()));
 		}
 
-		List<String> appRoleNames = (ArrayList<String>) responseMap.get("keys");
+		JsonObject metadataJsonObj = new JsonObject();
+		boolean limitExists = (limit != null);
+		List<String> appRoleList = (ArrayList<String>) responseMap.get("keys");
+		if (appRoleList == null) {
+			return "Failed to find AppRoles";
+		}
+		if (limitExists && ((limit + offset) > appRoleList.size())) {
+			limit = appRoleList.size() - offset;
+		}
+		List<String> appRoleNames = limitExists ? (appRoleList).subList(offset, offset + limit) : appRoleList;
 		List<AppRoleListObject> listObjects = new ArrayList<>();
 		if (appRoleNames != null && !appRoleNames.isEmpty()) {
 			for (String roleName : appRoleNames) {
@@ -433,7 +451,14 @@ public class  AppRoleService {
 				listObjects.add(new AppRoleListObject(roleName, isOwner));
 			}
 		}
-		return listObjects;
+		int next = -1;
+		if (limitExists && appRoleList.size() > (offset + limit)) {
+			next = appRoleList.size() - (offset + limit);
+		}
+		JsonArray appRoleListArray = new Gson().toJsonTree(listObjects).getAsJsonArray();
+		metadataJsonObj.add("keys", appRoleListArray);
+		metadataJsonObj.addProperty("next", next);
+		return metadataJsonObj.toString();
 	}
 
 	/**

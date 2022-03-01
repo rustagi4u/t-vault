@@ -33,6 +33,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.tmobile.cso.vault.api.model.*;
 import com.tmobile.cso.vault.api.utils.CommonUtils;
 import com.tmobile.cso.vault.api.utils.EmailUtils;
@@ -2153,7 +2156,11 @@ public class AppRoleServiceTest {
         appRoleListObject.setOwner(true);
         List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
         appRoleListObjects.add(appRoleListObject);
-        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        JsonObject metadataJsonObj = new JsonObject();
+        JsonArray appRoleListArray = new Gson().toJsonTree(appRoleListObjects).getAsJsonArray();
+        metadataJsonObj.add("keys", appRoleListArray);
+        metadataJsonObj.addProperty("next", -1);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(metadataJsonObj.toString());
         UserDetails userDetails = getMockUser("testuser1", false);
         Response response = getMockResponse(HttpStatus.OK, true, responseJson);
         Response responseAfterHide = response;
@@ -2187,9 +2194,9 @@ public class AppRoleServiceTest {
 
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
                 .thenReturn(responseAfterHide);
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
         assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
-        assertEquals(responseEntityExpected.getBody().get(0).getRoleName(), responseEntityActual.getBody().get(0).getRoleName());
+        assertEquals(responseEntityExpected.getBody(), responseEntityActual.getBody());
     }
 
     @Test
@@ -2205,7 +2212,11 @@ public class AppRoleServiceTest {
         appRoleListObject.setOwner(true);
         List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
         appRoleListObjects.add(appRoleListObject);
-        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        JsonObject metadataJsonObj = new JsonObject();
+        JsonArray appRoleListArray = new Gson().toJsonTree(appRoleListObjects).getAsJsonArray();
+        metadataJsonObj.add("keys", appRoleListArray);
+        metadataJsonObj.addProperty("next", -1);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(metadataJsonObj.toString());
         UserDetails userDetails = getMockUser("testuser1", true);
         Response response = getMockResponse(HttpStatus.OK, true, responseJson);
         Response responseAfterHide = response;
@@ -2239,9 +2250,9 @@ public class AppRoleServiceTest {
 
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
                 .thenReturn(responseAfterHide);
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
         assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
-        assertEquals(responseEntityExpected.getBody().get(0).getRoleName(), responseEntityActual.getBody().get(0).getRoleName());
+        assertEquals(responseEntityExpected.getBody(), responseEntityActual.getBody());
     }
 
     @Test
@@ -2257,7 +2268,7 @@ public class AppRoleServiceTest {
         appRoleListObject.setOwner(true);
         List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
         appRoleListObjects.add(appRoleListObject);
-        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.NOT_FOUND).body(appRoleListObjects);
         UserDetails userDetails = getMockUser("testuser1", false);
         Response response = getMockResponse(HttpStatus.OK, true, responseJson);
         Response responseAfterHide = response;
@@ -2288,9 +2299,9 @@ public class AppRoleServiceTest {
 
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
                 .thenReturn(responseAfterHide);
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
         assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
-        assertTrue(responseEntityActual.getBody().isEmpty());
+        assertEquals(responseEntityActual.getBody(), "{\"errors\":[\"Failed to find AppRoles\"]}");
     }
 
     @Test
@@ -2301,12 +2312,7 @@ public class AppRoleServiceTest {
                 "    \"testapprole01\"\r\n" +
                 "  ]\r\n" +
                 "}";
-        AppRoleListObject appRoleListObject = new AppRoleListObject();
-        appRoleListObject.setRoleName("testapprole01");
-        appRoleListObject.setOwner(true);
-        List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
-        appRoleListObjects.add(appRoleListObject);
-        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"keys\":[],\"next\":-1}");
         UserDetails userDetails = getMockUser("testuser1", false);
         Response response = getMockResponse(HttpStatus.OK, true, responseJson);
         Response responseAfterHide = response;
@@ -2334,9 +2340,9 @@ public class AppRoleServiceTest {
 
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(), Mockito.any()))
                 .thenReturn(responseAfterHide);
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
         assertEquals(responseEntityExpected.getStatusCode(), responseEntityActual.getStatusCode());
-        assertTrue(responseEntityActual.getBody().isEmpty());
+        assertEquals(responseEntityExpected.getBody(), responseEntityActual.getBody());
     }
 
     @Test
@@ -2354,8 +2360,8 @@ public class AppRoleServiceTest {
         when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr,userDetails.getSelfSupportToken())).thenReturn(response);
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(response);
 
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
-        assertTrue(responseEntityActual.getBody().isEmpty());
+        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        assertEquals(responseEntityActual.getBody(), responseJson);
     }
 
     @Test
@@ -2372,9 +2378,9 @@ public class AppRoleServiceTest {
         String jsonStr = "{\"path\":\""+_path+"\"}";
         when(reqProcessor.process("/auth/approles/rolesbyuser/list", jsonStr,userDetails.getSelfSupportToken())).thenReturn(response);
         when(ControllerUtil.hideSelfSupportAdminAppRoleFromResponse(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(response);
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
+        ResponseEntity<String> responseEntityActual = appRoleService.listAppRoles(tkn, userDetails, 1, 0);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
-        assertTrue(responseEntityActual.getBody().isEmpty());
+        assertEquals(responseEntityActual.getBody(), responseJson);
     }
 
     @Test
