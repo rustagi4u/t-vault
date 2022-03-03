@@ -508,7 +508,7 @@ const CreateAppRole = (props) => {
     ) {
       setEditApprole(true);
       setResponseType(0);
-      setAllAppRoles([...history.location.state.appRoleDetails.allAppRoles]);
+      setAllAppRoles([...history.location.state.appRoleDetails.appRoleList]);
       apiService
         .fetchAppRole(history.location.state.appRoleDetails.name)
         .then((res) => {

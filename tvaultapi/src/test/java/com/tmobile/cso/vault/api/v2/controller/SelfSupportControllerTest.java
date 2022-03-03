@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.Gson;
 import com.tmobile.cso.vault.api.model.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -675,7 +676,7 @@ public class SelfSupportControllerTest {
 		String vaultTkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
         List<AppRoleListObject> appRoleListObjects = new ArrayList<>();
         appRoleListObjects.add(new AppRoleListObject("somename", true));
-        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(new Gson().toJson(appRoleListObjects));
         when(selfSupportService.listAppRoles(Mockito.eq(vaultTkn), Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(responseEntityExpected);
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/ss/approle")
                 .header("vault-token", vaultTkn)

@@ -141,12 +141,15 @@ const AddAppRole = (props) => {
     if (!editClicked) {
       setLoader(true);
       apiService
-        .getExistingAppRole()
+        .getAllAppRoles()
         .then((res) => {
           if (res && res.data) {
             setLoader(false);
-            if (res.data.length > 0) {
-              setMenu([...res.data.map(role => role.roleName)]);
+            if (res.data.keys.length > 0) {
+              res.data.keys = res.data.keys.filter(
+                (item) => item !== 'vault-power-user-role'
+              );
+              setMenu([...res.data.keys]);
             }
           }
         })

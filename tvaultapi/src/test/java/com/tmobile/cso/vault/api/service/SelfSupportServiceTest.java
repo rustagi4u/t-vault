@@ -20,6 +20,7 @@ package com.tmobile.cso.vault.api.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.tmobile.cso.vault.api.common.TVaultConstants;
 import com.tmobile.cso.vault.api.controller.ControllerUtil;
 import com.tmobile.cso.vault.api.controller.OIDCUtil;
@@ -3802,10 +3803,10 @@ public class SelfSupportServiceTest {
         appRoleListObjects.add(appRoleListObject);
         appRoleListObjects.add(appRoleListObject2);
         appRoleListObjects.add(appRoleListObject3);
-        ResponseEntity<List<AppRoleListObject>> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(appRoleListObjects);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(new Gson().toJson(appRoleListObjects));
 
         when(appRoleService.listAppRoles(sampletok, userDetails, 10, 0)).thenReturn(responseEntityExpected);
-        ResponseEntity<List<AppRoleListObject>> responseEntityActual = selfSupportService.listAppRoles(sampletok,userDetails, 10,0);
+        ResponseEntity<String> responseEntityActual = selfSupportService.listAppRoles(sampletok,userDetails, 10,0);
         assertEquals(responseEntityActual, responseEntityExpected);
     }
     @Test
