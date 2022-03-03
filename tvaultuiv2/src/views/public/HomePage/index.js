@@ -82,7 +82,6 @@ const rowCommonCss = css`
 `;
 
 const HeaderWrap = styled.div`
-  margin-top: 2rem;
   width: 100%;
   height: 5rem;
   display: flex;
@@ -103,7 +102,7 @@ const SpeakerWrap = styled.img`
   position: absolute;
   width: 71px;
   left: -11px;
-  top: -1.45rem;
+  top: -1rem;
   ${small} {
     width: 40px;
     left: -5px;
@@ -181,7 +180,7 @@ const MessageBannerWrap = styled.div`
   padding: 5px 0 5px 0;
   width: 100%;
   margin-bottom: 10px;
-  max-height: 43px;
+  max-height: 100%;
 
   ${small} {
     width: 100%;
@@ -193,10 +192,11 @@ const MessageBanner = styled.p`
   font-size: 1.28rem;
   margin-left: 63px;
 
-  margin-top: 5px;
+  margin-top: 2px;
+  margin-bottom: 5px;
   font-color: #fff;
   width: 89%;
-  height: 28px;
+  height: 40px;
   overflow: auto;
   @media (max-width: 1024px) {
     width: 75%;
@@ -384,7 +384,7 @@ const LoginPage = () => {
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
-  const [bannerMessageSafe, setBannerMessageSafe] = useState('');
+  const [bannerMessage1, setBannerMessage1] = useState('');
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
 
@@ -477,7 +477,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     axios.get(`${configUrl.baseUrl}/bannermessage`).then(async (res) => {
-      setBannerMessageSafe(res.data.data.message1);
+      setBannerMessage1(res.data.data.message1);
     });
   }, []);
 
@@ -595,14 +595,8 @@ const LoginPage = () => {
               <HeaderWrap>
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
-                  <LoginHeaderTextWrap LoginHeaderText={LoginHeaderText} />
-                </SpeakerText>
-              </HeaderWrap>
-              <HeaderWrap>
-                <SpeakerText>
-                  <SpeakerWrap src={Speaker} />
                   <MessageBannerWrap>
-                    <MessageBanner>{bannerMessageSafe}</MessageBanner>
+                    <MessageBanner>{bannerMessage1}</MessageBanner>
                   </MessageBannerWrap>
                 </SpeakerText>
               </HeaderWrap>

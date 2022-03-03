@@ -9,6 +9,7 @@ import sectionMobHeaderBg from '../../../../../assets/mob-safebg.svg';
 import sectionTabHeaderBg from '../../../../../assets/tab-safebg.svg';
 import mediaBreakpoints from '../../../../../breakpoints';
 import ListDetailHeader from '../../../../../components/ListDetailHeader';
+import ReactDOMServer from 'react-dom/server';
 
 // styled components goes here
 const Section = styled('section')`
@@ -37,6 +38,12 @@ const SafeDetails = (props) => {
     }
   }, [detailData]);
 
+  const AttentionAlert = styled('p')`
+  color: #E20074;
+  display: inline;
+  font-weight: bold;
+`;
+
   return (
     <ComponentError>
       <Section>
@@ -44,7 +51,12 @@ const SafeDetails = (props) => {
           title={safe?.name || '...'}
           description={
             safe?.description ||
-            'A Safe is a logical unit to store the secrets. All the safes are created within Vault. You can control access only at the safe level. As a vault administrator you can manage safes but cannot view the content of the safe.'
+            `<span>${ReactDOMServer.renderToStaticMarkup(
+              <AttentionAlert>ATTENTION: </AttentionAlert>) + 
+                'Going forward users will not be able to create safes or secrets in T-Vault. Users will instead need to utilize either Enterprise Vault or CyberArk for their secret management needs. For information on how you can onboard your application into Enterprise Vault to begin creating secrets, please use the following <a style="color: #E20074;" href="https://confluencesw.t-mobile.com/display/ATPF/Onboarding" target="_blank">onboarding guide</a>.'
+              }
+            </span>`
+              
           }
           bgImage={
             isMobileScreen
