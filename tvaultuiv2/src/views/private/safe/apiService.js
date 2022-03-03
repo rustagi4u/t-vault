@@ -30,7 +30,7 @@ const addAwsRole = (payload) => api.post('/ss/sdb/role', payload);
 const deleteAwsConfiguration = (payload) => api.delete('/ss/sdb/role', payload);
 const editAwsApplication = (payload) => api.put('/ss/sdb/role', payload);
 
-const getExistingAppRole = () => api.get('/ss/approle');
+const getAllAppRoles = () => api.get(`/ss/approle/role`);
 const addAppRole = (payload) => api.post('/ss/sdb/approle', payload);
 const deleteAppRole = (payload) => api.delete('/ss/sdb/approle', payload);
 
@@ -74,7 +74,7 @@ export default {
   deleteAwsConfiguration,
   addAwsRole,
   deleteAppRole,
-  getExistingAppRole,
+  getAllAppRoles,
   addAppRole,
   editAwsApplication,
   getUsersDetails,

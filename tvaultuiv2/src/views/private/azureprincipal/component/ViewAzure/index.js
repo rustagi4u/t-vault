@@ -586,17 +586,24 @@ const ViewAzure = (props) => {
                     color="primary"
                     onClick={() => onCloseModal()}
                   />
-                  <CancelButton>
-                    <ButtonComponent
-                      label={azureDetail.isActivated ? 'Rotate' : 'Activate'}
-                      color="secondary"
-                      onClick={() =>
-                        azureDetail.isActivated
-                          ? onRotateSecret()
-                          : onActivateClicked()
-                      }
-                    />
-                  </CancelButton>
+                  {(azureDetail.isActivated &&
+                    JSON.parse(sessionStorage.getItem('isAdmin'))) ||
+                    (azureDetail?.owner_email?.toLowerCase() ===
+                      sessionStorage.getItem('owner')?.toLowerCase() && (
+                      <CancelButton>
+                        <ButtonComponent
+                          label={
+                            azureDetail.isActivated ? 'Rotate' : 'Activate'
+                          }
+                          color="secondary"
+                          onClick={() =>
+                            azureDetail.isActivated
+                              ? onRotateSecret()
+                              : onActivateClicked()
+                          }
+                        />
+                      </CancelButton>
+                    ))}
                 </CancelSaveWrapper>
               </GlobalModalWrapper>
             </Fade>

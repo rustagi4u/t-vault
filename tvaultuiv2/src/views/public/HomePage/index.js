@@ -378,6 +378,37 @@ const ContactUs = styled.p`
     width: 80%;
   }
 `;
+const MessageBannerWrap = styled.div`
+  background-color: #30323f;
+  border-width: 3px;
+  border-radius: 25px;
+  padding: 5px 0 5px 0;
+  width: 100%;
+  margin-bottom: 10px;
+  max-height: 100%;
+
+  ${small} {
+    width: 100%;
+  }
+`;
+
+const MessageBanner = styled.p`
+  line-height: 1.39rem;
+  font-size: 1.28rem;
+  margin-left: 63px;
+  margin-top: 2px;
+  margin-bottom: 5px;
+  font-color: #fff;
+  width: 89%;
+  height: 40px;
+  overflow: auto;
+  @media (max-width: 1024px) {
+    width: 75%;
+  }
+  ${small} {
+    width: 100%;
+  }
+`;
 
 const LoginPage = () => {
   const [response, setResponse] = useState({ status: 'home' });
@@ -385,6 +416,7 @@ const LoginPage = () => {
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [bannerMessage1, setBannerMessage1] = useState('');
+
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
 
@@ -654,7 +686,7 @@ const LoginPage = () => {
             </MainContainer>
             <ThirdRow>
               <ContactUs>
-                Developed by Cloud TeamContact us on
+                Developed by Cloud Team. Contact us on
                 <a
                   target="_blank"
                   rel="noopener noreferrer"

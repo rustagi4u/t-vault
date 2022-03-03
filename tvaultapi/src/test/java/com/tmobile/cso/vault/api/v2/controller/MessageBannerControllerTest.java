@@ -74,7 +74,6 @@ public class MessageBannerControllerTest {
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseMessage);
         when(messageBannerService.readBannerMessage()).thenReturn(responseEntityExpected);
         mockMvc.perform(MockMvcRequestBuilders.get("/v2/bannermessage?path=metadata/users/message")
-                .header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
                 .header("Content-Type", "application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(responseMessage)));

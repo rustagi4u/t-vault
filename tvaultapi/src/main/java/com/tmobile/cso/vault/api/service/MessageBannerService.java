@@ -1,5 +1,5 @@
 package com.tmobile.cso.vault.api.service;
-import java.io.Console;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -63,11 +63,12 @@ public class MessageBannerService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message & SSL-message cannot be empty\"]}");
 		}
 		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty.\"]}");
 		}
 		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty.\"]}");
 		}
+		
 		String metadataJson = "";
 		try {
 			metadataJson = objMapper.writeValueAsString(metadataMap);
@@ -174,10 +175,10 @@ public class MessageBannerService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe-message & SSL-message cannot be empty\"]}");
 		}
 		if((!metadataMap.containsKey("message1")) || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty.\"]}");
 		}
 		else if(!metadataMap.containsKey("message2") || metadataMap.containsValue("") || metadataMap.containsValue(null)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty\"]}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Message cannot be empty.\"]}");
 		}
 		
 		String metadataJson = "";
@@ -258,7 +259,7 @@ public class MessageBannerService {
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 							.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 							.put(LogMessage.ACTION, "isAuthorizedToGetSecretCount")
-							.put(LogMessage.MESSAGE, "The Token has required policies to get total secret count.")
+							.put(LogMessage.MESSAGE, "The Token has required policies to write message.")
 							.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL))
 							.build()));
 					return true;
@@ -274,7 +275,7 @@ public class MessageBannerService {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, "isAuthorizedToGetSecretCount")
-				.put(LogMessage.MESSAGE, "The Token does not have required policies to get total secret count.")
+				.put(LogMessage.MESSAGE, "The Token does not have required policies to write message.")
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		return false;
 	}

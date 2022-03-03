@@ -100,6 +100,8 @@ const AzureSelectionTabs = (props) => {
     status: '',
     message: '',
   });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isActivated, setIsActivated] = useState(false);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -113,6 +115,7 @@ const AzureSelectionTabs = (props) => {
   };
 
   const getAzureServiceAllDetails = useCallback(() => {
+    setHasPermission(false);
     setPermissionResponse({ status: 'loading' });
     return apiService
       .getAzureserviceDetails(`${azureDetail.name}`)
@@ -120,8 +123,8 @@ const AzureSelectionTabs = (props) => {
         setAzureMetaData(res.data);
         if (
           res?.data?.isActivated &&
-          res?.data?.owner_ntid?.toLowerCase() ===
-            sessionStorage.getItem('username').toLowerCase()
+          (res?.data?.owner_ntid?.toLowerCase() ===
+            sessionStorage.getItem('username').toLowerCase())
         ) {
           setHasPermission(true);
           getEachUser(res.data.users);
@@ -129,6 +132,11 @@ const AzureSelectionTabs = (props) => {
         } else {
           setHasPermission(false);
           setValue(0);
+        }
+        if (res?.data?.isActivated) {
+          setIsActivated(true);
+        } else {
+          setIsActivated(false);
         }
       })
       .catch((err) => {
@@ -142,18 +150,23 @@ const AzureSelectionTabs = (props) => {
         }
         setHasPermission(false);
         setValue(0);
+        setIsActivated(false);
       });
   }, [azureDetail]);
 
   const getAzureDataSecrets = useCallback(() => {
+    console.log(azureDetail);
+
     if (azureDetail?.name) {
-      if (azureDetail.access !== 'N/A') {
+      if (azureDetail.access !== 'N/A' || (isActivated && isAdmin)) {
+        setSecretResponse({ status: 'loading' });
         apiService
           .getAzureSecrets(azureDetail.name)
           .then((res) => {
             if (res?.data) {
               setAzureSecretData(res.data);
             }
+            setSecretResponse({ status: 'success' });
           })
           .catch((err) => {
             if (azureDetail.access === 'deny') {
@@ -179,7 +192,7 @@ const AzureSelectionTabs = (props) => {
         setSecretResponse({ status: 'success' });
       }
     }
-  }, [azureDetail]);
+  }, [azureDetail, isActivated]);
 
   useEffect(() => {
     if (Object.keys(azureDetail).length > 0) {
@@ -198,6 +211,12 @@ const AzureSelectionTabs = (props) => {
 
   useEffect(() => {
     setValue(0);
+    const admin = sessionStorage.getItem('isAdmin');
+    if (admin) {
+      setIsAdmin(JSON.parse(admin));
+    } else {
+      setIsAdmin(false);
+    }
   }, [azureDetail]);
 
   return (

@@ -1436,7 +1436,11 @@ public class SSLCertificateService {
 
                  // set template variables
             Map<String, String> mailTemplateVariables = new HashMap<>();
-            mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            if (StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+                mailTemplateVariables.put("name", directoryUser.getUserName());
+            } else {
+                mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            }
             mailTemplateVariables.put(SSLCertificateConstants.CERT_TYPE, StringUtils.capitalize(certType));
             mailTemplateVariables.put(SSLCertificateConstants.CERT_NAME, certName);
             mailTemplateVariables.put(SSLCertificateConstants.CONTACT_LINK, fromEmail);
@@ -1488,7 +1492,11 @@ public class SSLCertificateService {
 
             // set template variables
             Map<String, String> mailTemplateVariables = new HashMap<>();
-            mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            if (StringUtils.isEmpty(directoryUser.getDisplayName().trim())) {
+                mailTemplateVariables.put("name", directoryUser.getUserName());
+            } else {
+                mailTemplateVariables.put("name", directoryUser.getDisplayName());
+            }
             mailTemplateVariables.put(SSLCertificateConstants.CERT_TYPE, StringUtils.capitalize(certType));
             mailTemplateVariables.put(SSLCertificateConstants.CERT_NAME, certName);
             mailTemplateVariables.put(SSLCertificateConstants.CONTACT_LINK, fromEmail);
@@ -5177,7 +5185,7 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
             } else {
                 renewResponse = nclmMockUtil.getRenewMockResponse();
             }
-			Thread.sleep(renewDelayTime);
+
 			log.debug(
 					JSONUtil.getJSON(
 							ImmutableMap.<String, String> builder()
@@ -5246,6 +5254,9 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
                 }
 
             }else {
+                if (String.valueOf(certificateId).equalsIgnoreCase(String.valueOf(certData.getCertificateId()))) {
+                    certData = getRenewedCertificate(certType, certificateName, nclmAccessToken, containerId, certificateId);
+                }
 				metaDataParams.put(SSLCertificateConstants.CERTIFICATE_ID,((Integer)certData.getCertificateId()).toString()!=null?
 						((Integer)certData.getCertificateId()).toString():String.valueOf(certificateId));
 				metaDataParams.put("createDate", certData.getCreateDate()!=null?certData.getCreateDate():object.get("createDate").getAsString());
@@ -5668,17 +5679,18 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
 						.build()));
 			}
 		}
-		if(ldapConfigresponse.getHttpstatus().equals(HttpStatus.NO_CONTENT) || ldapConfigresponse.getHttpstatus().equals(HttpStatus.OK)){
+		if(ldapConfigresponse != null && (ldapConfigresponse.getHttpstatus().equals(HttpStatus.NO_CONTENT) ||
+                ldapConfigresponse.getHttpstatus().equals(HttpStatus.OK))){
 			return updateMetadataForRemoveUserFromCertificate(userName, certificatePath, authToken, groups,
 					currentpoliciesString, userDetails, currentpolicies, oidcEntityResponse.getEntityName());
 		} else {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, SSLCertificateConstants.REMOVE_USER_FROM_CERT_MSG).
-					put(LogMessage.MESSAGE, "Failed to remvoe the user from the certificate").
+					put(LogMessage.MESSAGE, "Failed to remove the user from the certificate").
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to remvoe the user from the certificate\"]}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to remove the user from the certificate\"]}");
 		}
 	}
 
@@ -6538,6 +6550,14 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
         return displayName;
     }
 
+    private String getUserName(DirectoryUser directoryUser) {
+        String userName = "";
+        if (Objects.nonNull(directoryUser)) {
+            userName = directoryUser.getUserName();
+        }
+        return userName;
+    }
+
     //get User Email
     private String getUserEmail(DirectoryUser directoryUser) {
         String emailId = "";
@@ -6556,10 +6576,22 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
      */
     private void sendTransferEmail(Map<String, String> metaDataParams, String newOwner, String oldOwner) {
         Map<String, String> mailTemplateVariables = new HashMap<>();
-        mailTemplateVariables.put("oldOwnerName", getDisplayName(getUserDetails(oldOwner)));
-        mailTemplateVariables.put("newOwnerName", getDisplayName(getUserDetails(newOwner)));
-        mailTemplateVariables.put("oldOwnerEmail", getUserEmail(getUserDetails(oldOwner)));
-        mailTemplateVariables.put("newOwnerEmail", getUserEmail(getUserDetails(newOwner)));
+        DirectoryUser oldOwnerObj = getUserDetails(oldOwner);
+        DirectoryUser newOwnerObj = getUserDetails(newOwner);
+        String oldOwnerName = "";
+        String newOwnerName = "";
+        if (oldOwnerObj != null) {
+            oldOwnerName = StringUtils.isEmpty(getDisplayName(oldOwnerObj).trim()) ? getUserName(oldOwnerObj) :
+                    getDisplayName(oldOwnerObj);
+        }
+        mailTemplateVariables.put("oldOwnerName", oldOwnerName);
+        if (newOwnerObj != null) {
+            newOwnerName = StringUtils.isEmpty(getDisplayName(newOwnerObj).trim()) ? getUserName(newOwnerObj) :
+                    getDisplayName(newOwnerObj);
+        }
+        mailTemplateVariables.put("newOwnerName", newOwnerName);
+        mailTemplateVariables.put("oldOwnerEmail", getUserEmail(oldOwnerObj));
+        mailTemplateVariables.put("newOwnerEmail", getUserEmail(newOwnerObj));
         mailTemplateVariables.put(SSLCertificateConstants.CERT_TYPE, StringUtils.capitalize(metaDataParams.get(SSLCertificateConstants.CERT_TYPE)));
         mailTemplateVariables.put(SSLCertificateConstants.CERT_NAME, metaDataParams.get("certificateName"));
         mailTemplateVariables.put("certStartDate", (Objects.nonNull(metaDataParams.get("createDate"))) ?
@@ -7376,7 +7408,7 @@ public ResponseEntity<String> getRevocationReasons(Integer certificateId, String
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, SSLCertificateConstants.REMOVE_USER_FROM_CERT_MSG).
-					put(LogMessage.MESSAGE, "Failed to remvoe the user from the certificate").
+					put(LogMessage.MESSAGE, "Failed to remove the user from the certificate").
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 					build()));
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to remove the " +

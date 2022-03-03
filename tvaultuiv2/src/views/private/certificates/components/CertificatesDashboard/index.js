@@ -14,15 +14,12 @@ import mediaBreakpoints from '../../../../../breakpoints';
 import ComponentError from '../../../../../errorBoundaries/ComponentError/component-error';
 import NoData from '../../../../../components/NoData';
 import noCertificateIcon from '../../../../../assets/nocertificate.svg';
-import FloatingActionButtonComponent from '../../../../../components/FormFields/FloatingActionButton';
 import Error from '../../../../../components/Error';
 import ScaledLoader from '../../../../../components/Loaders/ScaledLoader';
 import CertificatesReviewDetails from '../CertificatesReviewDetails';
 import CertificateItemDetail from '../CertificateItemDetail';
 import apiService from '../../apiService';
-import EditCertificate from '../EditCertificate';
 import TransferCertificate from '../TransferCertificateOwner';
-import CreateCertificates from '../../CreateCertificates';
 import LeftColumn from './components/LeftColumn';
 import { useStateValue } from '../../../../../contexts/globalState';
 import SelectWithCountComponent from '../../../../../components/FormFields/SelectWithCount';
@@ -88,13 +85,6 @@ const NoDataWrapper = styled.div`
 
 const NoListWrap = styled.div`
   width: 35%;
-`;
-
-const FloatBtnWrapper = styled('div')`
-  position: absolute;
-  bottom: 1rem;
-  right: 2.5rem;
-  z-index: 1;
 `;
 
 const SearchWrap = styled.div`
@@ -524,11 +514,6 @@ const CertificatesDashboard = () => {
   useEffect(() => {
     // const array = [{ name: 'Internal' }, { name: 'External' }];
     const array = [{ name: 'Internal' }];
-    if (admin || JSON.parse(sessionStorage.getItem('isCertAdmin'))) {
-      array.push({
-        name: 'Onboard',
-      });
-    }
     setMenu([...array]);
   }, [certificateList, admin, allCertList]);
 
@@ -575,37 +560,6 @@ const CertificatesDashboard = () => {
     clearDataAndLoad();
   };
 
-  const fetchOnboardCertificates = useCallback(async () => {
-    apiService
-      .getOnboardCertificates()
-      .then((result) => {
-        const onboardCertArray = [];
-        if (result?.data?.keys) {
-          result.data.keys.map((ele) => {
-            if (ele.certType !== 'external') {
-              ele.name = ele.certificateName;
-              ele.isOnboardCert = true;
-              ele.type = 'pending';
-              return onboardCertArray.push(ele);
-            }
-            return null;
-          });
-        }
-        setOnboardCertificates([...onboardCertArray]);
-        setOnboardStatus({ status: 'success' });
-      })
-      .catch((e) => {
-        setOnboardCertificates([]);
-        if (e?.response?.data?.errors && e?.response?.data?.errors[0]) {
-          setOnboardStatus({
-            status: 'error',
-            message: e?.response?.data?.errors[0],
-          });
-        }
-      });
-    // eslint-disable-next-line
-  }, []);
-
   const searchAllcertApi = useCallback(() => {
     const allSearchCerts = [];
     apiService
@@ -639,10 +593,6 @@ const CertificatesDashboard = () => {
 
   useEffect(() => {
     searchAllcertApi();
-    if (admin || JSON.parse(sessionStorage.getItem('isCertAdmin'))) {
-      setOnboardStatus({ status: 'loading' });
-      fetchOnboardCertificates();
-    }
     // eslint-disable-next-line
   }, []);
 
@@ -830,22 +780,6 @@ const CertificatesDashboard = () => {
     setOpenReleaseModal(false);
     apiService
       .onReleasecertificate(data.name, data.type, data.reason)
-      .then(async (res) => {
-        await fetchOnboardCertificates();
-        if (res?.data?.messages && res?.data?.messages[0]) {
-          setSuccessErrorDetails({
-            title: 'Certificate Status!',
-            desc: res.data.messages[0],
-          });
-        } else {
-          setSuccessErrorDetails({
-            title: 'Certificate Status!',
-            desc: 'Certificate released successfully!',
-          });
-        }
-        setSuccessErrorModal(true);
-        onCloseAllModal(true);
-      })
       .catch((e) => {
         setSuccessErrorModal(true);
         if (e?.response?.data?.errors && e?.response?.data?.errors[0]) {
@@ -882,12 +816,6 @@ const CertificatesDashboard = () => {
     setOpenOnboardModal(false);
     apiService
       .onOnboardcertificate(data)
-      .then(async () => {
-        await fetchOnboardCertificates();
-        setResponseType(1);
-        onCloseAllModal(true);
-        setToastMessage('SSL certificate onboarded successfully!');
-      })
       .catch((e) => {
         if (e?.response?.data?.errors && e?.response?.data?.errors[0]) {
           setToastMessage(e.response.data.errors[0]);
@@ -1127,16 +1055,7 @@ const CertificatesDashboard = () => {
                         <NoListWrap>
                           <NoData
                             imageSrc={noCertificateIcon}
-                            description="Create a certificate to get started!"
-                            actionButton={
-                              <FloatingActionButtonComponent
-                                href="/certificates/create-ceritificate"
-                                color="secondary"
-                                icon="add"
-                                tooltipTitle="Create New Certificate"
-                                tooltipPos="bottom"
-                              />
-                            }
+                            description="No certificates available!"
                             customStyle={customStyle}
                           />
                         </NoListWrap>
@@ -1145,17 +1064,6 @@ const CertificatesDashboard = () => {
                   </>
                 )}
               </>
-            )}
-            {certificateList.length > 0 && (
-              <FloatBtnWrapper>
-                <FloatingActionButtonComponent
-                  href="/certificates/create-ceritificate"
-                  color="secondary"
-                  icon="add"
-                  tooltipTitle="Create New Certificate"
-                  tooltipPos="left"
-                />
-              </FloatBtnWrapper>
             )}
           </LeftColumnSection>
           <RightColumnSection
@@ -1220,29 +1128,6 @@ const CertificatesDashboard = () => {
               />
             </Switch>
           </RightColumnSection>
-          <Switch>
-            <Route
-              exact
-              path="/certificates/create-ceritificate"
-              render={() => (
-                <CreateCertificates
-                  refresh={() => {
-                    clearDataAndLoad();
-                    searchAllcertApi();
-                  }}
-                />
-              )}
-            />
-            <Route
-              exact
-              path="/certificates/edit-certificate"
-              render={() => (
-                <EditCertificate
-                  refresh={(status) => onCloseAllModal(status)}
-                />
-              )}
-            />
-          </Switch>
         </SectionPreview>
         {responseType === -1 && (
           <SnackbarComponent

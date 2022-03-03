@@ -227,7 +227,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 		String expected = responseEntityExpected.getBody();
 
-		when(azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any()))
+		when(azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any()))
 				.thenReturn(responseEntityExpected);		
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/azureserviceaccounts")
 				.header(VAULT_TOKEN_STRING, token)
@@ -263,7 +263,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 		String inputJson = new ObjectMapper().writeValueAsString(serviceAccountAWSRole);
 		String responseJson = "{\"messages\":[\"AWS Role created \"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(azureServicePrincipalAccountsService.createAWSRole(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
+		when(azureServicePrincipalAccountsService.createAWSRole(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
 				Mockito.any(AWSLoginRole.class))).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/azureserviceaccounts/aws/role").header(VAULT_TOKEN_STRING, token)
@@ -278,7 +278,7 @@ public class AzureServicePrincipalAccountsControllerTest {
         String inputJson =new ObjectMapper().writeValueAsString(serviceAccountAWSRole);
 		String responseJson = "{\"messages\":[\"AWS Role created \"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(azureServicePrincipalAccountsService.createIAMRole(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any()))
+		when(azureServicePrincipalAccountsService.createIAMRole(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any()))
 				.thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/azureserviceaccounts/aws/iam/role")
@@ -300,7 +300,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 		String responseJson = "{\"messages\":[\"AWS Role successfully associated with Azure Service Account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 
-		when(azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
+		when(azureServicePrincipalAccountsService.addAwsRoleToAzureSvcacc(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
 				Mockito.any(AzureServiceAccountAWSRole.class))).thenReturn(responseEntityExpected);
 		
 		
@@ -332,7 +332,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 
 		String responseJson = "{\"messages\":[\"Azure Service Principal activated successfully\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(azureServicePrincipalAccountsService.activateAzureServicePrincipal(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), eq(userDetails), Mockito.any())).thenReturn(responseEntityExpected);
+		when(azureServicePrincipalAccountsService.activateAzureServicePrincipal(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.eq(userDetails), Mockito.any())).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/azureserviceaccounts/activateAzureServicePrincipal?servicePrincipalName=testaureserviceprincipal").requestAttr("UserDetails", userDetails)
 				.header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -361,7 +361,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 		String inputJson = getJSON(azureServicePrincipalRotateRequest);
 		String responseJson = "{\"messages\":[\"Azure Service Principal secret rotated successfully\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(azureServicePrincipalAccountsService.rotateSecret(eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AzureServicePrincipalRotateRequest.class))).thenReturn(responseEntityExpected);
+		when(azureServicePrincipalAccountsService.rotateSecret(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AzureServicePrincipalRotateRequest.class))).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/azureserviceaccounts/rotate").requestAttr("UserDetails", userDetails)
 				.header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")
@@ -383,7 +383,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 		String responseJson = "{\"messages\":[\"AWS Role successfully removed from Azure Service Account\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
 
-		when(azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(eq(userDetails), eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
+		when(azureServicePrincipalAccountsService.removeAwsRoleFromAzureSvcacc(Mockito.eq(userDetails), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"),
 				Mockito.any(AzureServiceAccountAWSRole.class))).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.delete("/v2/azureserviceaccounts/role")
@@ -457,6 +457,25 @@ public class AzureServicePrincipalAccountsControllerTest {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/v2/azureserviceaccounts/testiamsvcacc01")
 				.header(VAULT_TOKEN_STRING, token).header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)
 				.requestAttr(USER_DETAILS_STRING, userDetails)).andExpect(status().isOk()).andReturn();
+		String actual = result.getResponse().getContentAsString();
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testTransferAzureServiceAccountSuccess() throws Exception {
+		AzureServiceAccount serviceAccount = generateAzureServiceAccount("svc_cce_usertestrr16");
+
+		String expected = "{\"messages\":[\"Owner has been successfully transferred for Azure Service Principal\"]}";
+		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expected);
+		when(azureServicePrincipalAccountsService.transferAzureServicePrincipal(Mockito.anyString(), Mockito.any(), Mockito.any()))
+				.thenReturn(responseEntityExpected);
+		String inputJson = getJSON(serviceAccount);
+		MvcResult result = mockMvc
+				.perform(MockMvcRequestBuilders.post("/v2/azureserviceaccounts/transfer").header(VAULT_TOKEN_STRING, token)
+						.header(CONTENT_TYPE_STRING, CONTENT_TYPE_VALUE_STRING)
+						.requestAttr(USER_DETAILS_STRING, userDetails).content(inputJson))
+				.andExpect(status().isOk()).andReturn();
+
 		String actual = result.getResponse().getContentAsString();
 		assertEquals(expected, actual);
 	}
