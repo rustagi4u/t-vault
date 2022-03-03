@@ -33,6 +33,7 @@ import com.tmobile.cso.vault.api.service.SelfSupportService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
 
@@ -119,18 +120,7 @@ public class SelfSupportController {
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.getInfo(userDetails, path);
 	}
-	/**
-	 * 
-	 * @param token
-	 * @param safe
-	 * @return
-	 */
-	@ApiOperation(value = "${SelfSupportController.createSafe.value}", notes = "${SelfSupportController.createSafe.notes}")
-	@PostMapping(value="/v2/ss/sdb", consumes="application/json",produces="application/json")
-	public ResponseEntity<String> createSafe(HttpServletRequest request, @RequestHeader(value="vault-token" ) String token, @RequestBody Safe safe) {
-		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
-		return selfSupportService.createSafe(userDetails, safe);
-	}
+
 	/**
 	 * 
 	 * @param request
@@ -145,18 +135,6 @@ public class SelfSupportController {
 		return selfSupportService.isAuthorized(userDetails, path);
 	}
 
-	/**
-	 *
-	 * @param token
-	 * @param safe
-	 * @return
-	 */
-	@ApiOperation(value = "${SelfSupportController.updateSafe.value}", notes = "${SelfSupportController.updateSafe.notes}")
-	@PutMapping(value="/v2/ss/sdb", consumes="application/json",produces="application/json")
-	public ResponseEntity<String> updateSafe(HttpServletRequest request, @RequestHeader(value="vault-token" ) String token, @RequestBody Safe safe) {
-		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
-		return selfSupportService.updateSafe(userDetails,  safe);
-	}
 	/**
 	 * Deletes a SDB folder
 	 * @param token
@@ -515,7 +493,7 @@ public class SelfSupportController {
 		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
 		return selfSupportService.transferSafe(token, safeTransferRequest, userDetails);
 	}
-	
+
 	/**
 	 * To list aws ec2 roles
 	 * @param request

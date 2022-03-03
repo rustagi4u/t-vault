@@ -1,0 +1,8 @@
+{
+   "name":"uibannermessage",
+   "path": {
+     "metadata/users/message": {
+       "policy": "write"
+     }
+   }
+}

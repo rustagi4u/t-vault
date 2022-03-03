@@ -173,6 +173,39 @@ const Description = styled.p`
   }
 `;
 
+const MessageBannerWrap = styled.div`
+  background-color: #30323f;
+  border-width: 3px;
+  border-radius: 25px;
+  padding: 5px 0 5px 0;
+  width: 100%;
+  margin-bottom: 10px;
+  max-height: 100%;
+
+  ${small} {
+    width: 100%;
+  }
+`;
+
+const MessageBanner = styled.p`
+  line-height: 1.39rem;
+  font-size: 1.28rem;
+  margin-left: 63px;
+
+  margin-top: 2px;
+  margin-bottom: 5px;
+  font-color: #fff;
+  width: 89%;
+  height: 40px;
+  overflow: auto;
+  @media (max-width: 1024px) {
+    width: 75%;
+  }
+  ${small} {
+    width: 100%;
+  }
+`;
+
 const ButtonWrap = styled.div`
   display: flex;
   ${small} {
@@ -382,7 +415,8 @@ const LoginPage = () => {
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
-  const [bannerMessageSsl, setBannerMessageSsl] = useState('');
+  const [bannerMessage1, setBannerMessage1] = useState('');
+
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
 
@@ -475,7 +509,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     axios.get(`${configUrl.baseUrl}/bannermessage`).then(async (res) => {
-      setBannerMessageSsl(res.data.data.message2);
+      setBannerMessage1(res.data.data.message1);
     });
   }, []);
 
@@ -594,7 +628,7 @@ const LoginPage = () => {
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
                   <MessageBannerWrap>
-                    <MessageBanner>{bannerMessageSsl}</MessageBanner>
+                    <MessageBanner>{bannerMessage1}</MessageBanner>
                   </MessageBannerWrap>
                 </SpeakerText>
               </HeaderWrap>

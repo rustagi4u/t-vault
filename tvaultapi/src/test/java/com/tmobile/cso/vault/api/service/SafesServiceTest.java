@@ -186,54 +186,6 @@ public class SafesServiceTest {
     }
 
     @Test
-    public void test_createfolder_successfully() {
-
-        String responseJson = "{  \"messages\": [    \"Folder created \"  ]}";
-        String path = "shared/mysafe01";
-        String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(true);
-        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
-        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void test_createfolder_successfully_noContent() {
-
-        String responseJson = "{\"messages\":[\"Folder created \"]}";
-        String path = "shared/mysafe01";
-        String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(true);
-        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
-        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void test_createfolder_failure_400() {
-
-        String responseJson = "{\"errors\":[\"Invalid path\"]}";
-        String path = "shared/mysafe01";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseJson);
-
-        when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(false);
-        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
     public void testcreateSafesuccessfully() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
@@ -408,172 +360,19 @@ public class SafesServiceTest {
     public void testdeleteSafefailed400() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         String path = "shared/mysafe01";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe(path,safeBasicDetails);
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe", "T-Vault", "tvt");
+        Safe safe = new Safe(path, safeBasicDetails);
         ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid 'path' specified\"]}");
 
         when(ControllerUtil.isValidSafePath(path)).thenReturn(false);
         when(ControllerUtil.isValidSafe(path, token)).thenReturn(false);
         when(ControllerUtil.isValidDataPath(path)).thenReturn(false);
         UserDetails userDetails = new UserDetails();
-        userDetails.setUsername("testuser1"); 
+        userDetails.setUsername("testuser1");
         ResponseEntity<String> responseEntity = safesService.deleteSafe(token, safe, userDetails);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
-
-    @Test
-    public void testupdateSafesuccessfully() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        String metadatajson = "{\"path\":\"metadata/shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\",\"aws-roles\":null,\"groups\":null,\"users\":null}}";
-
-        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
-        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
-        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
-        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
-        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
-
-        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",token)).thenReturn(readResponse);
-        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
-        when(reqProcessor.process("/sdb/update",metadatajson,token)).thenReturn(responseNoContent);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-
-    @Test
-    public void testupdateSafefailuredescriptiontoolong() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe My first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
-                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values: Description too long\"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void testupdateSafefailure400() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid 'path' specified\"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
-        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
-        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
-        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
-        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(false);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void testupdateSafefailure404() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        Response readResponse = getMockResponse(HttpStatus.NOT_FOUND, true, "");
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error Fetching existing safe info. please check the path specified \"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
-        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
-        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
-        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
-        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
-        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
-
-        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",token)).thenReturn(readResponse);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
-    @Test
-    public void testupdateSafefailureinvalidInput() {
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
-
-        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values\"]}");
-
-        Map<String,Object> reqparams = null;
-        try {
-            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
-        when(ControllerUtil.areSDBInputsValid(reqparams)).thenReturn(false);
-        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
-
 
     @Test
     public void test_addUserToSafe_failure_400() {
@@ -1907,47 +1706,6 @@ public class SafesServiceTest {
         ResponseEntity<String> responseEntityActual = safesService.removeApproleFromSafe(token, inputJson);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
         assertEquals(responseEntityExpected, responseEntityActual);
-    }
-
-    @Test
-    public void test_createNestedfolder_successfully() {
-
-        String responseJson = "{\"messages\":[\"Folder created \"]}";
-        String path = "shared/mysafe01";
-        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(path)).thenReturn(true);
-        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
-        UserDetails userDetails = getMockUser(false);
-        VaultTokenLookupDetails  vaultTokenLookupDetails = new VaultTokenLookupDetails();
-        vaultTokenLookupDetails.setPolicies(new String[] {"w_shared_mysafe01"});
-        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-        try {
-            when(tokenValidator.getVaultTokenLookupDetails(token)).thenReturn(vaultTokenLookupDetails);
-        } catch (TVaultValidationException e) {}
-        ResponseEntity<String> responseEntity = safesService.createNestedfolder(token, path, userDetails);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
-    public void test_createNestedfolder_failure_400() {
-
-        String responseJson = "{\"errors\":[\"Invalid path\"]}";
-        String path = "shared/mysafe01";
-        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
-        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        Response response = getMockResponse(HttpStatus.BAD_REQUEST, true, responseJson);
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-
-        when(ControllerUtil.isPathValid(path)).thenReturn(false);
-        UserDetails userDetails = getMockUser(false);
-        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-        ResponseEntity<String> responseEntity = safesService.createNestedfolder(token, path, userDetails);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
     @Test

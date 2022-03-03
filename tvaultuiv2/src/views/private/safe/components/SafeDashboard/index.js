@@ -2,6 +2,7 @@
 /* eslint-disable no-return-assign */
 /* eslint-disable react/jsx-wrap-multilines */
 /* eslint-disable no-param-reassign */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback, lazy } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
@@ -818,16 +819,7 @@ const SafeDashboard = () => {
                     <NoSafeWrap>
                       <NoData
                         imageSrc={NoSafesIcon}
-                        description="Create a safe to get started!"
-                        actionButton={
-                          <FloatingActionButtonComponent
-                            href="/safes/create-safe"
-                            color="secondary"
-                            icon="addd"
-                            tooltipTitle="Create New Safe"
-                            tooltipPos="bottom"
-                          />
-                        }
+                        description=""
                         customStyle={noDataStyle}
                       />
                     </NoSafeWrap>
@@ -835,15 +827,9 @@ const SafeDashboard = () => {
                 )}
               </>
             )}
-            {safeList?.length > 0 && (
+            {false.false && safeList?.length > 0 && (
               <FloatBtnWrapper>
-                <FloatingActionButtonComponent
-                  href="/safes/create-safe"
-                  color="secondary"
-                  icon="addd"
-                  tooltipTitle="Create New Safe"
-                  tooltipPos="left"
-                />
+                <FloatingActionButtonComponent />
               </FloatBtnWrapper>
             )}
           </LeftColumnSection>
