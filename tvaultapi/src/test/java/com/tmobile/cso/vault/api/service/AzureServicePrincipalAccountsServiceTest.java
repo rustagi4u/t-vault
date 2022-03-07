@@ -222,8 +222,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
@@ -250,7 +250,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		rqstParams.put("servicePrincipalId", "c865a078-a5a7-44d8-9e43-0764c545b76d");
 		rqstParams.put("servicePrincipalClientId", "c865a078-a5a7-44d8-9e43-0764c545b76d");
 		rqstParams.put("tenantId", "c865a078-a5a7-44d8-9e43-0764c545b76d");
-		rqstParams.put("createdAtEpoch", 12345L);
+		rqstParams.put("createdAtEpoch", "1609754282000");
 		rqstParams.put("owner_ntid", "normaluser");
 		rqstParams.put("owner_email", "normaluser@testmail.com");
 		rqstParams.put("application_id", "app1");
@@ -321,7 +321,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -598,8 +599,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
@@ -681,7 +682,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -1384,31 +1386,34 @@ public class AzureServicePrincipalAccountsServiceTest {
 		public void testRemoveUserFromAzureSvcAccLdapSuccess() {
 			userDetails = getMockUser(true);
 			token = userDetails.getClientToken();
-			AzureServiceAccountUser iamSvcAccUser = new AzureServiceAccountUser("testaccount", "testuser1", "read");
+			AzureServiceAccountUser iamSvcAccUser = new AzureServiceAccountUser("testaccount", "testuser12", "read");
 			Response userResponse = getMockResponse(HttpStatus.OK, true,
-					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\", \"o_azuresvcacc_testaccount\"],\"ttl\":0,\"groups\":\"admin\"}}");
+					"{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\", \"testaccount\"],\"ttl\":0,\"groups\":\"admin\"}}");
 			Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-			when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"testuser1\"}", token)).thenReturn(userResponse);
+			when(reqProcessor.process("/auth/ldap/users", "{\"username\":\"testuser12\"}", token)).thenReturn(userResponse);
 			try {
 				List<String> resList = new ArrayList<>();
 				resList.add("default");
-				resList.add("o_azuresvcacc_testaccount");
+				resList.add("testaccount");
 				when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser1"), Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
+			when(ControllerUtil.configureLDAPUser(Mockito.eq("testuser12"), Mockito.any(), Mockito.any(), Mockito.eq(token))).thenReturn(responseNoContent);
 			when(ControllerUtil.updateMetadata(Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
 			// System under test
 			String expectedResponse = "{\"messages\":[\"Successfully removed user from the Azure Service Account\"]}";
 			ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(expectedResponse);
-			String[] latestPolicies = { "o_azuresvcacc_testaccount" };
+			String[] latestPolicies = { "testaccount" };
 			ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "ldap");
 			when(policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(), userDetails.getUsername(), userDetails))
 					.thenReturn(latestPolicies);
 			when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true,
 					"{\"data\":{\"isActivated\":true,\"managedBy\":\"normaluser\",\"name\":\"svc_vault_test5\",\"users\":{\"normaluser\":\"sudo\"}}}"));
 			when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+			String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"testaccount\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"/azuresvcacc/testaccount\"}";
+			when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/testaccount\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+					iamMetaDataStr));
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.removeUserFromAzureServiceAccount(token,
 					iamSvcAccUser, userDetails);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -1485,6 +1490,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 			when(OIDCUtil.updateOIDCEntity(Mockito.any(), Mockito.any())).thenReturn(responseEntity3);
 			when(OIDCUtil.oidcFetchEntityDetails(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(true))).thenReturn(responseEntity2);
 			when(tokenUtils.getSelfServiceToken()).thenReturn(token);
+			
+			String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"testaccount\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"/azuresvcacc/testaccount\"}";
+			when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/testaccount\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+					iamMetaDataStr));
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.removeUserFromAzureServiceAccount(token,
 					iamSvcAccUser, userDetails);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -1500,7 +1509,17 @@ public class AzureServicePrincipalAccountsServiceTest {
 			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(token, userDetails);
 			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		}
-
+		
+		@Test
+		public void test_getOnboardedAzureServiceAccounts_successfully_admin() throws IOException {
+			String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+			UserDetails userDetails = getMockUser(true);
+			when(reqProcessor.process(eq("/azure/onboardedlist"), Mockito.any(), eq(token))).thenReturn(getMockResponse(
+					HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr12\",\"svc_cce_usertestrr13\"]}"));
+			ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getOnboardedAzureServiceAccounts(token, userDetails);
+			assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		}
+		
 		@Test
 	    public void test_addAwsRoleToAzureSvcacc_succssfully_iam() throws Exception {
 
@@ -3047,17 +3066,17 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Owner has been successfully transferred for Azure Service Principal\"]}");
 		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		UserDetails userDetails = getMockUser(false);
-		String servicePrincipalName = "svc_cce_usertestrr1";
+		String servicePrincipalName = "testaccount";
 		String newOwner = "user2";
-		String ownerEmail = "user@abc.com";
+		String ownerEmail = "normaluser@testmail.com";
 		String applicationId = "app1";
-		String applicationName = "appname1";
-		String applicationTag = "appTag1";
+		String applicationName = "App1";
+		String applicationTag = "App1";
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 
 		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
-				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+				HttpStatus.OK, true, "{\"keys\":[\"testaccount\",\"testaccount\"]}"));
 
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
@@ -3073,12 +3092,12 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(reqProcessor.process(Mockito.eq("/sdb"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
 				"\"data\": {\n" +
-				"  \"application_id\": \"app2\",\n" +
-				"  \"application_name\": \"app2\",\n" +
+				"  \"application_id\": \"app1\",\n" +
+				"  \"application_name\": \"app1\",\n" +
 				"  \"application_tag\": \"apptag2\",\n" +
 				"  \"createdAtEpoch\": 604800000,\n" +
 				"  \"isActivated\": true,\n" +
-				"  \"owner_email\": \"user1@abc.xom\",\n" +
+				"  \"owner_email\": \"normaluser@testmail.com\",\n" +
 				"  \"owner_ntid\": \"user1\",\n" +
 				"  \"secret\": [\n" +
 				"    {\n" +
@@ -3088,7 +3107,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"  ],\n" +
 				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
 				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
-				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"servicePrincipalName\": \"testaccount\",\n" +
 				"  \"tenantId\": \"testtenantid\",\n" +
 				"  \"users\": {\n" +
 				"    \"User1\": \"sudo\"\n" +
@@ -3148,7 +3167,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
 		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
 				Mockito.any());
-
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"testaccount\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"/azuresvcacc/testaccount\"}";
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/testaccount\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
 
 		assertEquals(HttpStatus.OK, responseEntityActual.getStatusCode());
@@ -3161,7 +3182,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				.body("{\"errors\":[\"Transfer Azure Service Principal failed. Failed to associate write permission with owner.\"]}");
 		String tkn = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		UserDetails userDetails = getMockUser(false);
-		String servicePrincipalName = "svc_cce_usertestrr1";
+		String servicePrincipalName = "testaccount";
 		String newOwner = "user2";
 		String ownerEmail = "user@abc.com";
 		String applicationId = "app1";
@@ -3171,7 +3192,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				applicationName, applicationTag);
 
 		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(tkn))).thenReturn(getMockResponse(
-				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+				HttpStatus.OK, true, "{\"keys\":[\"testaccount\",\"testaccount\"]}"));
 
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
@@ -3202,7 +3223,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"  ],\n" +
 				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
 				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
-				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"servicePrincipalName\": \"testaccount\",\n" +
 				"  \"tenantId\": \"testtenantid\",\n" +
 				"  \"users\": {\n" +
 				"    \"User1\": \"sudo\"\n" +
@@ -3262,7 +3283,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
 		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
 				Mockito.any());
-
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"testaccount\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"/azuresvcacc/testaccount\"}";
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/testaccount\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(tkn, userDetails, aspTransferRequest);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());
@@ -3394,7 +3417,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.MULTI_STATUS).body("{\"errors\":[\"Metadata updating failed for Azure Service Account.\"]}");
 		String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
 		UserDetails userDetails = getMockUser(false);
-		String servicePrincipalName = "svc_cce_usertestrr1";
+		String servicePrincipalName = "testaccount";
 		String newOwner = "user2";
 		String ownerEmail = "user@abc.com";
 		String applicationId = "app1";
@@ -3404,7 +3427,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				applicationName, applicationTag);
 
 		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
-				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+				HttpStatus.OK, true, "{\"keys\":[\"testaccount\",\"testaccount\"]}"));
 
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
@@ -3435,7 +3458,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"  ],\n" +
 				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
 				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
-				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"servicePrincipalName\": \"testaccount\",\n" +
 				"  \"tenantId\": \"testtenantid\",\n" +
 				"  \"users\": {\n" +
 				"    \"User1\": \"sudo\"\n" +
@@ -3495,7 +3518,10 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
 		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
 				Mockito.any());
-
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"testaccount\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"/azuresvcacc/testaccount\"}";
+		
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/testaccount\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+							iamMetaDataStr));
 		ResponseEntity<String> responseEntityActual =  azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
 
 		assertEquals(HttpStatus.MULTI_STATUS, responseEntityActual.getStatusCode());
@@ -3512,8 +3538,11 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+//		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+//		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
+
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
@@ -3599,7 +3628,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,serviceAccount, userDetails);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
@@ -3845,8 +3875,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
@@ -3944,6 +3974,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
@@ -3962,8 +3994,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
@@ -4061,7 +4093,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -4079,8 +4112,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.NOT_FOUND, true, "");
@@ -4185,7 +4218,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -4203,8 +4237,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
@@ -4302,6 +4336,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
@@ -4320,8 +4356,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
+
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.OK, true, "");
@@ -4422,7 +4459,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -4440,8 +4478,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.OK, true, "");
@@ -4551,7 +4589,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -4569,8 +4608,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.OK, true, "");
@@ -4687,7 +4726,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -4705,9 +4745,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
-
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.OK, true, "");
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
@@ -4823,7 +4862,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -4841,8 +4881,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.OK, true, "");
@@ -4947,7 +4987,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -4965,8 +5006,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		String metaDataStr = "{ \"data\": {}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
 		String metadatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\":{}}";
 
-		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
-		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 12345L, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":12345L}]}}";
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"azuresvcacc/svc_cce_usertestrr16\"}";
+		String iamMetaDatajson = "{\"path\":\"azuresvcacc/svc_cce_usertestrr16\",\"data\": {\"servicePrincipalName\": \"svc_cce_usertestrr16\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_ntid\": \"normaluser\", \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}}";
 
 		Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 		Response responseNoContent1 = getMockResponse(HttpStatus.OK, true, "");
@@ -5084,7 +5125,8 @@ public class AzureServicePrincipalAccountsServiceTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/svc_cce_usertestrr16\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.onboardAzureServiceAccount(token,
 				serviceAccount, userDetails);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
@@ -5575,17 +5617,17 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"Principal failed. New owner association failed.\"]}");
 
 		UserDetails userDetails = getMockUser(false);
-		String servicePrincipalName = "svc_cce_usertestrr1";
+		String servicePrincipalName = "testaccount";
 		String newOwner = "user2";
-		String ownerEmail = "user@abc.com";
+		String ownerEmail = "normaluser@testmail.com";
 		String applicationId = "app1";
-		String applicationName = "appname1";
-		String applicationTag = "appTag1";
+		String applicationName = "App1";
+		String applicationTag = "App1";
 		ASPTransferRequest aspTransferRequest = new ASPTransferRequest(servicePrincipalName, newOwner, ownerEmail, applicationId,
 				applicationName, applicationTag);
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "vaultAuthMethod", "oidc");
 		when(reqProcessor.process(Mockito.eq("/azure/onboardedlist"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(
-				HttpStatus.OK, true, "{\"keys\":[\"svc_cce_usertestrr16\",\"svc_cce_usertestrr1\"]}"));
+				HttpStatus.OK, true, "{\"keys\":[\"testaccount\",\"testaccount\"]}"));
 
 		// Mock approle permission check
 		Response lookupResponse = getMockResponse(HttpStatus.OK, true, "{\"policies\":[\"azure_admin_policy \"]}");
@@ -5601,12 +5643,12 @@ public class AzureServicePrincipalAccountsServiceTest {
 		when(tokenUtils.getSelfServiceToken()).thenReturn(token);
 		when(reqProcessor.process(Mockito.eq("/sdb"), Mockito.any(), Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\n" +
 				"\"data\": {\n" +
-				"  \"application_id\": \"app2\",\n" +
-				"  \"application_name\": \"app2\",\n" +
-				"  \"application_tag\": \"apptag2\",\n" +
+				"  \"application_id\": \"app1\",\n" +
+				"  \"application_name\": \"App1\",\n" +
+				"  \"application_tag\": \"App1\",\n" +
 				"  \"createdAtEpoch\": 604800000,\n" +
 				"  \"isActivated\": false,\n" +
-				"  \"owner_email\": \"user1@abc.xom\",\n" +
+				"  \"owner_email\": \"normaluser@testmail.com\",\n" +
 				"  \"owner_ntid\": \"user1\",\n" +
 				"  \"secret\": [\n" +
 				"    {\n" +
@@ -5616,7 +5658,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"  ],\n" +
 				"  \"servicePrincipalClientId\": \"testclientid\",\n" +
 				"  \"servicePrincipalId\": \"testpprincipalid\",\n" +
-				"  \"servicePrincipalName\": \"svc_cce_usertestrr1\",\n" +
+				"  \"servicePrincipalName\": \"testaccount\",\n" +
 				"  \"tenantId\": \"testtenantid\",\n" +
 				"  \"users\": {\n" +
 				"    \"User1\": \"sudo\"\n" +
@@ -5676,7 +5718,9 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ReflectionTestUtils.setField(azureServicePrincipalAccountsService, "supportEmail", "support@abc.com");
 		Mockito.doNothing().when(emailUtils).sendHtmlEmalFromTemplate(Mockito.any(), Mockito.any(), Mockito.any(),
 				Mockito.any());
-
+		String iamMetaDataStr = "{ \"data\": {\"servicePrincipalName\": \"testaccount\", \"servicePrincipalId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"tenantId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\",\"servicePrincipalClientId\": \"c865a078-a5a7-44d8-9e43-0764c545b76d\", \"createdAtEpoch\": 1609754282000, \"owner_email\": \"normaluser@testmail.com\", \"application_id\": \"app1\", \"application_name\": \"App1\", \"application_tag\": \"App1\", \"isActivated\": false, \"secret\":[{\"secretKeyId\":\"testaccesskey\", \"expiryDuration\":604800000}]}, \"path\": \"/azuresvcacc/testaccount\"}";
+		when(reqProcessor.process("/read", "{\"path\":\"metadata/azuresvcacc/testaccount\"}", token)).thenReturn(getMockResponse(HttpStatus.OK, true,
+				iamMetaDataStr));
 		ResponseEntity<String> responseEntityActual = azureServicePrincipalAccountsService.transferAzureServicePrincipal(token, userDetails, aspTransferRequest);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntityActual.getStatusCode());

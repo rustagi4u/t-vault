@@ -795,8 +795,8 @@ public class AzureServicePrincipalAccountsService {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 						"{\"errors\":[\"Failed to add user permission to Azure Service account. Service Account is not activated. Please activate this service account and try again.\"]}");
 			}
-
-			if (isOwnerPemissionGettingChanged(azureServiceAccountUser, userDetails.getUsername(), isPartOfOnboard)) {
+			String servicePrincipalName = azureServiceAccountUser.getAzureSvcAccName();
+			if (isOwnerPemissionGettingChanged(azureServiceAccountUser, getOwnerNTIdFromMetadata(token, servicePrincipalName), isPartOfOnboard)) {
 				log.error(
 						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -854,7 +854,7 @@ public class AzureServicePrincipalAccountsService {
 				put(LogMessage.MESSAGE,"Start checking is Authorized To Add Permission In AzureSvcAcc").
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
-		if (isPartOfOnboard) {
+		if (userDetails.isAdmin() || isPartOfOnboard) {
 			return true;
 		}
 		// Owner of the service account can add/remove users, groups, aws roles and approles to service account
@@ -1231,7 +1231,7 @@ public class AzureServicePrincipalAccountsService {
 	 * @param isPartOfOnboard
 	 * @return
 	 */
-	private boolean isOwnerPemissionGettingChanged(AzureServiceAccountUser azureServiceAccountUser, String currentUsername, boolean isPartOfOnboard) {
+	private boolean isOwnerPemissionGettingChanged(AzureServiceAccountUser azureServiceAccountUser, String ownerNtId, boolean isPartOfOnboard) {
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 				.put(LogMessage.ACTION, "isOwnerPemissionGettingChanged")
@@ -1244,7 +1244,7 @@ public class AzureServicePrincipalAccountsService {
 		}
 		boolean isPermissionChanged = false;
 		// if owner is grating read/ deny to himself, not allowed. Write is allowed as part of activation.
-		if (azureServiceAccountUser.getUsername().equalsIgnoreCase(currentUsername) && !azureServiceAccountUser.getAccess().equals(TVaultConstants.WRITE_POLICY)) {
+		if (azureServiceAccountUser.getUsername().equalsIgnoreCase(ownerNtId) && !azureServiceAccountUser.getAccess().equals(TVaultConstants.WRITE_POLICY)) {
 			isPermissionChanged = true;
 		}
 		return isPermissionChanged;
@@ -2257,7 +2257,7 @@ public class AzureServicePrincipalAccountsService {
 						"{\"errors\":[\"Failed to remove user permission from Azure Service account. Azure Service Account is not activated. Please activate this Azure service account and try again.\"]}");
 			}
 			// Deleting owner permission is not allowed
-			if (azureServiceAccountUser.getUsername().equalsIgnoreCase(userDetails.getUsername())) {
+			if (azureServiceAccountUser.getUsername().equalsIgnoreCase(getOwnerNTIdFromMetadata(token, azureSvcaccName))) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 						.put(LogMessage.ACTION, AzureServiceAccountConstants.REMOVE_USER_FROM_AZURESVCACC_MSG)
@@ -2289,6 +2289,10 @@ public class AzureServicePrincipalAccountsService {
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
 		List<String> onboardedlist = new ArrayList<>();
+		if (userDetails.isAdmin()) {
+			onboardedlist = getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
+		}
+		else {
 			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
 					userDetails.getUsername(), userDetails);
 			for (String policy : latestPolicies) {
@@ -2297,6 +2301,7 @@ public class AzureServicePrincipalAccountsService {
 					onboardedlist.add(policy.substring(14));
 				}
 			}
+		}
 		response = new Response();
 		response.setHttpstatus(HttpStatus.OK);
 		response.setSuccess(true);
@@ -2831,6 +2836,9 @@ public class AzureServicePrincipalAccountsService {
 				put(LogMessage.MESSAGE,"Start checking if user has the permission to add user/group/awsrole/approles to the Azure Service Account.").
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
+		if (userDetails.isAdmin()) {
+			return true;
+		}
 		String ownerPolicy = new StringBuffer()
 				.append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
 				.append(AzureServiceAccountConstants.AZURE_SVCACC_POLICY_PREFIX).append(serviceAccount).toString();
