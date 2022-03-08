@@ -780,7 +780,7 @@ public class AzureServicePrincipalAccountsService {
 		}
 
 		boolean isAuthorized = isAuthorizedToAddPermissionInAzureSvcAcc(userDetails, azureServiceAccountUser.getAzureSvcAccName(), isPartOfOnboard);
-
+		String uniqueASPaccName= azureServiceAccountUser.getAzureSvcAccName();
 		if (isAuthorized) {
 			// Only Sudo policy can be added (as part of onbord) before activation.
 			if (!isAzureSvcaccActivated(token, userDetails, azureServiceAccountUser.getAzureSvcAccName())
@@ -795,8 +795,8 @@ public class AzureServicePrincipalAccountsService {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 						"{\"errors\":[\"Failed to add user permission to Azure Service account. Service Account is not activated. Please activate this service account and try again.\"]}");
 			}
-			String servicePrincipalName = azureServiceAccountUser.getAzureSvcAccName();
-			if (isOwnerPemissionGettingChanged(azureServiceAccountUser, getOwnerNTIdFromMetadata(token, servicePrincipalName), isPartOfOnboard)) {
+
+			if (isOwnerPemissionGettingChanged(azureServiceAccountUser, getOwnerNTIdFromMetadata(token, uniqueASPaccName), isPartOfOnboard)) {
 				log.error(
 						JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 								.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
@@ -2239,7 +2239,7 @@ public class AzureServicePrincipalAccountsService {
 		String azureSvcaccName = azureServiceAccountUser.getAzureSvcAccName();
 
 		boolean isAuthorized = isAuthorizedToAddPermissionInAzureSvcAcc(userDetails, azureSvcaccName, false);
-
+		String uniqueASPaccName= azureServiceAccountUser.getAzureSvcAccName();
 		if (isAuthorized) {
 			// Only Sudo policy can be added (as part of onbord) before
 			// activation.
@@ -2257,7 +2257,7 @@ public class AzureServicePrincipalAccountsService {
 						"{\"errors\":[\"Failed to remove user permission from Azure Service account. Azure Service Account is not activated. Please activate this Azure service account and try again.\"]}");
 			}
 			// Deleting owner permission is not allowed
-			if (azureServiceAccountUser.getUsername().equalsIgnoreCase(getOwnerNTIdFromMetadata(token, azureSvcaccName))) {
+			if (azureServiceAccountUser.getUsername().equalsIgnoreCase((getOwnerNTIdFromMetadata(token, uniqueASPaccName )))) {
 				log.error(JSONUtil.getJSON(ImmutableMap.<String, String> builder()
 						.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
 						.put(LogMessage.ACTION, AzureServiceAccountConstants.REMOVE_USER_FROM_AZURESVCACC_MSG)
@@ -2289,9 +2289,10 @@ public class AzureServicePrincipalAccountsService {
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		Response response = null;
 		List<String> onboardedlist = new ArrayList<>();
-		if (userDetails.isAdmin()) {
-			onboardedlist = getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
+		if(userDetails.isAdmin()) {
+			onboardedlist=getOnboardedAzureServiceAccountList(userDetails.getSelfSupportToken());
 		}
+		
 		else {
 			String[] latestPolicies = policyUtils.getCurrentPolicies(userDetails.getSelfSupportToken(),
 					userDetails.getUsername(), userDetails);
@@ -2301,7 +2302,7 @@ public class AzureServicePrincipalAccountsService {
 					onboardedlist.add(policy.substring(14));
 				}
 			}
-		}
+		}	
 		response = new Response();
 		response.setHttpstatus(HttpStatus.OK);
 		response.setSuccess(true);
@@ -2836,9 +2837,6 @@ public class AzureServicePrincipalAccountsService {
 				put(LogMessage.MESSAGE,"Start checking if user has the permission to add user/group/awsrole/approles to the Azure Service Account.").
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
-		if (userDetails.isAdmin()) {
-			return true;
-		}
 		String ownerPolicy = new StringBuffer()
 				.append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
 				.append(AzureServiceAccountConstants.AZURE_SVCACC_POLICY_PREFIX).append(serviceAccount).toString();
@@ -3226,6 +3224,7 @@ public class AzureServicePrincipalAccountsService {
 								}
 							}
 						}
+					
 						if (secretSaveCount == svcSecretArray.size()) {
 							// Update status to activated.
 							Response metadataUpdateResponse = azureServiceAccountUtils.updateActivatedStatusInMetadata(token, servicePrincipalName);
@@ -3503,8 +3502,7 @@ public class AzureServicePrincipalAccountsService {
 		AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest = new AzureServicePrincipalRotateRequest(servicePrincipalName, secretKeyId, servicePrincipalId, tenantId, expiryDurationMs);
 
 		AzureServiceAccountSecret azureServiceAccountSecret = azureServiceAccountUtils.rotateAzureServicePrincipalSecret(azureServicePrincipalRotateRequest);
-
-
+		
 		if (null != azureServiceAccountSecret) {
 			log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
