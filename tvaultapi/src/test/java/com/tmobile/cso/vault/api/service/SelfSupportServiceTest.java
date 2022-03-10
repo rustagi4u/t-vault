@@ -3605,23 +3605,7 @@ public class SelfSupportServiceTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
-    @Test
-    public void test_updateSafe_invalid() {
-        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
-        UserDetails userDetails = getMockUser(false);
-        userDetails.setEmail("yourtestemail@yourcompany.com");
-        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
-        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
 
-        ResponseEntity<String> readResponse = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
-        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid owner email\"]}");
-
-        when(safesService.updateSafe(sampletok, safe)).thenReturn(readResponse);
-        mockIsAuthorized(userDetails, true);
-        ResponseEntity<String> responseEntity = selfSupportService.updateSafe(userDetails,  safe);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertEquals(responseEntityExpected, responseEntity);
-    }
     @Test
     public void test_associateApproletoSDB_failure() {
         String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";

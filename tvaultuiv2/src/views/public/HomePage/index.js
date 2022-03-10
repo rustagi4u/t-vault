@@ -187,25 +187,6 @@ const MessageBannerWrap = styled.div`
   }
 `;
 
-const MessageBanner = styled.p`
-  line-height: 1.39rem;
-  font-size: 1.28rem;
-  margin-left: 63px;
-
-  margin-top: 2px;
-  margin-bottom: 5px;
-  font-color: #fff;
-  width: 89%;
-  height: 40px;
-  overflow: auto;
-  @media (max-width: 1024px) {
-    width: 75%;
-  }
-  ${small} {
-    width: 100%;
-  }
-`;
-
 const ButtonWrap = styled.div`
   display: flex;
   ${small} {
@@ -376,19 +357,6 @@ const ThirdRow = styled.div`
 const ContactUs = styled.p`
   ${small} {
     width: 80%;
-  }
-`;
-const MessageBannerWrap = styled.div`
-  background-color: #30323f;
-  border-width: 3px;
-  border-radius: 25px;
-  padding: 5px 0 5px 0;
-  width: 100%;
-  margin-bottom: 10px;
-  max-height: 100%;
-
-  ${small} {
-    width: 100%;
   }
 `;
 
@@ -664,12 +632,12 @@ const LoginPage = () => {
                 <CardWrapper rowCommonCss={rowCommonCss}>
                   <Tile>
                     <Image src={Store} alt="store" />
-                    <Heading>Store</Heading>
+                    <Heading>Onboard</Heading>
                     <Details>{Strings.Resources.storeDescription}</Details>
                   </Tile>
                   <Tile>
                     <Image src={Access} alt="access" />
-                    <Heading>Access</Heading>
+                    <Heading>Rotate</Heading>
                     <Details>{Strings.Resources.accessDescription}</Details>
                   </Tile>
                   <Tile>

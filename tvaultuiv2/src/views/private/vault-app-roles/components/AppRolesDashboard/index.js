@@ -233,6 +233,7 @@ const AppRolesDashboard = () => {
   const [noResultFound, setNoResultFound] = useState('');
   const [options, setOptions] = useState([]);
   const [searchList, setSearchList] = useState([]);
+  const [searchListLoaded, setSearchListLoaded] = useState(false);
 
   const admin = Boolean(state.isAdmin);
   /**
@@ -279,6 +280,7 @@ const AppRolesDashboard = () => {
         setAppRoleList([...finalList]);
         if (context != "afterDelete" || context != "afterClear") {
           setSearchList([...finalList]);
+          setSearchListLoaded(true);
         }
         dispatch({ type: 'UPDATE_APP_ROLE_LIST', payload: [...finalList] });
         setIsLoading(false);
@@ -390,6 +392,9 @@ const AppRolesDashboard = () => {
   };
 
   useEffect(() => {
+    if (!searchListLoaded) {
+      return
+    }
     if (state?.appRoleList?.length > 0) {
       const val = location.pathname.split('/');
       const roleName = val[val.length - 1];
@@ -412,7 +417,7 @@ const AppRolesDashboard = () => {
       setListItemDetails({});
     }
     // eslint-disable-next-line
-  }, [state, location, history]);
+  }, [state, location, history, searchListLoaded]);
 
   const handleListScroll = () => {
     const element = document.getElementById('scrollList');

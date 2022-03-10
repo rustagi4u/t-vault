@@ -53,7 +53,7 @@ const SafeDetails = (props) => {
             safe?.description ||
             `<span>${ReactDOMServer.renderToStaticMarkup(
               <AttentionAlert>ATTENTION: </AttentionAlert>) + 
-                'Going forward users will not be able to create safes or secrets in T-Vault. Users will instead need to utilize either Enterprise Vault or CyberArk for their secret management needs. For information on how you can onboard your application into Enterprise Vault to begin creating secrets, please use the following <a style="color: #E20074;" href="https://confluencesw.t-mobile.com/display/ATPF/Onboarding" target="_blank">onboarding guide</a>.'
+                'Going forward users will not be able to create safes or secrets in T-Vault. Users will instead need to utilize either Enterprise Vault, CyberArk, or AWS Secrets Manager for their secret management needs. For information on how you can onboard your application into Enterprise Vault to begin creating secrets, please use the following <a style="color: #E20074;" href="https://confluencesw.t-mobile.com/display/ATPF/Onboarding" target="_blank">onboarding guide</a>.'
               }
             </span>`
               
