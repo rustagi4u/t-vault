@@ -143,6 +143,7 @@ const AccountSelectionTabs = (props) => {
 
   // Function to get the metadata of the given service account
   const fetchPermission = useCallback(() => {
+    const isAdmin = JSON.parse(sessionStorage.getItem('isAdmin'));
     setResponse({ status: 'loading' });
     return apiService
       .updateMetaPath(accountDetail.name)
@@ -150,8 +151,10 @@ const AccountSelectionTabs = (props) => {
         if (res.data && res.data.data) {
           setServiceAccountMetaData(res.data.data);
           if (
-            res.data.data.managedBy?.toLowerCase() ===
-            state?.username?.toLowerCase()
+            // res.data.data.managedBy?.toLowerCase() ===
+            // state?.username?.toLowerCase()
+            state.username.toLowerCase() ||
+            isAdmin
           ) {
             setDisabledPermission(false);
             if (res.data.data.initialPasswordReset) {
