@@ -14,7 +14,7 @@ import {
   Redirect,
   useLocation,
 } from 'react-router-dom';
-
+import ReactDOMServer from 'react-dom/server';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useStateValue } from '../../../../../contexts/globalState';
 import sectionHeaderBg from '../../../../../assets/approle_banner_img.png';
@@ -30,7 +30,7 @@ import TextFieldComponent from '../../../../../components/FormFields/TextField';
 import ListItemDetail from '../../../../../components/ListItemDetail';
 import AppRoleDetails from '../ApproleDetails';
 import EditDeletePopper from '../EditDeletePopper';
-import ListItem from '../../../../../components/ListItem';
+import ListItem from '../../../../../components/ListItem/AppRoleListItem';
 import EditAndDeletePopup from '../../../../../components/EditAndDeletePopup';
 import Error from '../../../../../components/Error';
 import SnackbarComponent from '../../../../../components/Snackbar';
@@ -44,8 +44,10 @@ import { TitleOne } from '../../../../../styles/GlobalStyles';
 import {
   ListContainer,
   NoResultFound,
+  ListContent,
   StyledInfiniteScroll,
 } from '../../../../../styles/GlobalStyles/listingStyle';
+import SearchboxWithDropdown from '../../../../../components/FormFields/SearchboxWithDropdown';
 
 const ColumnSection = styled('section')`
   position: relative;
@@ -174,6 +176,21 @@ const EmptyContentBox = styled('div')`
   left: 50%;
   transform: translate(-50%, -50%);
 `;
+const ScaledLoaderContainer = styled.div`
+  height: 5rem;
+  display: flex;
+  align-items: center;
+`;
+const scaledLoaderFirstChild = css`
+  width: 1.5rem;
+  height: 1.5rem;
+`;
+const scaledLoaderLastChild = css`
+  width: 3rem;
+  height: 3rem;
+  left: -1.7rem;
+  top: -0.3rem;
+`;
 
 const EditDeletePopperWrap = styled.div``;
 const iconStyles = makeStyles(() => ({
@@ -186,15 +203,12 @@ const AppRolesDashboard = () => {
   const [inputSearchValue, setInputSearchValue] = useState('');
   const [appRoleClicked, setAppRoleClicked] = useState(false);
   const [listItemDetails, setListItemDetails] = useState({});
-  const [moreData] = useState(false);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [appRoleList, setAppRoleList] = useState([]);
   const [response, setResponse] = useState({});
   const [responseType, setResponseType] = useState(null);
   const [deleteAppRoleName, setDeleteAppRoleName] = useState('');
-  const [deleteAppRoleConfirmation, setDeleteAppRoleConfirmation] = useState(
-    false
-  );
+  const [deleteAppRoleConfirmation, setDeleteAppRoleConfirmation] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [state, dispatch] = useStateValue();
   let scrollParentRef = null;
@@ -204,37 +218,112 @@ const AppRolesDashboard = () => {
   const history = useHistory();
   const location = useLocation();
   const introduction = Strings.Resources.appRoles;
+  const [canDeleteSharedTo, setCanDeleteSharedTo] = useState(true);
+  const [associatedSafes, setAssociatedSafes] = useState('');
+  const [associatedIAMSvcAccs, setAssociatedIAMSvcAccs] = useState('');
+  const [associatedADSvcAccs, setAssociatedADSvcAccs] = useState('');
+  const [associatedAzureSvcAccs, setAssociatedAzureSvcAccs] = useState('');
+  const [associatedCerts, setAssociatedCerts] = useState('');
+  const [entitiesAreAssociatedWithAppRole, setEntitiesAreAssociatedWithAppRole] = useState(false);
+  const limit = 100;
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [searchSelected, setSearchSelected] = useState([]);
+  const [allAppRoles, setAllAppRoles] = useState([]);
+  const [noResultFound, setNoResultFound] = useState('');
+  const [options, setOptions] = useState([]);
+  const [searchList, setSearchList] = useState([]);
+  const [searchListLoaded, setSearchListLoaded] = useState(false);
 
   const admin = Boolean(state.isAdmin);
   /**
    * @function fetchData
    * @description function call all the manage and safe api.
    */
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (context) => {
     setListItemDetails({});
-    setInputSearchValue('');
-    setResponse({ status: 'loading' });
+    if (offset === 0) {
+      setResponse({ status: 'loading' });
+    }
+    let currentOffset = offset;
+    let newOffset = offset + limit;
+    let afterReset = false;
+    if (context === "afterDelete" || context === "afterClear") {
+      currentOffset = 0;
+      newOffset = limit;
+      afterReset = true;
+      getAllAppRoles();
+      setSearchSelected([]);
+      setAppRoleClicked(false);
+      setInputSearchValue('');
+    }
+
     apiService
-      .getAppRole()
+      .getAppRolesWithLimit(limit, currentOffset)
       .then((res) => {
-        setResponse({ status: 'success' });
+        setOffset(newOffset);
+        setHasMore(res?.data?.next != -1);
         const appRolesArr = [];
         if (res?.data?.keys) {
-          res.data.keys.map((item) => {
-            const appObj = {
-              name: item,
-              admin,
-            };
-            return appRolesArr.push(appObj);
-          });
+          let appObj
+            res.data.keys.map((item) => {
+              appObj = {
+                name: item.roleName,
+                isOwner: item.isOwner,
+                admin,
+              };
+              return appRolesArr.push(appObj);
+            });
         }
-        setAppRoleList([...appRolesArr]);
-        dispatch({ type: 'UPDATE_APP_ROLE_LIST', payload: [...appRolesArr] });
+
+        let finalList = (afterReset) ? [...appRolesArr] : [...appRoleList, ...appRolesArr];
+        setAppRoleList([...finalList]);
+        if (context != "afterDelete" || context != "afterClear") {
+          setSearchList([...finalList]);
+          setSearchListLoaded(true);
+        }
+        dispatch({ type: 'UPDATE_APP_ROLE_LIST', payload: [...finalList] });
+        setIsLoading(false);
+        setResponse({ status: 'success' });
       })
       .catch(() => {
         setResponse({ status: 'failed' });
       });
-  }, [admin, dispatch]);
+  }, [offset, appRoleList, admin, dispatch]);
+
+  /**
+   * @function getAllAppRoles
+   * @description function call to get all approles for search
+   */
+  const getAllAppRoles = () => {
+    apiService
+      .getAllAppRoles()
+      .then((res) => {
+        const allAppRolesArr = [];
+        if (res?.data?.keys) {
+          res.data.keys = res.data.keys.filter(item => item !== 'vault-power-user-role')
+          res.data.keys.map((item) => {
+            let appRoleObj = {
+              name: item
+            }
+            return allAppRolesArr.push(appRoleObj);
+          });
+        }
+        if (allAppRolesArr.length === 0) {
+          setNoResultFound('No records found');
+        } else {
+          setNoResultFound('');
+        }
+        setAllAppRoles([...allAppRolesArr]);
+      })
+      .catch(() => {
+        setResponse({ status: 'failed' });
+      });
+  }
+
+  useEffect(() => {
+    getAllAppRoles();
+  }, []);
 
   /**
    * @description On component load call fetchData function.
@@ -243,21 +332,29 @@ const AppRolesDashboard = () => {
     fetchData().catch(() => {
       setResponse({ status: 'failed', message: 'failed' });
     });
-  }, [fetchData]);
+  }, []);
 
   /**
    * @function onSearchChange
    * @description function to search input
    */
   const onSearchChange = (value) => {
-    setInputSearchValue(value);
     if (value?.length > 2) {
-      const array = state?.appRoleList?.filter((item) => {
-        return item?.name?.toLowerCase().includes(value?.toLowerCase().trim());
-      });
-      setAppRoleList([...array]);
-    } else {
-      setAppRoleList([...state?.appRoleList]);
+      const filteredList = allAppRoles.filter((i) =>
+        i.name.includes(value.toLowerCase())
+      );
+      setOptions([...filteredList]);
+      if (filteredList.length > 0) {
+        setNoResultFound('');
+      } else {
+        setNoResultFound('No result found');
+      }
+    } 
+    
+    if (value?.length == 0) {
+      setOptions([]);
+      setSearchSelected([]);
+      setNoResultFound('');
     }
   };
 
@@ -295,6 +392,9 @@ const AppRolesDashboard = () => {
   };
 
   useEffect(() => {
+    if (!searchListLoaded) {
+      return
+    }
     if (state?.appRoleList?.length > 0) {
       const val = location.pathname.split('/');
       const roleName = val[val.length - 1];
@@ -302,7 +402,8 @@ const AppRolesDashboard = () => {
         roleName !== 'create-vault-app-role' &&
         roleName !== 'edit-vault-app-role'
       ) {
-        const obj = state?.appRoleList.find((role) => role.name === roleName);
+        const obj = searchList.find((role) => role.name === roleName);
+
         if (obj) {
           if (listItemDetails.name !== obj.name) {
             setListItemDetails({ ...obj });
@@ -316,10 +417,20 @@ const AppRolesDashboard = () => {
       setListItemDetails({});
     }
     // eslint-disable-next-line
-  }, [state, location, history]);
+  }, [state, location, history, searchListLoaded]);
+
+  const handleListScroll = () => {
+    const element = document.getElementById('scrollList');
+    if (element.scrollHeight - element.offsetHeight - 250 < element.scrollTop && !isLoading && hasMore) {
+      loadMoreData();
+    }
+  };
 
   // Infine scroll load more data
-  const loadMoreData = () => {};
+  const loadMoreData = () => {
+    setIsLoading(true);
+    fetchData()
+  };
 
   // toast close handler
   const onToastClose = (reason) => {
@@ -336,9 +447,30 @@ const AppRolesDashboard = () => {
    * @param {string} name app role  name to be deleted.
    */
   const onDeleteClicked = (name) => {
-    setDeleteAppRoleConfirmation(true);
-    setDeleteAppRoleName(name);
-  };
+    validateCanDeleteSharedTo(name).then((sharedToRes) => {
+      setCanDeleteSharedTo(sharedToRes[0] == state.username);
+      setDeleteAppRoleConfirmation(true);
+      setDeleteAppRoleName(name);
+    });
+    getEntitiesAssociatedToAppRole(name).then((entityRes) => {
+      let safeList = entityRes?.messages[0]?.safes;
+      let iamSvcAccList = entityRes?.messages[1]?.iamsvcaccs;
+      let adSvcAccList = entityRes?.messages[2]?.adsvcaccs;
+      let azureSvcAccList = entityRes?.messages[3]?.azuresvcaccs;
+      let certList = entityRes?.messages[4]?.certs;
+      if (safeList?.length > 2 || iamSvcAccList?.length > 2 || adSvcAccList?.length > 2 ||
+          azureSvcAccList?.length > 2 || certList.length > 2) {
+        setEntitiesAreAssociatedWithAppRole(true);
+      } else {
+        setEntitiesAreAssociatedWithAppRole(false);
+      }
+      setAssociatedSafes(safeList);
+      setAssociatedIAMSvcAccs(iamSvcAccList);
+      setAssociatedADSvcAccs(adSvcAccList);
+      setAssociatedAzureSvcAccs(azureSvcAccList);
+      setAssociatedCerts(certList);
+    });
+  }; 
 
   const onApproleEdit = (name) => {
     history.push({
@@ -348,10 +480,17 @@ const AppRolesDashboard = () => {
           name,
           isAdmin: admin,
           isEdit: true,
-          allAppRoles: appRoleList,
+          appRoleList: appRoleList,
         },
       },
     });
+  };
+
+  const clearDataAndLoad = () => {
+    setHasMore(false);
+    setAppRoleList([]);
+    setNoResultFound('');
+    fetchData("afterClear");
   };
 
   /**
@@ -359,6 +498,7 @@ const AppRolesDashboard = () => {
    * @description delete app role
    */
   const onAppRoleDelete = () => {
+    setCanDeleteSharedTo(true);
     setDeleteAppRoleConfirmation(false);
     setResponse({ status: 'loading' });
     apiService
@@ -368,7 +508,7 @@ const AppRolesDashboard = () => {
         if (res?.data?.messages && res?.data?.messages[0]) {
           setToastMessage(res?.data?.messages[0]);
         }
-        await fetchData();
+        await fetchData("afterDelete");
       })
       .catch((err) => {
         setResponseType(-1);
@@ -376,6 +516,76 @@ const AppRolesDashboard = () => {
           setToastMessage(err?.response?.data?.errors[0]);
         }
       });
+  };
+
+  const getEntitiesAssociatedToAppRole = (appRoleName) => {
+    return new Promise((resolve, reject) =>
+      apiService
+        .getEntitiesAssociatedWithAppRole(appRoleName)
+        .then((res) => {
+          resolve(res.data);
+        })
+        .catch((err) => {
+          if (err.response && err.response.data?.errors[0]) {
+            setToastMessage({ status: 'failed', message: err.response.data.errors[0] });
+          }
+          setResponseType(-1);
+          reject(err.data);
+        })
+    );
+  };
+
+  const validateCanDeleteSharedTo = (appRoleName) => {
+    return new Promise((resolve, reject) =>
+      apiService
+        .getAppRoleOwner(appRoleName)
+        .then((res) => {
+          resolve(res.data);
+        })
+        .catch((err) => {
+          if (err.response && err.response.data?.errors[0]) {
+            setToastMessage({ status: 'failed', message: err.response.data.errors[0] });
+          }
+          setResponseType(-1);
+          reject(err.data);
+        })
+    );
+  };
+
+  const fetchAppRoleDetail = (appRoleName) => {
+    apiService
+      .getAppRoleOwner(appRoleName)
+      .then((res) => {
+        const appObj = {
+          name: appRoleName,
+          isOwner: res.data[0] == state.username,
+          admin,
+        };
+        let finalList = [...appRoleList];
+        finalList.push(appObj);
+        setSearchSelected([appObj]);
+        setSearchList([...finalList])
+      })
+      .catch((err) => {
+      })
+  };
+
+  useEffect(() => {
+    onSearchChange(inputSearchValue);
+    // eslint-disable-next-line
+  }, [inputSearchValue]);
+
+  useEffect(() => {
+    if (searchSelected.length === 1) {
+      history.push(`/vault-app-roles/${searchSelected[0].name}`);
+      setListItemDetails(searchSelected[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchSelected]);
+
+  const onSearchItemSelected = (v) => {
+    fetchAppRoleDetail(v.name);
+    setOptions([]);
   };
 
   /**
@@ -386,8 +596,36 @@ const AppRolesDashboard = () => {
     setDeleteAppRoleConfirmation(false);
   };
 
+  const getDeleteAppRoleConfirmationDescription = () => {
+      return (
+        <>
+          {getConfirmationDescSectionForEntityType("Safes", associatedSafes)}
+          {getConfirmationDescSectionForEntityType("IAM Service Accounts", associatedIAMSvcAccs)}
+          {getConfirmationDescSectionForEntityType("AD Service Accounts", associatedADSvcAccs)}
+          {getConfirmationDescSectionForEntityType("Azure Service Principals", associatedAzureSvcAccs)}
+          {getConfirmationDescSectionForEntityType("Certificates", associatedCerts)}
+        </>
+      );     
+  };
+
+  const getConfirmationDescSectionForEntityType = (entityName, entityObj) => {
+    let entityList = entityObj?.replaceAll('[', '').replaceAll(']', '').split(',');
+
+    return (entityList && entityList[0]?.length > 0) ? (
+        <>
+          <p style={{'marginBottom':'.2rem'}}>{entityName}</p>
+          <ul style={{'marginTop':'.2rem'}}>
+            {entityList.map((entity) => (
+              <li key="{entity}">{entity}</li>
+            ))}
+          </ul>
+        </>
+      ) : null;
+  };
+
   const renderList = () => {
-    return appRoleList.map((appRole) => (
+    let list = searchSelected.length == 1 ? [...searchSelected] : [...appRoleList];
+    return list.map((appRole) => (
       <ListFolderWrap
         key={appRole.name}
         to={{
@@ -404,6 +642,7 @@ const AppRolesDashboard = () => {
         <ListItem
           title={appRole.name}
           subTitle={appRole.date}
+          isOwner={appRole.isOwner}
           flag={appRole.type}
           icon={appRoleIcon}
           showActions={false}
@@ -433,28 +672,51 @@ const AppRolesDashboard = () => {
   return (
     <ComponentError>
       <>
-        <ConfirmationModal
-          open={deleteAppRoleConfirmation}
-          handleClose={handleConfirmationModalClose}
-          title="Confirmation"
-          description={`<p>Are you sure you want to delete the AppRole ${deleteAppRoleName} ?</p>`}
-          cancelButton={
-            <ButtonComponent
-              label="Cancel"
-              color="primary"
-              onClick={() => handleConfirmationModalClose()}
-              width={isMobileScreen ? '44%' : ''}
-            />
-          }
-          confirmButton={
-            <ButtonComponent
-              label="Delete"
-              color="secondary"
-              onClick={() => onAppRoleDelete()}
-              width={isMobileScreen ? '44%' : ''}
-            />
-          }
-        />
+        {canDeleteSharedTo ? (
+          <ConfirmationModal
+            open={deleteAppRoleConfirmation}
+            handleClose={handleConfirmationModalClose}
+            title="Confirmation"
+            description={entitiesAreAssociatedWithAppRole ? `<p>AppRole ${deleteAppRoleName} is associated with the following entities - ` +
+              `<span>
+                ${ReactDOMServer.renderToStaticMarkup(getDeleteAppRoleConfirmationDescription())} 
+              </span>` +
+              `Deleting it could impact users this AppRole has been shared with. Do you still want to delete?</p>` 
+              : `Are you sure you want to delete AppRole ${deleteAppRoleName}?` 
+            }
+            cancelButton={
+              <ButtonComponent
+                label="Cancel"
+                color="primary"
+                onClick={() => handleConfirmationModalClose()}
+                width={isMobileScreen ? '44%' : ''}
+              />
+            }
+            confirmButton={
+              <ButtonComponent
+                label="Delete"
+                color="secondary"
+                onClick={() => onAppRoleDelete()}
+                width={isMobileScreen ? '44%' : ''}
+              />
+            }
+          />
+         ) : 
+           <ConfirmationModal
+             open={deleteAppRoleConfirmation}
+             handleClose={handleConfirmationModalClose}
+             title="Confirmation"
+             description={`<p>You are not the owner of AppRole ${deleteAppRoleName} so you cannot delete it.</p>`}
+             cancelButton={
+               <ButtonComponent
+                 label="Cancel"
+                 color="primary"
+                 onClick={() => handleConfirmationModalClose()}
+                 width={isMobileScreen ? '44%' : ''}
+               />
+             }
+           />
+         } 
         <SectionPreview>
           <LeftColumnSection isAccountDetailsOpen={appRoleClicked}>
             <ColumnHeader>
@@ -464,14 +726,12 @@ const AppRolesDashboard = () => {
                 </TitleOne>
               </div>
               <SearchWrap>
-                <TextFieldComponent
-                  placeholder="Search - Enter min 3 character"
-                  icon="search"
-                  fullWidth
-                  onChange={(e) => onSearchChange(e.target.value)}
+                <SearchboxWithDropdown
+                  onSearchChange={(e) => setInputSearchValue(e?.target?.value)}
                   value={inputSearchValue || ''}
-                  color="secondary"
-                  characterLimit={40}
+                  menu={options}
+                  onChange={(value) => onSearchItemSelected(value)}
+                  noResultFound={noResultFound}
                 />
               </SearchWrap>
             </ColumnHeader>
@@ -491,19 +751,28 @@ const AppRolesDashboard = () => {
                     ref={(ref) => (scrollParentRef = ref)}
                   >
                     <StyledInfiniteScroll
+                      id="scrollList"
                       pageStart={0}
-                      loadMore={() => {
-                        loadMoreData();
+                      onScroll={() => {
+                        handleListScroll();
                       }}
-                      hasMore={moreData}
-                      threshold={100}
-                      loader={
-                        !isLoading ? <div key={0}>Loading...</div> : <></>
-                      }
+                      hasMore={hasMore}
+                      loadMore={() => {}}
                       useWindow={false}
                       getScrollParent={() => scrollParentRef}
                     >
                       {renderList()}
+                      {isLoading && searchSelected.length != 1 && (
+                        <ScaledLoaderContainer>
+                          <ScaledLoader
+                            contentHeight="80%"
+                            contentWidth="100%"
+                            notAbsolute
+                            scaledLoaderLastChild={scaledLoaderLastChild}
+                            scaledLoaderFirstChild={scaledLoaderFirstChild}
+                          />
+                        </ScaledLoaderContainer>
+                      )}
                     </StyledInfiniteScroll>
                   </ListContainer>
                 ) : (
@@ -636,14 +905,14 @@ const AppRolesDashboard = () => {
             exact
             path="/vault-app-roles/create-vault-app-role"
             render={(routeProps) => (
-              <CreateAppRole routeProps={routeProps} refresh={fetchData} />
+              <CreateAppRole routeProps={routeProps} refresh={clearDataAndLoad} />
             )}
           />
           <Route
             exact
             path="/vault-app-roles/edit-vault-app-role"
             render={(routeProps) => (
-              <CreateAppRole routeProps={routeProps} refresh={fetchData} />
+              <CreateAppRole routeProps={routeProps} refresh={clearDataAndLoad} />
             )}
           />
         </Switch>

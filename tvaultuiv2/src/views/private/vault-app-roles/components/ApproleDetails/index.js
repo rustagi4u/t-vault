@@ -248,14 +248,15 @@ const AppRoleDetails = (props) => {
    */
   const onDownloadSecretId = () => {
     apiService
-      .getRoleId(appRoleDetail?.name)
+      .fetchAppRoleDetails(appRoleDetail?.name)
       .then((res) => {
         if (res?.data) {
           const csvData = [
             {
               approle: appRoleDetail?.name,
-              roleId: res.data.data.role_id,
-              owner: userState?.username,
+              roleId: res.data.role_id,
+              owner: res.data.appRoleMetadata.data.createdBy,
+              sharedTo: res.data.appRoleMetadata.data.sharedTo?.toString()?.replaceAll(/,/g, ' | ') || '',
               secretID: secretIdInfo?.secret_id,
               accessorID: secretIdInfo?.secret_id_accessor,
             },
@@ -264,6 +265,7 @@ const AppRoleDetails = (props) => {
             approle: 'Approle'.replace(/,/g, ''), // remove commas to avoid errors
             roleId: 'RoleId',
             owner: 'Owner',
+            sharedTo: 'SharedTo',
             secretID: 'SecretID',
             accessorID: 'AccessorID',
           };
@@ -276,6 +278,7 @@ const AppRoleDetails = (props) => {
               approle: item.approle.replace(/,/g, ''), // remove commas to avoid errors,
               roleId: item.roleId,
               owner: item.owner,
+              sharedTo: item.sharedTo,
               secretID: item.secretID,
               accessorID: item.accessorID,
             });
@@ -305,7 +308,7 @@ const AppRoleDetails = (props) => {
           open={createSecretIdModal}
           handleClose={() => setCreateSecretIdModal(false)}
           title="Confirmation"
-          description={`Are you sure you want to create new Secret ID for the AppRole ${appRoleDetail?.name} ?`}
+          description={`Are you sure you want to create new Secret ID for the AppRole ${appRoleDetail?.name}?`}
           cancelButton={
             // eslint-disable-next-line react/jsx-wrap-multilines
             <ButtonComponent

@@ -3,13 +3,11 @@ package com.tmobile.cso.vault.api.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
+
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-public class IAMServiceAccountTransfer {
-
-    @JsonProperty("ad_group")
-    private String adSelfSupportGroup;
+public class ASPTransferRequest {
 
     @JsonProperty("application_id")
     private String applicationId;
@@ -21,42 +19,31 @@ public class IAMServiceAccountTransfer {
     private String applicationTag;
 
     @NotBlank
-    @Pattern( regexp = "^$|^[0-9]+$", message="Invalid AWS account id")
-    @Size(min = 1, max = 12, message = "AWSAccountId specified should be maximum 12 characters only")
-    private String awsAccountId;
-
     @Pattern(regexp = "^$|^[a-zA-Z0-9_-]+$", message = "Owner can have alphabets, numbers, _ and - characters only")
     @JsonProperty("owner_ntid")
     private String ownerNtid;
 
+    @NotBlank
     @Email
+    @Size(min = 1, message = "Owner Email can not be null or empty")
+    @Pattern(regexp = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$", message = "Owner Email is not valid")
     @JsonProperty("owner_email")
     private String ownerEmail;
 
     @NotBlank
-    @Size(min = 1, max = 64, message = "UserName specified should be minimum 1 character and maximum 64 characters only")
-    @Pattern(regexp = "^[a-zA-Z0-9+=,.@_-]+$", message = "Name can have alphabets, numbers, plus (+), equal (=), comma (,), period (.), at (@), underscore (_), and hyphen (-)  only")
-    private String userName;
+    @Size(min = 11, message = "Azure service principal name specified should be minimum 11 characters only")
+    @Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Azure service principal name can have alphabets, numbers, _ and - characters only")
+    private String servicePrincipalName;
 
-    public IAMServiceAccountTransfer() {}
-    public IAMServiceAccountTransfer(String userName, String awsAccountId, String ownerNtid, String ownerEmail, String applicationId,
-                                     String applicationName, String applicationTag, String adSelfSupportGroup) {
-        this.adSelfSupportGroup = adSelfSupportGroup;
+    public ASPTransferRequest() {}
+    public ASPTransferRequest(String servicePrincipalName, String ownerNtid, String ownerEmail, String applicationId,
+                              String applicationName, String applicationTag) {
         this.applicationId = applicationId;
         this.applicationName = applicationName;
         this.applicationTag = applicationTag;
-        this.awsAccountId = awsAccountId;
         this.ownerNtid = ownerNtid;
         this.ownerEmail = ownerEmail;
-        this.userName = userName;
-    }
-
-    public String getAdSelfSupportGroup() {
-        return adSelfSupportGroup;
-    }
-
-    public void setAdSelfSupportGroup(String adSelfSupportGroup) {
-        this.adSelfSupportGroup = adSelfSupportGroup;
+        this.servicePrincipalName = servicePrincipalName;
     }
 
     public String getApplicationId() {
@@ -83,14 +70,6 @@ public class IAMServiceAccountTransfer {
         this.applicationTag = applicationTag;
     }
 
-    public String getAwsAccountId() {
-        return awsAccountId;
-    }
-
-    public void setAwsAccountId(String awsAccountId) {
-        this.awsAccountId = awsAccountId;
-    }
-
     public String getOwnerNtid() {
         return ownerNtid;
     }
@@ -107,11 +86,11 @@ public class IAMServiceAccountTransfer {
         this.ownerEmail = ownerEmail;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getServicePrincipalName() {
+        return servicePrincipalName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setServicePrincipalName(String servicePrincipalName) {
+        this.servicePrincipalName = servicePrincipalName;
     }
 }

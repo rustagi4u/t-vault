@@ -63,7 +63,9 @@ public class TVaultConstants {
     public static final String APPROLE_DELETE_OPERATION="DELETE";
     public static final String APPROLE_READ_OPERATION="READ";
     public static final String APPROLE_UPDATE_OPERATION="UPDATE";
+    public static final String USER_DETAILS="UserDetails";
     public static final String SVC_ACC_PATH_PREFIX="svcacct";
+    public static final String AZURE_SVC_ACC_PREFIX="azuresvcacc";
     protected static final Map<String, String> SVC_ACC_POLICIES;
     public static final DualHashBidiMap SVC_ACC_POLICIES_PREFIXES ;
     static {
@@ -190,8 +192,8 @@ public class TVaultConstants {
     public static final String[] IAM_AZURE_ADMIN_POLICY_LIST = { "iamportal_admin_policy", "azure_admin_policy"};
     public static final String CLOUD_SECURITY_IAM_ADMIN_APPROLE = "cloudsecurity_iam_admin_approle";
     public static final String CLOUD_SECURITY_AZURE_AD_MANAGER_ROLE = "AzureADRoleManager";
-    public static final String NEW_SPRINT_EMAIL_FORMAT = "@tmobileusa.onmicrosoft.com";
     public static final String UI_BANNER_MESSAGE_PATH = "metadata/users/message";
     public static final String WRITE_MESSAGE_POLICY="uibannermessage";
+    public static final String NEW_SPRINT_EMAIL_FORMAT = "@tmobileusa.onmicrosoft.com";
 
 }

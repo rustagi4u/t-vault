@@ -71,12 +71,12 @@ public class IAMServiceAccountsController {
 	 * @param token
 	 * @return
 	 */
-	@ApiOperation(value = "${IAMServiceAccountsController.transferIAMServiceAccountOwner.value}", notes = "${IAMServiceAccountsController.transferIAMServiceAccountOwner.notes}")
-	@PostMapping(value="/v2/iamserviceaccounts/transfer", produces="application/json")
-	public ResponseEntity<String> transferIAMServiceAccountOwner( HttpServletRequest request, @RequestHeader(value="vault-token") String token,
+	@ApiOperation(value = "${IAMServiceAccountsController.updateIAMServiceAccount.value}", notes = "${IAMServiceAccountsController.updateIAMServiceAccount.notes}")
+	@PostMapping(value="/v2/iamserviceaccounts/update", produces="application/json")
+	public ResponseEntity<String> updateIAMServiceAccount( HttpServletRequest request, @RequestHeader(value="vault-token") String token,
 																  @RequestBody @Valid IAMServiceAccountTransfer iamServiceAccountTransfer) throws IOException {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		return iamServiceAccountsService.transferIAMServiceAccountOwner(token, userDetails, iamServiceAccountTransfer);
+		return iamServiceAccountsService.updateIAMServiceAccount(token, userDetails, iamServiceAccountTransfer);
 	}
 
 	/**
@@ -424,8 +424,9 @@ public class IAMServiceAccountsController {
 	@GetMapping(value = "/v2/iamserviceaccounts/{aws_account_id}/{iam_svc_name}/keys", produces = "application/json")
 	public ResponseEntity<String> getListOfIAMServiceAccountAccessKeys(HttpServletRequest request,
 			@RequestHeader(value = "vault-token") String token, @PathVariable("aws_account_id") String awsAccountId,
-			@PathVariable("iam_svc_name") String iamSvcName) {
-		return iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcName, awsAccountId);
+			@PathVariable("iam_svc_name") String iamSvcName) throws IOException {
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return iamServiceAccountsService.getListOfIAMServiceAccountAccessKeys(token, iamSvcName, awsAccountId, userDetails);
 	}
 
 	/**

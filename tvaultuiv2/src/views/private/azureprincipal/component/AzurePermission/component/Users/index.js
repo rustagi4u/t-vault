@@ -200,6 +200,17 @@ const Users = (props) => {
     // eslint-disable-next-line
   }, [selectedParentTab]);
 
+  const isSudoOnly = (users) => {
+    if (
+      users &&
+      Object.keys(users).length === 1 &&
+      Object.values(users)[0] === 'sudo'
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <ComponentError>
       <>
@@ -234,11 +245,13 @@ const Users = (props) => {
                   onEditClick={(key, value) => onEditClick(key, value)}
                   onDeleteClick={(key, value) => onDeleteClick(key, value)}
                   userDetails={userDetails}
+                  owner={azureMetaData?.owner_ntid}
                 />
               )}
             {(!azureMetaData.users ||
               userDetails.length === 0 ||
-              Object.keys(azureMetaData.users).length === 0) && (
+              Object.keys(azureMetaData.users).length === 0 ||
+              isSudoOnly(azureMetaData?.users)) && (
               <NoDataWrapper>
                 <NoData
                   imageSrc={noPermissionsIcon}

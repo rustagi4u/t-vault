@@ -425,7 +425,11 @@ public class  ServiceAccountsService {
 
 						// set template variables
 						Map<String, String> mailTemplateVariables = new HashMap<>();
-						mailTemplateVariables.put("name", managerDetails.get(0).getDisplayName());
+						if (StringUtils.isEmpty(managerDetails.get(0).getDisplayName().trim())) {
+							mailTemplateVariables.put("name", managerDetails.get(0).getUserName());
+						} else {
+							mailTemplateVariables.put("name", managerDetails.get(0).getDisplayName());
+						}
 						mailTemplateVariables.put("svcAccName", svcAccName);
 						if (serviceAccount.getAdGroup() != null && !serviceAccount.getAdGroup().equals("")) {
 							groupContent = String.format(mailAdGroupContent, serviceAccount.getAdGroup());

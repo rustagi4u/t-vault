@@ -1,14 +1,14 @@
 const Resources = {
   tvaultDescription:
-    'T-Vault is a simplified and centralized secrets management solution for securely storing, distributing and tightly controlling access to passwords, certificates, encryption keys, tokens for protecting secrets and other sensitive data using a UI, HTTP API.',
+    'T-Vault is a simplified and centralized service account management solution for securely managing IAM and CORP AD service accounts, as well as Azure Service Principals via a UI or HTTP API.',
   loginNotes:
-    ' This instance of T-Vault is for the Cloud Security Team to share AD Service account passwords, SSH keys, AWS Access Keys, Certificates and other general sensitive information to Cloud Customers only. Do not use it for Tier1 application integrations.',
+    ' This instance of T-Vault is for the Cloud Security Team to share AD Service account passwords, SSH keys, AWS Access Keys and other general sensitive information to Cloud Customers only. Do not use it for Tier1 application integrations.',
   storeDescription:
-    'Centrally store, access, and distribute secrets like API keys, AWS IAM/STS credentials, SQL/NoSQL databases, X.509 certificates, SSH credentials, and more.',
+    'Bring IAM Service Accounts, CORP AD Service Accounts, and Azure Service Principals into T-Vault so that the secrets can be read and rotated.',
   accessDescription:
-    'Secure and tight access control for accessing passwords, certificates, encryption keys for protecting secrets and other sensitive data using a UI and HTTP API.',
+    'T-Vault provides a clean and easy way to create access keys and rotate secrets so that you can stay in compliance, and your application can stay secure.',
   distributeDescription:
-    'Easily create safes, add secrets and share access to others. Integrate T-Vault with your existing workflows to distribute secrets to users.',
+    'Distribute access to service accounts by granting specific permissions to other users and groups, allowing others to read and/or rotate the secrets.',
   serviceAccount:
     "Service Account Activation. By default passwords are not set to autorotate <br/> <p>Note: When 'Enable Password Rotation' is turned off, the password for this service account will not be autorotated by T-Vault.</p>",
   offBoardConfirmation:
@@ -59,7 +59,8 @@ const Resources = {
     'Once you add a <strong>Certificate</strong> you’ll see the  Corresponding <strong>Details</strong> here!',
   appRoles:
     'AppRoles operate a lot like safes, but they put the application as the logical unit for sharing. Additional Accessor ID and Secret ID pairs can easily be created through T-Vault, Secret IDs can only be accessed when downloaded.',
-  certificateDesc: 'Create internal certificates.',
+  certificateDesc: 'The ability to create/renew NCLM certificates in T-Vault has been decommissioned. Going forward users will need to utilize NCLM directly for certificate management. ' +
+  'You will need to create a new container in NCLM with a security group associated with it. Then you will need to move your certificates from VenafiBin_12345 to your new container. <a style="color: #E20074;" href="https://nclm.t-mobile.com/faq" target="_blank">Helpful docs</a>',
   noTransferOwnerAvailable:
     'Certificate may not be approved or rejected.Please follow the instructions mentioned in email',
   certificateGuide1:
