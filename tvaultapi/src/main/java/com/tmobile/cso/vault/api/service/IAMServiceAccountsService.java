@@ -1407,9 +1407,11 @@ public class  IAMServiceAccountsService {
 		policies.add(policyToAdd);
 	}
 
+
 	private ResponseEntity<String> configureGroup(String token, UserDetails userDetails, OIDCGroup oidcGroup,
 												  IAMServiceAccountGroup iamServiceAccountGroup, List<String> policies,
 												  List<String> currentpolicies) {
+
 		String policiesString = org.apache.commons.lang3.StringUtils.join(policies, ",");
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
@@ -5906,6 +5908,7 @@ public class  IAMServiceAccountsService {
 			return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(
 					"{\"errors\":[\"Metadata update failed for IAM Service Account.\"]}");
 		}
+
 
 		if (isOwnerBeingTransferred) {
 			DirectoryUser oldOwnerObj = getUserDetails(originalIAMSvcAcc.getOwnerNtid());

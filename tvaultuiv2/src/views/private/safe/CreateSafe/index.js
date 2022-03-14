@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-wrap-multilines */
 /* eslint-disable react/jsx-curly-newline */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { debounce } from 'lodash';
@@ -717,10 +718,7 @@ const CreateModal = (props) => {
                           )}
                           loader={autoLoader}
                           userInput={owner}
-                          disabled={
-                            !!editSafe ||
-                            sessionStorage.getItem('isAdmin') === 'false'
-                          }
+                          disabled
                           name="owner"
                           onSelected={(e, val) => onSelected(e, val)}
                           onChange={(e) => onOwnerChange(e)}
@@ -751,7 +749,7 @@ const CreateModal = (props) => {
                         <SelectComponent
                           menu={menu}
                           value={safeType}
-                          readOnly={!!editSafe}
+                          readOnly
                           onChange={(e) => setSafeType(e)}
                         />
                       </InputFieldLabelWrapper>
@@ -785,6 +783,7 @@ const CreateModal = (props) => {
                               ? `Application ${applicationName} does not exist!`
                               : ''
                           }
+                          disabled
                         />
                       </InputFieldLabelWrapper>
 
@@ -800,6 +799,7 @@ const CreateModal = (props) => {
                           onChange={(e) => setDescription(e.target.value)}
                           placeholder="Add some details about this safe"
                           characterLimit={1024}
+                          readOnly
                         />
                         <FieldInstruction>
                           Please add a minimum of 10 characters
@@ -827,16 +827,6 @@ const CreateModal = (props) => {
                           />
                         </CancelButton>
                       )}
-                      <ButtonComponent
-                        label={!editSafe ? 'Create' : 'Update'}
-                        color="secondary"
-                        icon={!editSafe ? 'add' : ''}
-                        disabled={disabledSave}
-                        onClick={() =>
-                          !editSafe ? onCreateSafes() : onEditSafes()
-                        }
-                        width={isMobileScreen ? '100%' : ''}
-                      />
                     </CancelSaveWrapper>
                   </>
                 )}

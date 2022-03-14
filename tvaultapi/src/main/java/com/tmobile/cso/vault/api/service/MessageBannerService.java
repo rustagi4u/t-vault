@@ -1,4 +1,5 @@
 package com.tmobile.cso.vault.api.service;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -82,7 +83,6 @@ public class MessageBannerService {
 				.put(LogMessage.ACTION, "Write ui banner message")
 				.put(LogMessage.MESSAGE, String.format("Trying to write message [%s]", path))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).build()));
-		System.out.println(path);
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())
@@ -195,7 +195,6 @@ public class MessageBannerService {
 				.put(LogMessage.ACTION, "Write message")
 				.put(LogMessage.MESSAGE, String.format("Trying to write message [%s]", path))
 				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).build()));
-		System.out.println(path);
 
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
 				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString())

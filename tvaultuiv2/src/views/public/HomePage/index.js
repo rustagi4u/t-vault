@@ -173,6 +173,20 @@ const Description = styled.p`
   }
 `;
 
+const MessageBannerWrap = styled.div`
+  background-color: #30323f;
+  border-width: 3px;
+  border-radius: 25px;
+  padding: 5px 0 5px 0;
+  width: 100%;
+  margin-bottom: 10px;
+  max-height: 100%;
+
+  ${small} {
+    width: 100%;
+  }
+`;
+
 const ButtonWrap = styled.div`
   display: flex;
   ${small} {
@@ -345,19 +359,6 @@ const ContactUs = styled.p`
     width: 80%;
   }
 `;
-const MessageBannerWrap = styled.div`
-  background-color: #30323f;
-  border-width: 3px;
-  border-radius: 25px;
-  padding: 5px 0 5px 0;
-  width: 100%;
-  margin-bottom: 10px;
-  max-height: 100%;
-
-  ${small} {
-    width: 100%;
-  }
-`;
 
 const MessageBanner = styled.p`
   line-height: 1.39rem;
@@ -382,7 +383,8 @@ const LoginPage = () => {
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
-  const [bannerMessageSsl, setBannerMessageSsl] = useState('');
+  const [bannerMessage1, setBannerMessage1] = useState('');
+
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
 
@@ -475,7 +477,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     axios.get(`${configUrl.baseUrl}/bannermessage`).then(async (res) => {
-      setBannerMessageSsl(res.data.data.message2);
+      setBannerMessage1(res.data.data.message1);
     });
   }, []);
 
@@ -594,7 +596,7 @@ const LoginPage = () => {
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
                   <MessageBannerWrap>
-                    <MessageBanner>{bannerMessageSsl}</MessageBanner>
+                    <MessageBanner>{bannerMessage1}</MessageBanner>
                   </MessageBannerWrap>
                 </SpeakerText>
               </HeaderWrap>
@@ -630,12 +632,12 @@ const LoginPage = () => {
                 <CardWrapper rowCommonCss={rowCommonCss}>
                   <Tile>
                     <Image src={Store} alt="store" />
-                    <Heading>Store</Heading>
+                    <Heading>Onboard</Heading>
                     <Details>{Strings.Resources.storeDescription}</Details>
                   </Tile>
                   <Tile>
                     <Image src={Access} alt="access" />
-                    <Heading>Access</Heading>
+                    <Heading>Rotate</Heading>
                     <Details>{Strings.Resources.accessDescription}</Details>
                   </Tile>
                   <Tile>
