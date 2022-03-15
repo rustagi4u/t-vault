@@ -361,7 +361,7 @@ public class AzureServicePrincipalAccountsControllerTest {
 		String inputJson = getJSON(azureServicePrincipalRotateRequest);
 		String responseJson = "{\"messages\":[\"Azure Service Principal secret rotated successfully\"]}";
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
-		when(azureServicePrincipalAccountsService.rotateSecret(Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AzureServicePrincipalRotateRequest.class))).thenReturn(responseEntityExpected);
+		when(azureServicePrincipalAccountsService.rotateSecret(Mockito.any(), Mockito.eq("5PDrOhsy4ig8L3EpsJZSLAMg"), Mockito.any(AzureServicePrincipalRotateRequest.class))).thenReturn(responseEntityExpected);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/v2/azureserviceaccounts/rotate").requestAttr("UserDetails", userDetails)
 				.header("vault-token", "5PDrOhsy4ig8L3EpsJZSLAMg")

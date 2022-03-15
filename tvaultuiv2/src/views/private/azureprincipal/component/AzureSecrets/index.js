@@ -504,7 +504,7 @@ const AzureSecrets = (props) => {
                           </span>
                         </PopperItem>
 
-                        {azureDetail.access === 'write' && (
+                        {(azureDetail.access === 'write' || isAdmin) && (
                           <PopperItem onClick={() => onRotateSecret()}>
                             <img alt="refersh-ic" src={refreshIcon} />
                             <span>Rotate Secret</span>

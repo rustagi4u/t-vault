@@ -284,7 +284,8 @@ public class AzureServicePrincipalAccountsController {
 	@PostMapping(value="/v2/azureserviceaccounts/rotate",produces="application/json")
 	@ApiOperation(value = "${AzureServicePrincipalAccountsController.rotateSecret.value}", notes = "${AzureServicePrincipalAccountsController.rotateSecret.notes}")
 	public ResponseEntity<String> rotateSecret(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @RequestBody @Valid AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest){
-		return azureServicePrincipalAccountsService.rotateSecret(token, azureServicePrincipalRotateRequest);
+		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		return azureServicePrincipalAccountsService.rotateSecret(userDetails, token, azureServicePrincipalRotateRequest);
 	}
 
 	/**
