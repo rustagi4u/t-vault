@@ -2831,6 +2831,9 @@ public class AzureServicePrincipalAccountsService {
 	public boolean hasAddOrRemovePermission(UserDetails userDetails, String serviceAccount, String token) {
 		// Owner of the service account can add/remove users, groups, aws roles
 		// and approles to service account
+		if (userDetails.isAdmin()) {
+			return true;
+		}
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				put(LogMessage.ACTION, "hasAddOrRemovePermission").
@@ -2841,10 +2844,7 @@ public class AzureServicePrincipalAccountsService {
 				.append(TVaultConstants.SVC_ACC_POLICIES_PREFIXES.getKey(TVaultConstants.SUDO_POLICY))
 				.append(AzureServiceAccountConstants.AZURE_SVCACC_POLICY_PREFIX).append(serviceAccount).toString();
 		String[] policies = policyUtils.getCurrentPolicies(token, userDetails.getUsername(), userDetails);
-		if (ArrayUtils.contains(policies, ownerPolicy)) {
-			return true;
-		}
-		return false;
+		return ArrayUtils.contains(policies, ownerPolicy);
 	}
 
 	/**
@@ -3311,11 +3311,13 @@ public class AzureServicePrincipalAccountsService {
 
 	/**
 	 * Rotate Azure Service Principal secret by secretKeyId.
+	 * @param userDetails
 	 * @param token
 	 * @param azureServicePrincipalRotateRequest
-	 * @return
+	 * @return ResponseEntity
 	 */
-	public ResponseEntity<String> rotateSecret(String token, AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest) {
+	public ResponseEntity<String> rotateSecret(UserDetails userDetails, String token,
+											   AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest) {
 		boolean rotationStatus = false;
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
@@ -3329,7 +3331,7 @@ public class AzureServicePrincipalAccountsService {
 		String secretKeyId = azureServicePrincipalRotateRequest.getSecretKeyId();
 		String servicePrincipalName = azureServicePrincipalRotateRequest.getAzureSvcAccName().toLowerCase();
 
-		if (!hasResetPermissionForAzureServicePrincipal(token, servicePrincipalName)) {
+		if (!hasResetPermissionForAzureServicePrincipal(userDetails, token, servicePrincipalName)) {
 			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 					put(LogMessage.ACTION, AzureServiceAccountConstants.AZURE_SP_ROTATE_ACTION).
@@ -3434,11 +3436,20 @@ public class AzureServicePrincipalAccountsService {
 
 	/**
 	 * Method to check if the user/approle has reset permission.
+	 * @param userDetails
 	 * @param token
 	 * @param servicePrincipalName
 	 * @return
 	 */
-	private boolean hasResetPermissionForAzureServicePrincipal(String token, String servicePrincipalName) {
+	private boolean hasResetPermissionForAzureServicePrincipal(UserDetails userDetails, String token, String servicePrincipalName) {
+		if (userDetails.isAdmin()) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, "HasResetPermissionForAzureServicePrincipal")
+					.put(LogMessage.MESSAGE, "User is admin and therefore has reset permission on this Azure Service principal.")
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
+			return true;
+		}
 		String resetPermission = "w_"+ AzureServiceAccountConstants.AZURE_SVCACC_POLICY_PREFIX + servicePrincipalName;
 		ObjectMapper objectMapper = new ObjectMapper();
 		List<String> currentPolicies = new ArrayList<>();

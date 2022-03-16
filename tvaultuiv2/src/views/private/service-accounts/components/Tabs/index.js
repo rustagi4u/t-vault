@@ -151,10 +151,8 @@ const AccountSelectionTabs = (props) => {
         if (res.data && res.data.data) {
           setServiceAccountMetaData(res.data.data);
           if (
-            // res.data.data.managedBy?.toLowerCase() ===
-            // state?.username?.toLowerCase()
-            state.username.toLowerCase() ||
-            isAdmin
+            res.data.data.managedBy?.toLowerCase() ===
+            state?.username?.toLowerCase()
           ) {
             setDisabledPermission(false);
             if (res.data.data.initialPasswordReset) {

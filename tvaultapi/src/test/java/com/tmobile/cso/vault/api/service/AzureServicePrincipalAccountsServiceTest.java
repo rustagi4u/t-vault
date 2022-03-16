@@ -2412,7 +2412,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Azure Service Principal secret rotated successfully\"]}");
 		AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest = new AzureServicePrincipalRotateRequest(servicePrincipal, secretKeyId, "98765432-1234-1234-1234-123456789098", "abcd1234-1234-1234-1234-123456789098", expiryDurationMs);
-		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.rotateSecret(token, azureServicePrincipalRotateRequest);
+		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.rotateSecret(getMockUser(false), token, azureServicePrincipalRotateRequest);
 		assertEquals(expectedResponse, actualResponse);
 	}
 
@@ -2438,7 +2438,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		Long expiryDurationMs = 63738393L;
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"Access denied: No permission to rotate secret for this Azure Service Principal.\"]}");
 		AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest = new AzureServicePrincipalRotateRequest(servicePrincipal, secretKeyId, "98765432-1234-1234-1234-123456789098", "abcd1234-1234-1234-1234-123456789098", expiryDurationMs);
-		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.rotateSecret(token, azureServicePrincipalRotateRequest);
+		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.rotateSecret(getMockUser(false), token, azureServicePrincipalRotateRequest);
 		assertEquals(expectedResponse, actualResponse);
 	}
 
@@ -2481,7 +2481,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 
 		ResponseEntity<String> expectedResponse =  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Failed to rotate secret for Azure Service Principal\"]}");
 		AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest = new AzureServicePrincipalRotateRequest(servicePrincipal, secretKeyId, "98765432-1234-1234-1234-123456789098", "abcd1234-1234-1234-1234-123456789098", expiryDurationMs);
-		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.rotateSecret(token, azureServicePrincipalRotateRequest);
+		ResponseEntity<String> actualResponse = azureServicePrincipalAccountsService.rotateSecret(getMockUser(false), token, azureServicePrincipalRotateRequest);
 		assertEquals(expectedResponse, actualResponse);
 	}
 
