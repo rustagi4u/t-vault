@@ -67,6 +67,26 @@ public class SecretControllerV2 {
 	}
 
 	/**
+	 * Write secrets into vault
+	 * @param token
+	 * @param jsonStr
+	 * @return
+	 */
+	@ApiOperation(value = "${SecretControllerV2.write.value}", notes = "${SecretControllerV2.write.notes}")
+	@PostMapping(value = {"/v2/safes/folders/secrets", "/v2/write"}, consumes = "application/json", produces = "application/json")
+	public ResponseEntity<String> write(HttpServletRequest request, @RequestHeader(value = "vault-token") String token,
+										@RequestHeader(value = "delete-flag", required = false) String deleteFlag
+			, @RequestBody Secret secret) {
+
+		UserDetails userDetails = (UserDetails) ((HttpServletRequest) request).getAttribute("UserDetails");
+		if (!StringUtils.isEmpty(deleteFlag) && deleteFlag.equalsIgnoreCase("true")) {
+			return secretService.write(token, secret, userDetails, deleteFlag);
+		} else {
+			return secretService.write(token, secret, userDetails);
+		}
+	}
+
+	/**
 	 * Delete secrets from vault
 	 * @param token
 	 * @param path

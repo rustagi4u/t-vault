@@ -290,6 +290,14 @@ const SelectionTabs = (props) => {
               <Tab label="Permissions" {...a11yProps(1)} />
             )}
           </Tabs>
+          {value === 0 && safeDetail?.access === 'write' && (
+            <NamedButton
+              label="Add Folder"
+              onClick={addSecretsFolder}
+              customStyle={customBtnStyles}
+              iconSrc={addFolderPlus}
+            />
+          )}
         </AppBar>
         <TabContentsWrap>
           <TabPanel value={value} index={0}>

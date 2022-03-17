@@ -156,6 +156,49 @@ public class  SafesService {
 		return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
 
 	}
+
+	/**
+	 * Create a folder
+	 * @param token
+	 * @param path
+	 * @return
+	 */
+	public ResponseEntity<String> createfolder(String token, String path){
+
+		path = (path != null) ? path.toLowerCase() : path;
+		if(ControllerUtil.isPathValid(path)){
+			String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "CreateFolder").
+					put(LogMessage.MESSAGE, String.format ("Trying to Create folder [%s]", path)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			Response response = reqProcessor.process("/sdb/createfolder",jsonStr,token);
+			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, "Create Folder").
+						put(LogMessage.MESSAGE, "Create Folder completed").
+						put(LogMessage.STATUS, response.getHttpstatus().toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Folder created \"]}");
+			}
+			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+
+		}else{
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Create Folder").
+					put(LogMessage.MESSAGE, "Create Folder failed").
+					put(LogMessage.RESPONSE, INVALID_PATH).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid path\"]}");
+		}
+
+	}
 	
 	/**
 	 * Creates Safe
@@ -502,6 +545,162 @@ public class  SafesService {
 					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
 					put(LogMessage.ACTION, "Delete SDB").
 					put(LogMessage.MESSAGE, "SDB Deletion failed").
+					put(LogMessage.RESPONSE, INVALID_PATH).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid 'path' specified\"]}");
+		}
+	}
+
+	/**
+	 * Updates Safe
+	 * @param token
+	 * @param safe
+	 * @return
+	 */
+	public ResponseEntity<String>  updateSafe(String token, Safe safe) {
+		// Safe type
+		safe.getSafeBasicDetails().setType(ControllerUtil.getSafeType(safe.getPath()));
+		Map<String, Object> requestParams = ControllerUtil.parseJson(JSONUtil.getJSON(safe));
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				put(LogMessage.ACTION, UPDATE_SDB).
+				put(LogMessage.MESSAGE, String.format("Start trying to Update SDB [%s].",safe.getSafeBasicDetails().getName())).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				build()));
+		if (!ControllerUtil.areSDBInputsValidForUpdate(requestParams)) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, UPDATE_SDB).
+					put(LogMessage.MESSAGE, "Invalid input values ").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values\"]}");
+		}
+		SafeBasicDetails bsafeBasicDetails = safe.getSafeBasicDetails();
+		String appName  =getValidAppName(bsafeBasicDetails);
+		if(appName == null) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, UPDATE_SDB).
+					put(LogMessage.MESSAGE, "Invalid Application name ").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid Application name\"]}");
+		}
+		if (safe.getSafeBasicDetails().getDescription().length() > 1024) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, UPDATE_SDB).
+					put(LogMessage.MESSAGE, "Invalid input values: Description too long").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values: Description too long\"]}");
+		}
+		@SuppressWarnings("unchecked")
+		Map<Object,Object> data = (Map<Object,Object>)requestParams.get("data");
+		String path = safe.getPath();
+		String safeName = safe.getSafeBasicDetails().getName();
+		String safeNameFromPath = ControllerUtil.getSafeName(path);
+		String safeType = ControllerUtil.getSafeType(path);
+
+		int redundantSafeNamesCount = ControllerUtil.getCountOfSafesForGivenSafeName(safeName, token);
+		if (redundantSafeNamesCount > 1) {
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, UPDATE_SDB).
+					put(LogMessage.MESSAGE, "Safe can't be updated since duplicate safe names are found").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe can't be updated since duplicate safe names are found\"]}");
+		}
+
+		String safePath = ControllerUtil.generateSafePath(safeName, safeType);
+		String _path = METADATA+safeType+"/"+safeNameFromPath; //Path as passed
+		String _safePath = METADATA+safeType+"/"+safeName; // Path created from given safename and type
+		String pathToBeUpdated = _path;
+
+		if(ControllerUtil.isValidSafePath(path) || ControllerUtil.isValidSafePath(safePath)){
+			// Get Safe metadataInfo
+			Response response = reqProcessor.process("/read","{\"path\":\""+_path+"\"}",token);
+			Map<String, Object> responseMap = null;
+			if(HttpStatus.OK.equals(response.getHttpstatus())) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, UPDATE_SDB).
+						put(LogMessage.MESSAGE, "Start reading metadata from safepath").
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				responseMap = ControllerUtil.parseJson(response.getResponse());
+				if(responseMap.isEmpty()) {
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error Fetching existing safe info \"]}");
+				}
+				pathToBeUpdated = _path;
+			}
+			else{
+				response = reqProcessor.process("/read","{\"path\":\""+_safePath+"\"}",token);
+				if(HttpStatus.OK.equals(response.getHttpstatus())){
+					responseMap = ControllerUtil.parseJson(response.getResponse());
+					if(responseMap.isEmpty()) {
+						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error Fetching existing safe info \"]}");
+					}
+					pathToBeUpdated = _safePath;
+				}
+				else {
+					log.error("Could not fetch the safe information. Possible path issue");
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error Fetching existing safe info. please check the path specified \"]}");
+				}
+			}
+
+			@SuppressWarnings("unchecked")
+			Map<String,Object> metadataMap = (Map<String,Object>)responseMap.get("data");
+			Object awsroles = metadataMap.get(TVaultConstants.AWS_ROLES);
+			Object groups = metadataMap.get(TVaultConstants.GROUPS);
+			Object users = metadataMap.get(TVaultConstants.USERS);
+			Object approles = metadataMap.get(TVaultConstants.APP_ROLES);
+			data.put(TVaultConstants.AWS_ROLES,awsroles);
+			data.put(TVaultConstants.GROUPS,groups);
+			data.put(TVaultConstants.USERS,users);
+			data.put(TVaultConstants.APP_ROLES,approles);
+			requestParams.put("path",pathToBeUpdated);
+			SafeBasicDetails basicDetails = safe.getSafeBasicDetails();
+			String applicationTag=basicDetails.getAppName();
+			String applicationName  =getValidAppName(basicDetails);
+			((Map<String,Object>)requestParams.get("data")).put("appName",(String)applicationName);
+			((Map<String,Object>)requestParams.get("data")).put("applicationTag",(String) applicationTag);
+
+			// Do not alter the name of the safe
+			((Map<String,Object>)requestParams.get("data")).put("name",(String) metadataMap.get("name"));
+			// Do not alter the owner of the safe
+			((Map<String,Object>)requestParams.get("data")).put("ownerid",(String) metadataMap.get("ownerid"));
+
+			String metadataJson = ControllerUtil.convetToJson(requestParams) ;
+			response = reqProcessor.process("/sdb/update",metadataJson,token);
+			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)){
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, UPDATE_SDB).
+						put(LogMessage.MESSAGE,String.format("Safe [%s] updated successfully",safe.getSafeBasicDetails().getName())).
+						put(LogMessage.STATUS, response.getHttpstatus().toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
+			}else{
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION,UPDATE_SDB).
+						put(LogMessage.MESSAGE, "SDB Update completed").
+						put(LogMessage.RESPONSE, response.getResponse()).
+						put(LogMessage.STATUS, response.getHttpstatus().toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+			}
+		}else{
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, UPDATE_SDB).
+					put(LogMessage.MESSAGE, "SDB Update failed").
 					put(LogMessage.RESPONSE, INVALID_PATH).
 					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
 					build()));
@@ -2358,6 +2557,68 @@ public class  SafesService {
 				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 				build()));
 		return ResponseEntity.status(response.getHttpstatus()).body(JSONUtil.getJSON(safesMap));
+	}
+
+	/**
+	 * Create folder
+	 * @param token
+	 * @param path
+	 * @return
+	 */
+	public ResponseEntity<String> createNestedfolder(String token, String path, UserDetails userDetails) {
+		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+				put(LogMessage.ACTION, "createNestedfolder").
+				put(LogMessage.MESSAGE, String.format ("Trying to createNestedfolder [%s]", path)).
+				put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+				build()));
+		path = (path != null) ? path.toLowerCase(): path;
+
+
+		if(ControllerUtil.isPathValid(path) && 	isValidSafe(token, path)){
+			String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
+			Response response = reqProcessor.process("/sdb/createfolder",jsonStr,token);
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "createNestedfolder").
+					put(LogMessage.MESSAGE, "createNestedfolder completed").
+					put(LogMessage.STATUS, response.getHttpstatus().toString()).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+				// create version folder
+				Response versionCreationResponse = safeUtils.updateActivityInfo(token, path, userDetails, TVaultConstants.CREATE_ACTION, null, null);
+				if (HttpStatus.NO_CONTENT.equals(versionCreationResponse.getHttpstatus())) {
+					log.info(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "createNestedfolder").
+							put(LogMessage.MESSAGE, String.format ("Created version folder for [%s]", path)).
+							put(LogMessage.STATUS, versionCreationResponse.getHttpstatus().toString()).
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+				}
+				else {
+					log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
+							put(LogMessage.ACTION, "createNestedfolder").
+							put(LogMessage.MESSAGE, String.format ("Failed to create version folder for [%s]", path)).
+							put(LogMessage.STATUS, versionCreationResponse.getHttpstatus().toString()).
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
+							build()));
+				}
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Folder created \"]}");
+			}
+			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+		}else{
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "createNestedfolder").
+					put(LogMessage.MESSAGE, "createNestedfolder completed").
+					put(LogMessage.RESPONSE, INVALID_PATH).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid path\"]}");
+		}
 	}
 
 	/**

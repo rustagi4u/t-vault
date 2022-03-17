@@ -123,14 +123,34 @@ const Secrets = (props) => {
                   ) : secretsFolder[0]?.children?.length === 0 ? (
                     // eslint-disable-next-line react/jsx-indent
                     <EmptySecretBox>
-                      <NoData
-                        imageSrc={NoSecretsIcon}
-                        description={
-                          Strings.Resources.noSafeSecretFoundReadPerm
-                        }
-                        bgIconStyle={bgIconStyle}
-                        customStyle={noDataStyle}
-                      />
+                      {safeDetail.access === 'write' ? (
+                        <NoData
+                          imageSrc={NoSecretsIcon}
+                          description={Strings.Resources.noSafeSecretFound}
+                          actionButton={
+                            // eslint-disable-next-line react/jsx-wrap-multilines
+                            <ButtonComponent
+                              label="add"
+                              icon="add"
+                              color="secondary"
+                              disabled={safeDetail.access !== 'write'}
+                              width={isMobileScreen ? '100%' : '9.4rem'}
+                              onClick={() => setEnableAddFolder(true)}
+                            />
+                          }
+                          bgIconStyle={bgIconStyle}
+                          customStyle={noDataStyle}
+                        />
+                      ) : (
+                        <NoData
+                          imageSrc={NoSecretsIcon}
+                          description={
+                            Strings.Resources.noSafeSecretFoundReadPerm
+                          }
+                          bgIconStyle={bgIconStyle}
+                          customStyle={noDataStyle}
+                        />
+                      )}
                     </EmptySecretBox>
                   ) : (
                     <></>

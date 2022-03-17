@@ -194,6 +194,29 @@ const File = (props) => {
                     </PopperItem>
                   </CopyToClipboard>
                 ))}
+              {userHavePermission?.type === 'write' && (
+                <PopperItem onClick={() => editNode()}>
+                  <IconEdit />
+                  <span>Edit</span>
+                </PopperItem>
+              )}
+              {userHavePermission?.type === 'write' && (
+                <PopperItem
+                  onClick={
+                    () =>
+                      deleteNode({
+                        id,
+                        type,
+                        key: Object.keys(secret)[0],
+                        parentId,
+                      })
+                    // eslint-disable-next-line react/jsx-curly-newline
+                  }
+                >
+                  <IconDeleteActive />
+                  <span>Delete</span>
+                </PopperItem>
+              )}
             </PopperElement>
           </FolderIconWrap>
         </StyledFile>
