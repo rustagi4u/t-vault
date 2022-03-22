@@ -93,6 +93,152 @@ public class  SecretService {
 	}
 
 	/**
+	 * Write a secret into vault
+	 * @param token
+	 * @param secret
+	 * @param userDetails
+	 * @return
+	 */
+	public ResponseEntity<String> write(String token, Secret secret, UserDetails userDetails,String deleteFlag){
+		String jsonStr = JSONUtil.getJSON(secret);
+		String path="";
+		try {
+			path = new ObjectMapper().readTree(jsonStr).at("/path").asText();
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Write Secret").
+					put(LogMessage.MESSAGE, String.format("Trying to write secret [%s]", path)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			jsonStr = ControllerUtil.addDefaultSecretKey(jsonStr);
+			if (!ControllerUtil.areSecretKeysValid(jsonStr)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid request.Check json data\"]}");
+			}
+		} catch (IOException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid request.Check json data\"]}");
+		}
+		if(ControllerUtil.isPathValid(path) && !path.contains(TVaultConstants.VERSION_FOLDER_PREFIX)){
+			// Check if the user has explicit write permission. Safe owners (implicit write permission) will be denied from write operation
+			if (!hasExplicitWritePermission(userDetails, secret.getPath())) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, "Write Secret").
+						put(LogMessage.MESSAGE, String.format("Deleting secret [%s] failed", path)).
+						put(LogMessage.RESPONSE, "No permisison to write secret in this safe").
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"No permisison to write secret in this safe\"]}");
+			}
+			Response readResponse = reqProcessor.process("/read","{\"path\":\""+secret.getPath()+"\"}",token);
+			Response response = reqProcessor.process("/write",jsonStr,token);
+			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+				if (!StringUtils.isEmpty("deleteFlag") && deleteFlag.equalsIgnoreCase("true")){
+					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+							put(LogMessage.ACTION, "Write Secret").
+							put(LogMessage.MESSAGE, String.format("Deleting secret [%s] completed successfully", path)).
+							put(LogMessage.STATUS, response.getHttpstatus().toString()).
+							put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+							build()));
+				}
+				// write version information to version folder
+				saveVersionInfo(token, path, userDetails, secret, readResponse);
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Secret saved to vault\"]}");
+			}
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Write Secret").
+					put(LogMessage.MESSAGE, String.format("Writing secret [%s] failed", path)).
+					put(LogMessage.RESPONSE, response.getResponse()).
+					put(LogMessage.STATUS, response.getHttpstatus().toString()).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+		}else{
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Write Secret").
+					put(LogMessage.MESSAGE, String.format("Writing secret [%s] failed", path)).
+					put(LogMessage.RESPONSE, "Invalid path").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid path\"]}");
+		}
+	}
+
+	/**
+	 * Write a secret into vault
+	 * @param token
+	 * @param secret
+	 * @param userDetails
+	 * @return
+	 */
+	public ResponseEntity<String> write(String token, Secret secret, UserDetails userDetails){
+		String jsonStr = JSONUtil.getJSON(secret);
+		String path="";
+		try {
+			path = new ObjectMapper().readTree(jsonStr).at("/path").asText();
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Write Secret").
+					put(LogMessage.MESSAGE, String.format("Trying to write secret [%s]", path)).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			jsonStr = ControllerUtil.addDefaultSecretKey(jsonStr);
+			if (!ControllerUtil.areSecretKeysValid(jsonStr)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid request.Check json data\"]}");
+			}
+		} catch (IOException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid request.Check json data\"]}");
+		}
+		if(ControllerUtil.isPathValid(path) && ControllerUtil.isValidFolderPath(path) && !path.contains(TVaultConstants.VERSION_FOLDER_PREFIX)){
+			// Check if the user has explicit write permission. Safe owners (implicit write permission) will be denied from write operation
+			if (!hasExplicitWritePermission( userDetails, secret.getPath())) {
+				log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, "Write Secret").
+						put(LogMessage.MESSAGE, String.format("Writing secret [%s] failed", path)).
+						put(LogMessage.RESPONSE, "No permisison to write secret in this safe").
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errors\":[\"No permisison to write secret in this safe\"]}");
+			}
+			Response readResponse = reqProcessor.process("/read","{\"path\":\""+secret.getPath()+"\"}",token);
+			Response response = reqProcessor.process("/write",jsonStr,token);
+			if(response.getHttpstatus().equals(HttpStatus.NO_CONTENT)) {
+				log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+						put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+						put(LogMessage.ACTION, "Write Secret").
+						put(LogMessage.MESSAGE, String.format("Writing secret [%s] completed succssfully", path)).
+						put(LogMessage.STATUS, response.getHttpstatus().toString()).
+						put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+						build()));
+				// write version information to version folder
+				saveVersionInfo(token, path, userDetails, secret, readResponse);
+				return ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Secret saved to vault\"]}");
+			}
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Write Secret").
+					put(LogMessage.MESSAGE, String.format("Writing secret [%s] failed", path)).
+					put(LogMessage.RESPONSE, response.getResponse()).
+					put(LogMessage.STATUS, response.getHttpstatus().toString()).
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(response.getHttpstatus()).body(response.getResponse());
+		}else{
+			log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
+					put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER).toString()).
+					put(LogMessage.ACTION, "Write Secret").
+					put(LogMessage.MESSAGE, String.format("Writing secret [%s] failed", path)).
+					put(LogMessage.RESPONSE, "Invalid path").
+					put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL).toString()).
+					build()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid path\"]}");
+		}
+	}
+
+	/**
 	 * To save version information on secret creation
 	 * @param token
 	 * @param path

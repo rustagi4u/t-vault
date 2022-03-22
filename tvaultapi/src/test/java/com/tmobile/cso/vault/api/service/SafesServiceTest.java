@@ -186,6 +186,54 @@ public class SafesServiceTest {
     }
 
     @Test
+    public void test_createfolder_successfully() {
+
+        String responseJson = "{  \"messages\": [    \"Folder created \"  ]}";
+        String path = "shared/mysafe01";
+        String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+
+        when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(true);
+        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
+        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void test_createfolder_successfully_noContent() {
+
+        String responseJson = "{\"messages\":[\"Folder created \"]}";
+        String path = "shared/mysafe01";
+        String jsonStr ="{\"path\":\""+path +"\",\"data\":{\"default\":\"default\"}}";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, responseJson);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+
+        when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(true);
+        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
+        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void test_createfolder_failure_400() {
+
+        String responseJson = "{\"errors\":[\"Invalid path\"]}";
+        String path = "shared/mysafe01";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseJson);
+
+        when(ControllerUtil.isPathValid(Mockito.any())).thenReturn(false);
+        ResponseEntity<String> responseEntity = safesService.createfolder(token, path);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
     public void testcreateSafesuccessfully() {
         String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
         SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
@@ -370,6 +418,158 @@ public class SafesServiceTest {
         UserDetails userDetails = new UserDetails();
         userDetails.setUsername("testuser1");
         ResponseEntity<String> responseEntity = safesService.deleteSafe(token, safe, userDetails);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void testupdateSafesuccessfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\",\"aws-roles\":null,\"groups\":null,\"users\":null}}";
+
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
+        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
+        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
+        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
+        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
+
+        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",token)).thenReturn(readResponse);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/sdb/update",metadatajson,token)).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+
+    @Test
+    public void testupdateSafefailuredescriptiontoolong() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe My first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe" +
+                "My first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safeMy first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values: Description too long\"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+
+        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void testupdateSafefailure400() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid 'path' specified\"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
+        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
+        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
+        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
+        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(false);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void testupdateSafefailure404() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        Response readResponse = getMockResponse(HttpStatus.NOT_FOUND, true, "");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"errors\":[\"Error Fetching existing safe info. please check the path specified \"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
+        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
+        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), token)).thenReturn(1);
+        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
+        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
+
+        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",token)).thenReturn(readResponse);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void testupdateSafefailureinvalidInput() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Invalid input values\"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValid(reqparams)).thenReturn(false);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(token, safe);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
@@ -1709,6 +1909,47 @@ public class SafesServiceTest {
     }
 
     @Test
+    public void test_createNestedfolder_successfully() {
+
+        String responseJson = "{\"messages\":[\"Folder created \"]}";
+        String path = "shared/mysafe01";
+        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        Response response = getMockResponse(HttpStatus.OK, true, responseJson);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+
+        when(ControllerUtil.isPathValid(path)).thenReturn(true);
+        when(reqProcessor.process("/sdb/createfolder",jsonStr,token)).thenReturn(response);
+        UserDetails userDetails = getMockUser(false);
+        VaultTokenLookupDetails  vaultTokenLookupDetails = new VaultTokenLookupDetails();
+        vaultTokenLookupDetails.setPolicies(new String[] {"w_shared_mysafe01"});
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        try {
+            when(tokenValidator.getVaultTokenLookupDetails(token)).thenReturn(vaultTokenLookupDetails);
+        } catch (TVaultValidationException e) {}
+        ResponseEntity<String> responseEntity = safesService.createNestedfolder(token, path, userDetails);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void test_createNestedfolder_failure_400() {
+
+        String responseJson = "{\"errors\":[\"Invalid path\"]}";
+        String path = "shared/mysafe01";
+        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        Response response = getMockResponse(HttpStatus.BAD_REQUEST, true, responseJson);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+
+        when(ControllerUtil.isPathValid(path)).thenReturn(false);
+        UserDetails userDetails = getMockUser(false);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        ResponseEntity<String> responseEntity = safesService.createNestedfolder(token, path, userDetails);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void test_getFoldersRecursively_successfully() {
 
         String path = "shared/mysafe01";
@@ -2503,397 +2744,468 @@ public class SafesServiceTest {
 	     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 	 }
 	 
-	 @Test
-	    public void test_addAwsRoleToSafe_write_failure() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        String path = "shared/mysafe01";
-	        AWSRole awsRole = new AWSRole(path,"iam","read");
-	        String jsonStr = "{  \"access\": \"write\",  \"path\": \"shared/mysafe01\",  \"role\": \"ec2\"}";
+    @Test
+    public void test_addAwsRoleToSafe_write_failure() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01";
+        AWSRole awsRole = new AWSRole(path,"iam","read");
+        String jsonStr = "{  \"access\": \"write\",  \"path\": \"shared/mysafe01\",  \"role\": \"ec2\"}";
 
-	        String responseBody = "{ \"bound_account_id\": [ \"1234567890123\"],\"bound_ami_id\": [\"ami-fce3c696\" ], \"bound_iam_instance_profile_arn\": [\n" +
-	                "  \"arn:aws:iam::877677878:instance-profile/exampleinstanceprofile\" ], \"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\" ], " +
-	                "\"bound_vpc_id\": [    \"vpc-2f09a348\"], \"bound_subnet_id\": [ \"subnet-1122aabb\"],\"bound_region\": [\"us-east-2\"],\"policies\":" +
-	                " [ \"\\\"[prod\",\"dev\\\"]\" ], \"auth_type\":\"ec2\"}";
-	        Response readResponse = getMockResponse(HttpStatus.OK, true, responseBody);
-	        Response idapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
-	        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        String responseBody = "{ \"bound_account_id\": [ \"1234567890123\"],\"bound_ami_id\": [\"ami-fce3c696\" ], \"bound_iam_instance_profile_arn\": [\n" +
+                "  \"arn:aws:iam::877677878:instance-profile/exampleinstanceprofile\" ], \"bound_iam_role_arn\": [\"arn:aws:iam::8987887:role/test-role\" ], " +
+                "\"bound_vpc_id\": [    \"vpc-2f09a348\"], \"bound_subnet_id\": [ \"subnet-1122aabb\"],\"bound_region\": [\"us-east-2\"],\"policies\":" +
+                " [ \"\\\"[prod\",\"dev\\\"]\" ], \"auth_type\":\"ec2\"}";
+        Response readResponse = getMockResponse(HttpStatus.OK, true, responseBody);
+        Response idapConfigureResponse = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"policies\":null}");
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
-	        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Role is successfully associated \"]}");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Role is successfully associated \"]}");
 
-	        when(JSONUtil.getJSON(awsRole)).thenReturn(jsonStr);
-	        when(ControllerUtil.areAWSRoleInputsValid(Mockito.any(Map.class))).thenReturn(true);
-	        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
-	        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
-	        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-	        when(reqProcessor.process("/auth/aws/roles","{\"role\":\"ec2\"}",token)).thenReturn(readResponse);
-	        when(awsAuthService.configureAWSRole(Mockito.eq("ec2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
-	        Response responseBadContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-		     when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
-	        ResponseEntity<String> responseEntity = safesService.addAwsRoleToSafe(token, awsRole);
-	        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-	    }
+        when(JSONUtil.getJSON(awsRole)).thenReturn(jsonStr);
+        when(ControllerUtil.areAWSRoleInputsValid(Mockito.any(Map.class))).thenReturn(true);
+        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
+        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        when(reqProcessor.process("/auth/aws/roles","{\"role\":\"ec2\"}",token)).thenReturn(readResponse);
+        when(awsAuthService.configureAWSRole(Mockito.eq("ec2"),Mockito.any(),Mockito.eq(token))).thenReturn(idapConfigureResponse);
+        Response responseBadContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+         when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
+        ResponseEntity<String> responseEntity = safesService.addAwsRoleToSafe(token, awsRole);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 	 
-	 @Test
-	    public void test_removeUserFromSafe_userpass_successfully() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        String path = "shared/mysafe01";
-	        SafeUser safeUser = new SafeUser(path, "testuser1","write");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
-	        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
-	        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+    @Test
+    public void test_removeUserFromSafe_userpass_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01";
+        SafeUser safeUser = new SafeUser(path, "testuser1","write");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
+        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
 
-	        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
 
-	        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
-	        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
-	        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-	        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
+        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
 
-	        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
-	        try {
-	            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
-	            List<String> resList = new ArrayList<>();
-	            resList.add("default");
-	            resList.add("w_shared_mysafe01");
-	            resList.add("w_shared_mysafe02");
-	            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
-	        Response responseBadContent = getMockResponse(HttpStatus.BAD_REQUEST, false, "");
-
-	        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
-	        
-	        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "userpass");
-	        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-	        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-	        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(null);
-	        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
-            assertNotNull(responseEntity);
-	    }
-	 
-	 @Test
-	    public void test_removeUserFromSafe_oidc_successfully() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        String path = "shared/mysafe01";
-	        SafeUser safeUser = new SafeUser(path, "testuser1","write");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
-	        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
-	        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-
-	        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
-
-	        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
-	        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
-	        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-	        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
-
-	        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
-	        try {
-	            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
-	            List<String> resList = new ArrayList<>();
-	            resList.add("default");
-	            resList.add("w_shared_mysafe01");
-	            resList.add("w_shared_mysafe02");
-	            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
-	        Response responseBadContent = getMockResponse(HttpStatus.BAD_REQUEST, false, "");
-
-	        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
-	        
-	        //oidc test cases
-	        String mountAccessor = "auth_oidc";
-	        DirectoryUser directoryUser = new DirectoryUser();
-	        directoryUser.setDisplayName("testUser");
-	        directoryUser.setGivenName("testUser");
-	        directoryUser.setUserEmail("testUser@t-mobile.com");
-	        directoryUser.setUserId("testuser01");
-	        directoryUser.setUserName("testUser");
-	        
-	        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "oidc");
-
-	        List<DirectoryUser> persons = new ArrayList<>();
-	        persons.add(directoryUser);
-
-	        DirectoryObjects users = new DirectoryObjects();
-	        DirectoryObjectsList usersList = new DirectoryObjectsList();
-	        usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
-	        users.setData(usersList);
-	        
-				OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
-				oidcLookupEntityRequest.setId(null);
-				oidcLookupEntityRequest.setAlias_id(null);
-				oidcLookupEntityRequest.setName(null);
-				oidcLookupEntityRequest.setAlias_name(directoryUser.getUserEmail());
-				oidcLookupEntityRequest.setAlias_mount_accessor(mountAccessor);
-				OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
-				oidcEntityResponse.setEntityName("entity");
-				List<String> policies = new ArrayList<>();
-				policies.add("safeadmin");
-				oidcEntityResponse.setPolicies(policies);
-				when(OIDCUtil.fetchMountAccessorForOidc(token)).thenReturn(mountAccessor);
-
-				ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.OK)
-						.body(oidcEntityResponse);
-
-				when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
-		
-				Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-				when(OIDCUtil.updateOIDCEntity(policies, oidcEntityResponse.getEntityName()))
-						.thenReturn(responseEntity3);
-	        when(OIDCUtil.oidcFetchEntityDetails(token, "testuser1", userDetails, true)).thenReturn(responseEntity2);
-	        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-	        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-	        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
-	        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
-         assertNotNull(responseEntity);
-	    }
-	 
-	 @Test
-	    public void test_removeUserFromSafe_oidc_failure() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        String path = "shared/mysafe01";
-	        SafeUser safeUser = new SafeUser(path, "testuser1","write");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
-	        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
-	        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-
-	        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
-
-	        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
-	        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
-	        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-	        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
-
-	        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
-	        try {
-	            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
-	            List<String> resList = new ArrayList<>();
-	            resList.add("default");
-	            resList.add("w_shared_mysafe01");
-	            resList.add("w_shared_mysafe02");
-	            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
-	        Response responseBadContent = getMockResponse(HttpStatus.BAD_REQUEST, false, "");
-
-	        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
-	        
-	        //oidc test cases
-	        String mountAccessor = "auth_oidc";
-	        DirectoryUser directoryUser = new DirectoryUser();
-	        directoryUser.setDisplayName("testUser");
-	        directoryUser.setGivenName("testUser");
-	        directoryUser.setUserEmail("testUser@t-mobile.com");
-	        directoryUser.setUserId("testuser01");
-	        directoryUser.setUserName("testUser");
-	        
-	        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "oidc");
-
-	        List<DirectoryUser> persons = new ArrayList<>();
-	        persons.add(directoryUser);
-
-	        DirectoryObjects users = new DirectoryObjects();
-	        DirectoryObjectsList usersList = new DirectoryObjectsList();
-	        usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
-	        users.setData(usersList);
-	        
-				OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
-				oidcLookupEntityRequest.setId(null);
-				oidcLookupEntityRequest.setAlias_id(null);
-				oidcLookupEntityRequest.setName(null);
-				oidcLookupEntityRequest.setAlias_name(directoryUser.getUserEmail());
-				oidcLookupEntityRequest.setAlias_mount_accessor(mountAccessor);
-				OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
-				oidcEntityResponse.setEntityName("entity");
-				List<String> policies = new ArrayList<>();
-				policies.add("safeadmin");
-				oidcEntityResponse.setPolicies(policies);
-				when(OIDCUtil.fetchMountAccessorForOidc(token)).thenReturn(mountAccessor);
-
-				ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.FORBIDDEN)
-						.body(oidcEntityResponse);
-
-				when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
-		
-				Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-				when(OIDCUtil.updateOIDCEntity(policies, oidcEntityResponse.getEntityName()))
-						.thenReturn(responseEntity3);
-	        when(OIDCUtil.oidcFetchEntityDetails(token, "testuser1", userDetails, true)).thenReturn(responseEntity2);
-	        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-	        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-	        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
-	        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
-      assertNotNull(responseEntity);
-	    }
-	 
-	 @Test
-	    public void test_removeUserFromSafe_oidc_failure1() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        String path = "shared/mysafe01";
-	        SafeUser safeUser = new SafeUser(path, "testuser1","write");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
-	        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
-	        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-
-	        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
-
-	        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
-	        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
-	        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-	        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
-
-	        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
-	        try {
-	            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
-	            List<String> resList = new ArrayList<>();
-	            resList.add("default");
-	            resList.add("w_shared_mysafe01");
-	            resList.add("w_shared_mysafe02");
-	            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
-	        Response responseBadContent = getMockResponse(HttpStatus.NO_CONTENT, false, "");
-
-	        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
-	        
-	        //oidc test cases
-	        String mountAccessor = "auth_oidc";
-	        DirectoryUser directoryUser = new DirectoryUser();
-	        directoryUser.setDisplayName("testUser");
-	        directoryUser.setGivenName("testUser");
-	        directoryUser.setUserEmail("testUser@t-mobile.com");
-	        directoryUser.setUserId("testuser01");
-	        directoryUser.setUserName("testUser");
-	        
-	        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "oidc");
-
-	        List<DirectoryUser> persons = new ArrayList<>();
-	        persons.add(directoryUser);
-
-	        DirectoryObjects users = new DirectoryObjects();
-	        DirectoryObjectsList usersList = new DirectoryObjectsList();
-	        usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
-	        users.setData(usersList);
-	        
-				OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
-				oidcLookupEntityRequest.setId(null);
-				oidcLookupEntityRequest.setAlias_id(null);
-				oidcLookupEntityRequest.setName(null);
-				oidcLookupEntityRequest.setAlias_name(directoryUser.getUserEmail());
-				oidcLookupEntityRequest.setAlias_mount_accessor(mountAccessor);
-				OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
-				oidcEntityResponse.setEntityName("entity");
-				List<String> policies = new ArrayList<>();
-				policies.add("safeadmin");
-				oidcEntityResponse.setPolicies(policies);
-				when(OIDCUtil.fetchMountAccessorForOidc(token)).thenReturn(mountAccessor);
-
-				ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.FORBIDDEN)
-						.body(oidcEntityResponse);
-
-				when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
-		
-				Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
-				when(OIDCUtil.updateOIDCEntity(policies, oidcEntityResponse.getEntityName()))
-						.thenReturn(responseEntity3);
-	        when(OIDCUtil.oidcFetchEntityDetails(token, "testuser1", userDetails, true)).thenReturn(responseEntity2);
-	        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-	        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-	        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
-	        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
-            assertNotNull(responseEntity);
-	    }
-	 
-	 @Test
-	    public void test_addGroupToSafe_failure1() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        SafeGroup safeGroup = new SafeGroup("shared/mysafe01","mygroup01","read");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        when(ControllerUtil.areSafeGroupInputsValid(safeGroup)).thenReturn(false);
-	        ResponseEntity<String> responseEntity = safesService.addGroupToSafe(token, safeGroup, userDetails);
-	        assertNotNull(responseEntity);
-	    }
-	 
-	 @Test
-	    public void test_addGroupToSafe_failure2() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        SafeGroup safeGroup = new SafeGroup("shared/mysafe01","mygroup01","read");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        when(ControllerUtil.areSafeGroupInputsValid(safeGroup)).thenReturn(true);
-	   	    ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "userpass");
-
-	        ResponseEntity<String> responseEntity = safesService.addGroupToSafe(token, safeGroup, userDetails);
-	        assertNotNull(responseEntity);
-	    }
-	 
-	 @Test
-	    public void test_removeUserFromSafe_ldap_failure() {
-	        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
-	        String path = "shared/mysafe01";
-	        SafeUser safeUser = new SafeUser(path, "testuser1","write");
-	        UserDetails userDetails = new UserDetails();
-	        userDetails.setUsername("testuser1");
-	        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
-	        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
-	        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
-
-	        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
-
-	        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
-	        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
-	        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
-	        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
-
-	        when(reqProcessor.process("/auth/ldap/users","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
-	        try {
-	            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
-	            List<String> resList = new ArrayList<>();
-	            resList.add("default");
-	            resList.add("w_shared_mysafe01");
-	            resList.add("w_shared_mysafe02");
-	            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	        Response responseBadContent = getMockResponse(HttpStatus.NO_CONTENT, false, "");
-
-	        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
-	        try{
-	        List<String> resList = new ArrayList<>();
+        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
+        try {
+            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
+            List<String> resList = new ArrayList<>();
             resList.add("default");
             resList.add("w_shared_mysafe01");
             resList.add("w_shared_mysafe02");
             when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
-	        }catch(Exception e){
-	        	e.printStackTrace();
-	        }
-	        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "ldap");
-	        when(ControllerUtil.configureLDAPUser(Mockito.any(),Mockito.any(),Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
-	        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
-	        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
-	        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
-	        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
-         assertNotNull(responseEntity);
-	    }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
+        Response responseBadContent = getMockResponse(HttpStatus.BAD_REQUEST, false, "");
+
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
+
+        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "userpass");
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(null);
+        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
+        assertNotNull(responseEntity);
+    }
+	 
+    @Test
+    public void test_removeUserFromSafe_oidc_successfully() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01";
+        SafeUser safeUser = new SafeUser(path, "testuser1","write");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
+        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
+
+        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
+
+        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
+        try {
+            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
+            List<String> resList = new ArrayList<>();
+            resList.add("default");
+            resList.add("w_shared_mysafe01");
+            resList.add("w_shared_mysafe02");
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
+        Response responseBadContent = getMockResponse(HttpStatus.BAD_REQUEST, false, "");
+
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
+
+        //oidc test cases
+        String mountAccessor = "auth_oidc";
+        DirectoryUser directoryUser = new DirectoryUser();
+        directoryUser.setDisplayName("testUser");
+        directoryUser.setGivenName("testUser");
+        directoryUser.setUserEmail("testUser@t-mobile.com");
+        directoryUser.setUserId("testuser01");
+        directoryUser.setUserName("testUser");
+
+        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "oidc");
+
+        List<DirectoryUser> persons = new ArrayList<>();
+        persons.add(directoryUser);
+
+        DirectoryObjects users = new DirectoryObjects();
+        DirectoryObjectsList usersList = new DirectoryObjectsList();
+        usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+        users.setData(usersList);
+
+            OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
+            oidcLookupEntityRequest.setId(null);
+            oidcLookupEntityRequest.setAlias_id(null);
+            oidcLookupEntityRequest.setName(null);
+            oidcLookupEntityRequest.setAlias_name(directoryUser.getUserEmail());
+            oidcLookupEntityRequest.setAlias_mount_accessor(mountAccessor);
+            OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+            oidcEntityResponse.setEntityName("entity");
+            List<String> policies = new ArrayList<>();
+            policies.add("safeadmin");
+            oidcEntityResponse.setPolicies(policies);
+            when(OIDCUtil.fetchMountAccessorForOidc(token)).thenReturn(mountAccessor);
+
+            ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.OK)
+                    .body(oidcEntityResponse);
+
+            when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
+
+            Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
+            when(OIDCUtil.updateOIDCEntity(policies, oidcEntityResponse.getEntityName()))
+                    .thenReturn(responseEntity3);
+        when(OIDCUtil.oidcFetchEntityDetails(token, "testuser1", userDetails, true)).thenReturn(responseEntity2);
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
+        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
+     assertNotNull(responseEntity);
+    }
+	 
+    @Test
+    public void test_removeUserFromSafe_oidc_failure() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01";
+        SafeUser safeUser = new SafeUser(path, "testuser1","write");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
+        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
+
+        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
+
+        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
+        try {
+            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
+            List<String> resList = new ArrayList<>();
+            resList.add("default");
+            resList.add("w_shared_mysafe01");
+            resList.add("w_shared_mysafe02");
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
+        Response responseBadContent = getMockResponse(HttpStatus.BAD_REQUEST, false, "");
+
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
+
+        //oidc test cases
+        String mountAccessor = "auth_oidc";
+        DirectoryUser directoryUser = new DirectoryUser();
+        directoryUser.setDisplayName("testUser");
+        directoryUser.setGivenName("testUser");
+        directoryUser.setUserEmail("testUser@t-mobile.com");
+        directoryUser.setUserId("testuser01");
+        directoryUser.setUserName("testUser");
+
+        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "oidc");
+
+        List<DirectoryUser> persons = new ArrayList<>();
+        persons.add(directoryUser);
+
+        DirectoryObjects users = new DirectoryObjects();
+        DirectoryObjectsList usersList = new DirectoryObjectsList();
+        usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+        users.setData(usersList);
+
+            OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
+            oidcLookupEntityRequest.setId(null);
+            oidcLookupEntityRequest.setAlias_id(null);
+            oidcLookupEntityRequest.setName(null);
+            oidcLookupEntityRequest.setAlias_name(directoryUser.getUserEmail());
+            oidcLookupEntityRequest.setAlias_mount_accessor(mountAccessor);
+            OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+            oidcEntityResponse.setEntityName("entity");
+            List<String> policies = new ArrayList<>();
+            policies.add("safeadmin");
+            oidcEntityResponse.setPolicies(policies);
+            when(OIDCUtil.fetchMountAccessorForOidc(token)).thenReturn(mountAccessor);
+
+            ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(oidcEntityResponse);
+
+            when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
+
+            Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
+            when(OIDCUtil.updateOIDCEntity(policies, oidcEntityResponse.getEntityName()))
+                    .thenReturn(responseEntity3);
+        when(OIDCUtil.oidcFetchEntityDetails(token, "testuser1", userDetails, true)).thenReturn(responseEntity2);
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
+        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
+    assertNotNull(responseEntity);
+    }
+	 
+    @Test
+    public void test_removeUserFromSafe_oidc_failure1() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01";
+        SafeUser safeUser = new SafeUser(path, "testuser1","write");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
+        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
+
+        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
+
+        when(reqProcessor.process("/auth/userpass/read","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
+        try {
+            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
+            List<String> resList = new ArrayList<>();
+            resList.add("default");
+            resList.add("w_shared_mysafe01");
+            resList.add("w_shared_mysafe02");
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        when(ControllerUtil.configureUserpassUser(Mockito.eq("testuser1"),Mockito.any(),Mockito.eq(token))).thenReturn(responseNoContent);
+        Response responseBadContent = getMockResponse(HttpStatus.NO_CONTENT, false, "");
+
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
+
+        //oidc test cases
+        String mountAccessor = "auth_oidc";
+        DirectoryUser directoryUser = new DirectoryUser();
+        directoryUser.setDisplayName("testUser");
+        directoryUser.setGivenName("testUser");
+        directoryUser.setUserEmail("testUser@t-mobile.com");
+        directoryUser.setUserId("testuser01");
+        directoryUser.setUserName("testUser");
+
+        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "oidc");
+
+        List<DirectoryUser> persons = new ArrayList<>();
+        persons.add(directoryUser);
+
+        DirectoryObjects users = new DirectoryObjects();
+        DirectoryObjectsList usersList = new DirectoryObjectsList();
+        usersList.setValues(persons.toArray(new DirectoryUser[persons.size()]));
+        users.setData(usersList);
+
+            OIDCLookupEntityRequest oidcLookupEntityRequest = new OIDCLookupEntityRequest();
+            oidcLookupEntityRequest.setId(null);
+            oidcLookupEntityRequest.setAlias_id(null);
+            oidcLookupEntityRequest.setName(null);
+            oidcLookupEntityRequest.setAlias_name(directoryUser.getUserEmail());
+            oidcLookupEntityRequest.setAlias_mount_accessor(mountAccessor);
+            OIDCEntityResponse oidcEntityResponse = new OIDCEntityResponse();
+            oidcEntityResponse.setEntityName("entity");
+            List<String> policies = new ArrayList<>();
+            policies.add("safeadmin");
+            oidcEntityResponse.setPolicies(policies);
+            when(OIDCUtil.fetchMountAccessorForOidc(token)).thenReturn(mountAccessor);
+
+            ResponseEntity<OIDCEntityResponse> responseEntity2 = ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(oidcEntityResponse);
+
+            when(tokenUtils.getSelfServiceTokenWithAppRole()).thenReturn(token);
+
+            Response responseEntity3 = getMockResponse(HttpStatus.NO_CONTENT, true, "{\"data\": [\"safeadmin\",\"vaultadmin\"]]");
+            when(OIDCUtil.updateOIDCEntity(policies, oidcEntityResponse.getEntityName()))
+                    .thenReturn(responseEntity3);
+        when(OIDCUtil.oidcFetchEntityDetails(token, "testuser1", userDetails, true)).thenReturn(responseEntity2);
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
+        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
+        assertNotNull(responseEntity);
+    }
+	 
+    @Test
+    public void test_addGroupToSafe_failure1() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeGroup safeGroup = new SafeGroup("shared/mysafe01","mygroup01","read");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        when(ControllerUtil.areSafeGroupInputsValid(safeGroup)).thenReturn(false);
+        ResponseEntity<String> responseEntity = safesService.addGroupToSafe(token, safeGroup, userDetails);
+        assertNotNull(responseEntity);
+    }
+	 
+    @Test
+    public void test_addGroupToSafe_failure2() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeGroup safeGroup = new SafeGroup("shared/mysafe01","mygroup01","read");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        when(ControllerUtil.areSafeGroupInputsValid(safeGroup)).thenReturn(true);
+        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "userpass");
+
+        ResponseEntity<String> responseEntity = safesService.addGroupToSafe(token, safeGroup, userDetails);
+        assertNotNull(responseEntity);
+    }
+	 
+    @Test
+    public void test_removeUserFromSafe_ldap_failure() {
+        String token = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        String path = "shared/mysafe01";
+        SafeUser safeUser = new SafeUser(path, "testuser1","write");
+        UserDetails userDetails = new UserDetails();
+        userDetails.setUsername("testuser1");
+        String jsonStr = "{  \"path\": \"shared/mysafe01\",  \"username\": \"testuser1\",  \"access\": \"write\"}";
+        Response userResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"bound_cidrs\":[],\"max_ttl\":0,\"policies\":[\"default\",\"w_shared_mysafe01\",\"w_shared_mysafe02\"],\"ttl\":0,\"groups\":\"admin\"}}");
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"Message\":\"User association is removed \"}");
+
+        when(JSONUtil.getJSON(safeUser)).thenReturn(jsonStr);
+        when(ControllerUtil.isValidSafePath(path)).thenReturn(true);
+        when(ControllerUtil.isValidSafe(path, token)).thenReturn(true);
+        when(ControllerUtil.canAddPermission(path, token)).thenReturn(true);
+
+        when(reqProcessor.process("/auth/ldap/users","{\"username\":\"testuser1\"}",token)).thenReturn(userResponse);
+        try {
+            //when(ControllerUtil.getPoliciesAsStringFromJson(Mockito.any(), Mockito.any())).thenReturn("default,w_shared_mysafe01,w_shared_mysafe02");
+            List<String> resList = new ArrayList<>();
+            resList.add("default");
+            resList.add("w_shared_mysafe01");
+            resList.add("w_shared_mysafe02");
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Response responseBadContent = getMockResponse(HttpStatus.NO_CONTENT, false, "");
+
+        when(ControllerUtil.updateMetadata(Mockito.any(),Mockito.eq(token))).thenReturn(responseBadContent);
+        try{
+            List<String> resList = new ArrayList<>();
+            resList.add("default");
+            resList.add("w_shared_mysafe01");
+            resList.add("w_shared_mysafe02");
+            when(ControllerUtil.getPoliciesAsListFromJson(Mockito.any(), Mockito.any())).thenReturn(resList);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        ReflectionTestUtils.setField(safesService, "vaultAuthMethod", "ldap");
+        when(ControllerUtil.configureLDAPUser(Mockito.any(),Mockito.any(),Mockito.any(), Mockito.any())).thenReturn(responseNoContent);
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(ControllerUtil.getAllExistingSafeNames("shared", token)).thenReturn(Arrays.asList("mysafe02"));
+        ResponseEntity<String> responseEntity = safesService.removeUserFromSafe(token, safeUser, userDetails);
+     assertNotNull(responseEntity);
+    }
+
+    @Test
+    public void testupdateSafe_failure() {
+        String sampletok = "5P.DrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\",\"aws-roles\":null,\"groups\":null,\"users\":null}}";
+
+        Response responseNoContent = getMockResponse(HttpStatus.OK, true, "");
+        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
+        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
+        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), sampletok)).thenReturn(1);
+        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
+        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
+
+        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",sampletok)).thenReturn(readResponse);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/sdb/update",metadatajson,sampletok)).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(sampletok, safe);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+    }
+    @Test
+    public void testupdateSafenull() {
+        String sampletok = "5P.DrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", "null", "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\",\"aws-roles\":null,\"groups\":null,\"users\":null}}";
+        String workloadApiResponse = "{\n" +"\n" +"\t\"kind\": \"Application\",\n" +"\t\"spec\": {\n" +"\t\t\"akmid\": \"103001\",\n" +"\t\t\"brtContactEmail\": \" testspec@mail.com\",\n" +"\t\t\"businessUnit\": \"\",\n" +"\t\t\"classification\": \"\",\n" +"\t\t\"directorEmail\": \"abc.joe@mail.com\",\n" +"\t\t\"directorName\": \"abc amith\",\n" +"\t\t\"executiveSponsor\": \"Dar Web\",\n" +"\t\t\"opsContactEmail\": \"rick.nick@test.com\",\n" +"\t\t\"organizationalUnits\": [\"tvt\"],\n" +"\t\t\"projectLeadEmail\": \"rick.nick@test.com\",\n" + "\t\t\"scope\": \"Production\",\n" +"\t\t\"summary\": \"T-Vault\",\n" + "\t\t\"tag\": \"T-Vault\",\n" +"\t\t\"tier\": \"Tier II\",\n" +"\t\t\"workflowStatus\": \"Open_CCP\",\n" + "\t\t\"workload\": \"Adaptive Security\"\n" +"\t}\n" +"\n" +"}";
+
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"messages\":[\"Safe updated \"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        when(workloadDetailsService.getWorkloadDetailsByAppName(Mockito.anyString())).thenReturn(ResponseEntity.status(HttpStatus.NO_CONTENT).body(workloadApiResponse));
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
+        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
+        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), sampletok)).thenReturn(1);
+        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
+        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
+
+        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",sampletok)).thenReturn(readResponse);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/sdb/update",metadatajson,sampletok)).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(sampletok, safe);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
 
     @Test
     public void test_addUserToSafe_500() {
@@ -3002,6 +3314,57 @@ public class SafesServiceTest {
         ResponseEntity<String> responseEntity = safesService.deleteSafe(sampletok, safe, userDetails);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void test_createNestedfolder_nocontent() {
+
+        String responseJson = "{\"messages\":[\"Folder created \"]}";
+        String path = "shared/mysafe01";
+        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
+        String sampletok = "5P.DrOhsy4ig8L3EpsJZSLAMg";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, responseJson);
+        Response updateresponse = getMockResponse(HttpStatus.NO_CONTENT, true, responseJson);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+
+        when(ControllerUtil.isPathValid(path)).thenReturn(true);
+        when(reqProcessor.process("/sdb/createfolder",jsonStr,sampletok)).thenReturn(response);
+        UserDetails userDetails = getMockUser(false);
+        VaultTokenLookupDetails  vaultTokenLookupDetails = new VaultTokenLookupDetails();
+        vaultTokenLookupDetails.setPolicies(new String[] {"w_shared_mysafe01"});
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(safeUtils.updateActivityInfo(Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(updateresponse);
+        try {
+            when(tokenValidator.getVaultTokenLookupDetails(sampletok)).thenReturn(vaultTokenLookupDetails);
+        } catch (TVaultValidationException e) {}
+        ResponseEntity<String> responseEntity = safesService.createNestedfolder(sampletok, path, userDetails);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    @Test
+    public void test_createNestedfolder_fail() {
+
+        String responseJson = "{\"messages\":[\"Folder created \"]}";
+        String path = "shared/mysafe01";
+        String jsonStr = "{\"path\":\"" + path + "\",\"data\":{\"default\":\"default\"}}";
+        String sampletok = "5P.DrOhsy4ig8L3EpsJZSLAMg";
+        Response response = getMockResponse(HttpStatus.NO_CONTENT, true, responseJson);
+        Response updateresponse = getMockResponse(HttpStatus.NOT_FOUND, true, responseJson);
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body(responseJson);
+
+        when(ControllerUtil.isPathValid(path)).thenReturn(true);
+        when(reqProcessor.process("/sdb/createfolder",jsonStr,sampletok)).thenReturn(response);
+        UserDetails userDetails = getMockUser(false);
+        VaultTokenLookupDetails  vaultTokenLookupDetails = new VaultTokenLookupDetails();
+        vaultTokenLookupDetails.setPolicies(new String[] {"w_shared_mysafe01"});
+        when(ControllerUtil.getSafeType(path)).thenReturn("shared");
+        when(ControllerUtil.getSafeName(path)).thenReturn("mysafe01");
+        when(safeUtils.updateActivityInfo(Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(updateresponse);
+        try {
+            when(tokenValidator.getVaultTokenLookupDetails(sampletok)).thenReturn(vaultTokenLookupDetails);
+        } catch (TVaultValidationException e) {}
+        ResponseEntity<String> responseEntity = safesService.createNestedfolder(sampletok, path, userDetails);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
@@ -3170,6 +3533,42 @@ public class SafesServiceTest {
         when(reqProcessor.process(Mockito.eq("/access/update"),Mockito.any(),Mockito.eq(sampletok))).thenReturn(responseNoContent);
         ResponseEntity<String> responseEntity = safesService.createSafe(sampletok, safe);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(responseEntityExpected, responseEntity);
+    }
+
+    @Test
+    public void testupdateSafesafecountmorethanone() {
+        String sampletok = "5PDrOhsy4ig8L3EpsJZSLAMg";
+        SafeBasicDetails safeBasicDetails = new SafeBasicDetails("mysafe01", "youremail@yourcompany.com", null, "My first safe","T-Vault","tvt");
+        Safe safe = new Safe("shared/mysafe01",safeBasicDetails);
+
+        String jsonStr = "{\"path\":\"shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\"}}";
+        String metadatajson = "{\"path\":\"metadata/shared/mysafe01\",\"data\":{\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\",\"description\":\"My first safe\",\"aws-roles\":null,\"groups\":null,\"users\":null}}";
+
+        Response responseNoContent = getMockResponse(HttpStatus.NO_CONTENT, true, "");
+        Response readResponse = getMockResponse(HttpStatus.OK, true, "{\"data\":{\"description\":\"My first safe\",\"name\":\"mysafe01\",\"owner\":\"youremail@yourcompany.com\",\"type\":\"\"}}");
+        ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"errors\":[\"Safe can't be updated since duplicate safe names are found\"]}");
+
+        Map<String,Object> reqparams = null;
+        try {
+            reqparams = new ObjectMapper().readValue(jsonStr, new TypeReference<Map<String, Object>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        when(ControllerUtil.parseJson(Mockito.any())).thenReturn(reqparams);
+        when(ControllerUtil.areSDBInputsValidForUpdate(reqparams)).thenReturn(true);
+        when(ControllerUtil.getSafeName("shared/mysafe01")).thenReturn("mysafe01");
+        when(ControllerUtil.getSafeType("shared/mysafe01")).thenReturn("shared");
+        when(ControllerUtil.getCountOfSafesForGivenSafeName(safe.getSafeBasicDetails().getName(), sampletok)).thenReturn(1);
+        when(ControllerUtil.generateSafePath("mysafe01", "shared")).thenReturn("shared/mysafe01");
+        when(ControllerUtil.isValidSafePath(Mockito.any())).thenReturn(true);
+        when(ControllerUtil.getCountOfSafesForGivenSafeName("mysafe01", sampletok)).thenReturn(2);
+        when(reqProcessor.process("/read","{\"path\":\"metadata/shared/mysafe01\"}",sampletok)).thenReturn(readResponse);
+        when(ControllerUtil.convetToJson(Mockito.any())).thenReturn(metadatajson);
+        when(reqProcessor.process("/sdb/update",metadatajson,sampletok)).thenReturn(responseNoContent);
+        ResponseEntity<String> responseEntity = safesService.updateSafe(sampletok, safe);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertEquals(responseEntityExpected, responseEntity);
     }
 

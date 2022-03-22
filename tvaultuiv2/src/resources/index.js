@@ -1,14 +1,14 @@
 const Resources = {
   tvaultDescription:
-    'T-Vault is a simplified and centralized service account management solution for securely managing IAM and CORP AD service accounts, as well as Azure Service Principals via a UI or HTTP API.',
+    'T-Vault is a simplified and centralized secrets management solution for securely storing, distributing and tightly controlling access to passwords, encryption keys and tokens for protecting secrets and other sensitive data using a UI, HTTP API.',
   loginNotes:
     ' This instance of T-Vault is for the Cloud Security Team to share AD Service account passwords, SSH keys, AWS Access Keys and other general sensitive information to Cloud Customers only. Do not use it for Tier1 application integrations.',
   storeDescription:
-    'Bring IAM Service Accounts, CORP AD Service Accounts, and Azure Service Principals into T-Vault so that the secrets can be read and rotated.',
+    'Centrally store, access, and distribute secrets like API keys, AWS IAM/STS credentials, SQL/NoSQL databases, SSH credentials and more.',
   accessDescription:
-    'T-Vault provides a clean and easy way to create access keys and rotate secrets so that you can stay in compliance, and your application can stay secure.',
+    'Secure and tight access control for accessing passwords, encryption keys and tokens for protecting secrets and other sensitive data using a UI and HTTP API.',
   distributeDescription:
-    'Distribute access to service accounts by granting specific permissions to other users and groups, allowing others to read and/or rotate the secrets.',
+    'Easily create safes, add secrets and share access to others. Integrate T-Vault with your existing workflows to distribute secrets to users.',
   serviceAccount:
     "Service Account Activation. By default passwords are not set to autorotate <br/> <p>Note: When 'Enable Password Rotation' is turned off, the password for this service account will not be autorotated by T-Vault.</p>",
   offBoardConfirmation:

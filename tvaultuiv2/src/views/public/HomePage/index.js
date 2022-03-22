@@ -181,7 +181,6 @@ const MessageBannerWrap = styled.div`
   width: 100%;
   margin-bottom: 10px;
   max-height: 100%;
-
   ${small} {
     width: 100%;
   }
@@ -383,7 +382,7 @@ const LoginPage = () => {
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [responseType, setResponseType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
-  const [bannerMessage1, setBannerMessage1] = useState('');
+  const [bannerMessageSsl, setBannerMessageSsl] = useState('');
 
   const [, dispatch] = useStateValue();
   const isMobileScreen = useMediaQuery(small);
@@ -477,7 +476,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     axios.get(`${configUrl.baseUrl}/bannermessage`).then(async (res) => {
-      setBannerMessage1(res.data.data.message1);
+      setBannerMessageSsl(res.data.data.message2);
     });
   }, []);
 
@@ -596,7 +595,7 @@ const LoginPage = () => {
                 <SpeakerText>
                   <SpeakerWrap src={Speaker} />
                   <MessageBannerWrap>
-                    <MessageBanner>{bannerMessage1}</MessageBanner>
+                    <MessageBanner>{bannerMessageSsl}</MessageBanner>
                   </MessageBannerWrap>
                 </SpeakerText>
               </HeaderWrap>
@@ -632,12 +631,12 @@ const LoginPage = () => {
                 <CardWrapper rowCommonCss={rowCommonCss}>
                   <Tile>
                     <Image src={Store} alt="store" />
-                    <Heading>Onboard</Heading>
+                    <Heading>Store</Heading>
                     <Details>{Strings.Resources.storeDescription}</Details>
                   </Tile>
                   <Tile>
                     <Image src={Access} alt="access" />
-                    <Heading>Rotate</Heading>
+                    <Heading>Access</Heading>
                     <Details>{Strings.Resources.accessDescription}</Details>
                   </Tile>
                   <Tile>

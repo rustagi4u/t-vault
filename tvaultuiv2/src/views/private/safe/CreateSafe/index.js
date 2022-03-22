@@ -718,7 +718,10 @@ const CreateModal = (props) => {
                           )}
                           loader={autoLoader}
                           userInput={owner}
-                          disabled
+                          disabled={
+                            !!editSafe ||
+                            sessionStorage.getItem('isAdmin') === 'false'
+                          }
                           name="owner"
                           onSelected={(e, val) => onSelected(e, val)}
                           onChange={(e) => onOwnerChange(e)}
@@ -749,7 +752,7 @@ const CreateModal = (props) => {
                         <SelectComponent
                           menu={menu}
                           value={safeType}
-                          readOnly
+                          readOnly={!!editSafe}
                           onChange={(e) => setSafeType(e)}
                         />
                       </InputFieldLabelWrapper>
@@ -783,7 +786,6 @@ const CreateModal = (props) => {
                               ? `Application ${applicationName} does not exist!`
                               : ''
                           }
-                          disabled
                         />
                       </InputFieldLabelWrapper>
 
@@ -799,7 +801,6 @@ const CreateModal = (props) => {
                           onChange={(e) => setDescription(e.target.value)}
                           placeholder="Add some details about this safe"
                           characterLimit={1024}
-                          readOnly
                         />
                         <FieldInstruction>
                           Please add a minimum of 10 characters
@@ -827,6 +828,16 @@ const CreateModal = (props) => {
                           />
                         </CancelButton>
                       )}
+                      <ButtonComponent
+                        label={!editSafe ? 'Create' : 'Update'}
+                        color="secondary"
+                        icon={!editSafe ? 'add' : ''}
+                        disabled={disabledSave}
+                        onClick={() =>
+                          !editSafe ? onCreateSafes() : onEditSafes()
+                        }
+                        width={isMobileScreen ? '100%' : ''}
+                      />
                     </CancelSaveWrapper>
                   </>
                 )}
