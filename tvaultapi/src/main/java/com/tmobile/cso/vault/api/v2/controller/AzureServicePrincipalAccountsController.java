@@ -290,6 +290,7 @@ public class AzureServicePrincipalAccountsController {
 	@ApiOperation(value = "${AzureServicePrincipalAccountsController.rotateSecret.value}", notes = "${AzureServicePrincipalAccountsController.rotateSecret.notes}")
 	public ResponseEntity<String> rotateSecret(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @RequestBody @Valid AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest){
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
+		token = userDetails.isAdmin() ? userDetails.getSelfSupportToken() : token;
 		return azureServicePrincipalAccountsService.rotateSecret(userDetails, token, azureServicePrincipalRotateRequest);
 	}
 
