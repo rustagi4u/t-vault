@@ -121,8 +121,11 @@ const AzureSelectionTabs = (props) => {
       .getAzureserviceDetails(`${azureDetail.name}`)
       .then((res) => {
         setAzureMetaData(res.data);
-        if (res?.data?.isActivated && ((res?.data?.owner_ntid?.toLowerCase() ===
-            sessionStorage.getItem('username').toLowerCase()) || isAdmin)
+        if (
+          res?.data?.isActivated &&
+          (res?.data?.owner_ntid?.toLowerCase() ===
+            sessionStorage.getItem('username').toLowerCase() ||
+            isAdmin)
         ) {
           setHasPermission(true);
           getEachUser(res.data.users);
@@ -153,10 +156,10 @@ const AzureSelectionTabs = (props) => {
   }, [azureDetail]);
 
   const getAzureDataSecrets = useCallback(() => {
-    console.log(azureDetail);
+    console.table(azureDetail);
 
     if (azureDetail?.name) {
-      if (azureDetail.access !== 'N/A' || (isActivated && isAdmin)) {
+      if (isActivated && isAdmin) {
         setSecretResponse({ status: 'loading' });
         apiService
           .getAzureSecrets(azureDetail.name)
