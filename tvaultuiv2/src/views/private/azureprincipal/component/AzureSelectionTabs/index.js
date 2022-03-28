@@ -157,7 +157,7 @@ const AzureSelectionTabs = (props) => {
 
   const getAzureDataSecrets = useCallback(() => {
     if (azureDetail?.name) {
-      if (isActivated && isAdmin) {
+      if (isActivated && (azureDetail.access !== 'N/A' || isAdmin)) {
         setSecretResponse({ status: 'loading' });
         apiService
           .getAzureSecrets(azureDetail.name)
