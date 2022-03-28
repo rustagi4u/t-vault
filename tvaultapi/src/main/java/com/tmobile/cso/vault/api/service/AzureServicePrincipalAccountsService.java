@@ -1379,9 +1379,10 @@ public class AzureServicePrincipalAccountsService {
 	 * @return
 	 * @throws IOException 
 	 */
-	public ResponseEntity<String> readFolders(String token, String path) throws IOException {
+	public ResponseEntity<String> readFolders(UserDetails userDetails, String token, String path) throws IOException {
 		Response response = new Response();
 		ObjectMapper objMapper = new ObjectMapper();
+		token = userDetails.isAdmin() ? tokenUtils.getSelfServiceToken() : token;
 		Response lisresp = reqProcessor.process("/azure/list", PATHSTR + path + "\"}", token);
 		if(lisresp.getHttpstatus().equals(HttpStatus.OK)){
 			List<String> foldersList = new ArrayList<>();
@@ -1429,9 +1430,9 @@ public class AzureServicePrincipalAccountsService {
 	 * @param azureSvcaccName
 	 * @return
 	 */
-	public ResponseEntity<String> getAzureServiceAccountSecretKey(String token, String azureSvcaccName, String folderName) throws IOException {
+	public ResponseEntity<String> getAzureServiceAccountSecretKey(UserDetails userDetails, String token, String azureSvcaccName, String folderName) throws IOException {
 		String path = AzureServiceAccountConstants.AZURE_SVCC_ACC_PATH + azureSvcaccName + "/" + folderName;
-
+		token = userDetails.isAdmin() ? tokenUtils.getSelfServiceToken() : token;
 		Response response = reqProcessor.process("/azuresvcacct", PATHSTR + path + "\"}", token);
 		if (response.getHttpstatus().equals(HttpStatus.OK)) {
 			JsonParser jsonParser = new JsonParser();
@@ -1487,7 +1488,7 @@ public class AzureServicePrincipalAccountsService {
 
 		azureSvcName = azureSvcName.toLowerCase();
 		String azureSvcNamePath = AzureServiceAccountConstants.AZURE_SVCC_ACC_PATH + azureSvcName;
-		ResponseEntity<String> response = readFolders(token, azureSvcNamePath);
+		ResponseEntity<String> response = readFolders(userDetails, token, azureSvcNamePath);
 		ObjectMapper mapper = new ObjectMapper();
 		String secret = "";
 		if (HttpStatus.OK.equals(response.getStatusCode())) {
@@ -1495,7 +1496,7 @@ public class AzureServicePrincipalAccountsService {
 					AzureServiceAccountNode.class);
 			if (azureServiceAccountNode.getFolders() != null) {
 				for (String folderName : azureServiceAccountNode.getFolders()) {
-					ResponseEntity<String> responseEntity = getAzureServiceAccountSecretKey(token, azureSvcName,
+					ResponseEntity<String> responseEntity = getAzureServiceAccountSecretKey(userDetails, token, azureSvcName,
 							folderName);
 					if (HttpStatus.OK.equals(responseEntity.getStatusCode())) {
 						AzureServiceAccountSecret azureServiceAccountSecret = mapper.readValue(responseEntity.getBody(),
@@ -3340,6 +3341,7 @@ public class AzureServicePrincipalAccountsService {
 	public ResponseEntity<String> rotateSecret(UserDetails userDetails, String token,
 											   AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest) {
 		boolean rotationStatus = false;
+		token = userDetails.isAdmin() ? tokenUtils.getSelfServiceToken() : token;
 		log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 				put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
 				put(LogMessage.ACTION, AzureServiceAccountConstants.AZURE_SP_ROTATE_ACTION).
