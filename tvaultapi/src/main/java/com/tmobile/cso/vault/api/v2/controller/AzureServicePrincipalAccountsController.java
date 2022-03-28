@@ -92,8 +92,7 @@ public class AzureServicePrincipalAccountsController {
 	public ResponseEntity<String> readFolders(HttpServletRequest request, @RequestHeader(value = "vault-token") String token,
 			@RequestParam("path") String path) throws IOException {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		token = userDetails.isAdmin() ? userDetails.getSelfSupportToken() : token;
-		return azureServicePrincipalAccountsService.readFolders(token, path);
+		return azureServicePrincipalAccountsService.readFolders(userDetails, token, path);
 	}
 	
 	/**
@@ -110,8 +109,7 @@ public class AzureServicePrincipalAccountsController {
 			@RequestHeader(value = "vault-token") String token, @PathVariable("azure_svc_name") String azureServiceAccountName,
 			@PathVariable("folderName") String folderName) throws IOException {
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		token = userDetails.isAdmin() ? userDetails.getSelfSupportToken() : token;
-		return azureServicePrincipalAccountsService.getAzureServiceAccountSecretKey(token, azureServiceAccountName, folderName);
+		return azureServicePrincipalAccountsService.getAzureServiceAccountSecretKey(userDetails, token, azureServiceAccountName, folderName);
 	}
 	
 	/**
@@ -290,7 +288,6 @@ public class AzureServicePrincipalAccountsController {
 	@ApiOperation(value = "${AzureServicePrincipalAccountsController.rotateSecret.value}", notes = "${AzureServicePrincipalAccountsController.rotateSecret.notes}")
 	public ResponseEntity<String> rotateSecret(HttpServletRequest request, @RequestHeader(value="vault-token") String token, @RequestBody @Valid AzureServicePrincipalRotateRequest azureServicePrincipalRotateRequest){
 		UserDetails userDetails = (UserDetails) request.getAttribute(USER_DETAILS_STRING);
-		token = userDetails.isAdmin() ? userDetails.getSelfSupportToken() : token;
 		return azureServicePrincipalAccountsService.rotateSecret(userDetails, token, azureServicePrincipalRotateRequest);
 	}
 

@@ -727,7 +727,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
 
 		when(reqProcessor.process(Mockito.eq("/azure/list"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
-		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(userDetails, token, path);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertEquals(responseEntityExpected, responseEntity);
 	}
@@ -741,7 +741,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 				"{\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}");
 
 		when(reqProcessor.process(Mockito.eq("/azuresvcacct"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.OK, true, "{\"data\":{\"accessKeyId\":\"1212zdasd\",\"accessKeySecret\":\"assOOetcHce1VugthF6KE9hqv2PWWbX3ULrpe1T\",\"awsAccountId\":\"123456789012\",\"expiryDateEpoch\":1609845308000,\"userName\":\"testiamsvcacc01_01\",\"expiryDate\":\"2021-01-05 16:45:08\"}}"));
-		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getAzureServiceAccountSecretKey(token, iamSvcaccName, folderName);
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.getAzureServiceAccountSecretKey(userDetails, token, iamSvcaccName, folderName);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 		
@@ -3653,7 +3653,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
 
 		when(reqProcessor.process(Mockito.eq("/azure/list"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.FORBIDDEN, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
-		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(userDetails, token, path);
 		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
 
 	}
@@ -3664,7 +3664,7 @@ public class AzureServicePrincipalAccountsServiceTest {
 		ResponseEntity<String> responseEntityExpected = ResponseEntity.status(HttpStatus.OK).body("{\"folders\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"],\"path\":\"testiamsvcacc01\",\"servicePrincipalName\":\"testiamsvcacc01\"}");
 
 		when(reqProcessor.process(Mockito.eq("/azure/list"),Mockito.any(),Mockito.eq(token))).thenReturn(getMockResponse(HttpStatus.NOT_FOUND, true, "{\"keys\":[\"testiamsvcacc01_01\",\"testiamsvcacc01_02\"]}"));
-		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(token, path);
+		ResponseEntity<String> responseEntity = azureServicePrincipalAccountsService.readFolders(userDetails, token, path);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 
 	}
