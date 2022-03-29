@@ -1435,6 +1435,11 @@ public class AzureServicePrincipalAccountsService {
 		token = userDetails.isAdmin() ? tokenUtils.getSelfServiceToken() : token;
 		Response response = reqProcessor.process("/azuresvcacct", PATHSTR + path + "\"}", token);
 		if (response.getHttpstatus().equals(HttpStatus.OK)) {
+			log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+					.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+					.put(LogMessage.ACTION, "getAzureServiceAccountSecretKey")
+					.put(LogMessage.MESSAGE, String.format("Successfully fetched secrets from [%s]", PATHSTR + path + "\"}"))
+					.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 			JsonParser jsonParser = new JsonParser();
 			JsonObject data = ((JsonObject) jsonParser.parse(response.getResponse())).getAsJsonObject("data");
 			Long expiryDate = Long.valueOf(String.valueOf(data.get("expiryDateEpoch")));
@@ -1442,6 +1447,13 @@ public class AzureServicePrincipalAccountsService {
 			data.addProperty("expiryDate", formattedExpiryDt);
 			return ResponseEntity.status(HttpStatus.OK).body(data.toString());
 		}
+		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, "getAzureServiceAccountSecretKey")
+				.put(LogMessage.MESSAGE, String.format("Failed to fetch secrets from [%s]", PATHSTR + path + "\"}"))
+				.put(LogMessage.MESSAGE, String.format("HttpStatus: [%s], Response: [%s]",
+						response.getHttpstatus(), response.getResponse()))
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 				.body("{\"errors\":[\"No Azure Service Principal with " + azureSvcaccName + ".\"]}");
 
@@ -2358,6 +2370,13 @@ public class AzureServicePrincipalAccountsService {
 			JsonObject data = populateMetaData(response);
 			return ResponseEntity.status(HttpStatus.OK).body(data.toString());
 		}
+		log.error(JSONUtil.getJSON(ImmutableMap.<String, String>builder()
+				.put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER))
+				.put(LogMessage.ACTION, AzureServiceAccountConstants.FETCH_AZURE_DETAILS)
+				.put(LogMessage.MESSAGE, String.format("Failed to fetch ASP details from [%s]", PATHSTR + path + "\"}"))
+				.put(LogMessage.MESSAGE, String.format("HttpStatus: [%s], Response: [%s]",
+						response.getHttpstatus(), response.getResponse()))
+				.put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).build()));
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 				.body("{\"errors\":[\"No Azure Service Principal with " + azureSvcName + ".\"]}");
 	}
