@@ -136,8 +136,10 @@ const AzureSelectionTabs = (props) => {
         }
         if (res?.data?.isActivated) {
           setIsActivated(true);
+          getAzureDataSecrets(true);
         } else {
           setIsActivated(false);
+          getAzureDataSecrets(false);
         }
       })
       .catch((err) => {
@@ -152,10 +154,11 @@ const AzureSelectionTabs = (props) => {
         setHasPermission(false);
         setValue(0);
         setIsActivated(false);
+        getAzureDataSecrets(false);
       });
   }, [azureDetail]);
 
-  const getAzureDataSecrets = useCallback(() => {
+  const getAzureDataSecrets = useCallback((isActivated) => {
     if (azureDetail?.name) {
       if (isActivated && (azureDetail.access !== 'N/A' || isAdmin)) {
         setSecretResponse({ status: 'loading' });
@@ -191,7 +194,7 @@ const AzureSelectionTabs = (props) => {
         setSecretResponse({ status: 'success' });
       }
     }
-  }, [azureDetail, isActivated]);
+  }, [azureDetail]);
 
   useEffect(() => {
     if (Object.keys(azureDetail).length > 0) {
@@ -201,8 +204,7 @@ const AzureSelectionTabs = (props) => {
       }
       async function fetchData() {
         setSecretResponse({ status: 'loading' });
-        await getAzureServiceAllDetails();
-        getAzureDataSecrets();
+        await getAzureServiceAllDetails()
       }
       fetchData();
     }
