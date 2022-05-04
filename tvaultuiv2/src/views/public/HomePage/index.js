@@ -14,7 +14,6 @@ import IpadRectangle from '../../../assets/Login/ipad-rectangle.svg';
 import MobRectangle from '../../../assets/Login/mob-rectangle.svg';
 import ButtonComponent from '../../../components/FormFields/ActionButton';
 import Speaker from '../../../assets/Login/speaker.png';
-import LoginHeaderText from '../../../assets/Login/login-header-text.svg';
 import AllGroups from '../../../assets/Login/allgroups.svg';
 import Store from '../../../assets/Login/store.svg';
 import Access from '../../../assets/Login/access.svg';
@@ -108,14 +107,6 @@ const SpeakerWrap = styled.img`
     left: -5px;
     top: -1rem;
   }
-`;
-
-const LoginHeaderTextWrap = styled.div`
-  background: url(${(props) => props.LoginHeaderText || ''});
-  background-size: contain;
-  background-repeat: no-repeat;
-  height: 5rem;
-  width: 100%;
 `;
 
 const FirstRow = styled.div`
@@ -364,10 +355,10 @@ const MessageBanner = styled.p`
   font-size: 1.28rem;
   margin-left: 63px;
   margin-top: 2px;
-  margin-bottom: 5px;
+  margin-bottom: 1px;
   font-color: #fff;
   width: 89%;
-  height: 40px;
+  height: 57px;
   overflow: auto;
   @media (max-width: 1024px) {
     width: 75%;
