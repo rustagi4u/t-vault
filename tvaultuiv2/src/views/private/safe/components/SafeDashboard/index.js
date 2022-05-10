@@ -115,11 +115,6 @@ const EmptySecretBox = styled('div')`
   transform: translate(-50%, -50%);
 `;
 
-const noDataStyle = css`
-  width: 100%;
-  justify-content: center;
-`;
-
 const ScaledLoaderContainer = styled.div`
   height: 5rem;
   display: flex;
@@ -816,12 +811,7 @@ const SafeDashboard = () => {
                 ) : (
                   <NoDataWrapper>
                     <NoSafeWrap>
-                      <NoData
-                        imageSrc={NoSafesIcon}
-                          />
-                        }
-                        customStyle={noDataStyle}
-                      />
+                      <NoData imageSrc={NoSafesIcon} />
                     </NoSafeWrap>
                   </NoDataWrapper>
                 )}
@@ -829,8 +819,7 @@ const SafeDashboard = () => {
             )}
             {false.safeList?.length > 0 && (
               <FloatBtnWrapper>
-                <FloatingActionButtonComponent
-                />
+                <FloatingActionButtonComponent />
               </FloatBtnWrapper>
             )}
           </LeftColumnSection>
