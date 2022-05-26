@@ -3789,7 +3789,9 @@ public class  IAMServiceAccountsService {
 				Response metadataUdpateResponse = iamServiceAccountUtils.updateIAMSvcAccNewAccessKeyIdInMetadata(token, awsAccountId, iamServiceAccountName, accessKeyId, iamServiceAccountSecret);
 				if (null != metadataUdpateResponse
 						&& HttpStatus.NO_CONTENT.equals(metadataUdpateResponse.getHttpstatus())) {
-					updateIAMSvcAccSecretWithLatestExpiryDate(token, awsAccountId, iamServiceAccountName, accessKeyId,
+					//Passing new accesskey to update latest expiry date
+					String accessKey=iamServiceAccountSecret.getAccessKeyId();
+					updateIAMSvcAccSecretWithLatestExpiryDate(token, awsAccountId, iamServiceAccountName, accessKey,
 							iamServiceAccountSecret.getExpiryDateEpoch());
 					log.debug(JSONUtil.getJSON(ImmutableMap.<String, String>builder().
 							put(LogMessage.USER, ThreadLocalContext.getCurrentMap().get(LogMessage.USER)).
@@ -5633,8 +5635,9 @@ public class  IAMServiceAccountsService {
 						if (HttpStatus.OK.equals(responseEntity.getStatusCode())) {
 							IAMServiceAccountSecret iamServiceAccountSecret = mapper.readValue(responseEntity.getBody(),
 									IAMServiceAccountSecret.class);
+							if(iamServiceAccountSecret.getAccessKeyId().equals(accessKey)){
 							int expiryDateValue = expiryDateEpoch.compareTo(0L);
-							if (!accessKey.equals(iamServiceAccountSecret.getAccessKeyId()) && (expiryDateValue > 0)) {
+							if (accessKey.equals(iamServiceAccountSecret.getAccessKeyId()) && (expiryDateValue > 0)) {
 								iamServiceAccountSecret.setExpiryDateEpoch(expiryDateEpoch);
 								// Save secret in iamavcacc mount
 								String path = new StringBuilder().append(IAMServiceAccountConstants.IAM_SVCC_ACC_PATH).append(uniqueIAMSvcName).append("/").append(folderName).toString();
@@ -5646,6 +5649,7 @@ public class  IAMServiceAccountsService {
 											put(LogMessage.APIURL, ThreadLocalContext.getCurrentMap().get(LogMessage.APIURL)).
 											build()));
 									return true;
+								}
 								}
 								break;
 							}
