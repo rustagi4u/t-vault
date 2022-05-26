@@ -3789,6 +3789,7 @@ public class  IAMServiceAccountsService {
 				Response metadataUdpateResponse = iamServiceAccountUtils.updateIAMSvcAccNewAccessKeyIdInMetadata(token, awsAccountId, iamServiceAccountName, accessKeyId, iamServiceAccountSecret);
 				if (null != metadataUdpateResponse
 						&& HttpStatus.NO_CONTENT.equals(metadataUdpateResponse.getHttpstatus())) {
+					//Passing new accesskey to update latest expiry date
 					String accessKey=iamServiceAccountSecret.getAccessKeyId();
 					updateIAMSvcAccSecretWithLatestExpiryDate(token, awsAccountId, iamServiceAccountName, accessKey,
 							iamServiceAccountSecret.getExpiryDateEpoch());
@@ -5628,9 +5629,7 @@ public class  IAMServiceAccountsService {
 				IAMServiceAccountNode iamServiceAccountNode = mapper.readValue(response.getBody(),
 						IAMServiceAccountNode.class);
 				if (iamServiceAccountNode.getFolders() != null) {
-					int index=0;
 					for (String folderName : iamServiceAccountNode.getFolders()) {
-						index++;
 						ResponseEntity<String> responseEntity = getIAMServiceAccountSecretKey(token,
 								uniqueIAMSvcName, folderName);
 						if (HttpStatus.OK.equals(responseEntity.getStatusCode())) {
