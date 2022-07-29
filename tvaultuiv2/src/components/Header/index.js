@@ -303,9 +303,7 @@ const Header = (props) => {
                   onClick={() => handleOnClick('Certificates')}
                   component={RRDLink}
                   active={currentTab === 'certificates' ? 'true' : 'false'}
-                >
-                  Certificates
-                </NavLink>
+                />
               )}
               <HeaderSelectComponent
                 menu={[...navItems.svcNavItems]}
