@@ -114,7 +114,7 @@ public class TokenValidator {
 							lookupDetails = addUsername(lookupDetails,directoryObjectsResponseEntity);
 						}
 
-						// if user details not found in GSM1900 and the email is sprint email.
+						// if user details not found in GSM1900.
 						// Validating null string also in lookupDetails.getUsername as initially username is set as ("null") from lookup response
 						
 						lookupDetails = addCorpUser(email,lookupDetails);					
@@ -153,7 +153,7 @@ public class TokenValidator {
 	}
 	
 	private VaultTokenLookupDetails addCorpUser(String email,VaultTokenLookupDetails lookupDetails) {
-		if ((StringUtils.isEmpty(lookupDetails.getUsername()) || TVaultConstants.NULL_STRING.equals(lookupDetails.getUsername()))&& email.contains(TVaultConstants.SPRINT_EMIAL_DOMAIN)) {
+		if ((StringUtils.isEmpty(lookupDetails.getUsername()) || TVaultConstants.NULL_STRING.equals(lookupDetails.getUsername()))) {
 			ResponseEntity<DirectoryObjects> directoryObjectsResponseEntity  = directoryService.searchByEmailInCorp(email);
 			if (directoryObjectsResponseEntity != null && HttpStatus.OK.equals(directoryObjectsResponseEntity.getStatusCode())) {
 				Object[] adUser = directoryObjectsResponseEntity.getBody().getData().getValues();
