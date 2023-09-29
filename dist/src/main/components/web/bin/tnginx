@@ -27,10 +27,10 @@
 # =========================================================================		
 
 # Source function library.
-. /etc/rc.d/init.d/functions
+. /etc/init.d/functions
 
 # Source networking configuration.
-. /etc/sysconfig/network
+. /etc/network
 
 # Check that networking is up.
 [ "$NETWORKING" = "no" ] && exit 0
@@ -46,7 +46,7 @@ start() {
     [ -x $nginx ] || exit 5
     [ -f $NGINX_CONF_FILE ] || exit 6
     echo -n $"Starting $prog: "
-    daemon $nginx -c $NGINX_CONF_FILE
+    nohup $nginx -c $NGINX_CONF_FILE
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -55,7 +55,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $prog: "
-    killproc $prog -QUIT
+    pkill $prog -QUIT
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
@@ -71,7 +71,7 @@ restart() {
 reload() {
     configtest || return $?
     echo -n $"Reloading $prog: "
-    killproc $nginx -HUP
+    pkill $nginx -HUP
     RETVAL=$?
     echo
 }
