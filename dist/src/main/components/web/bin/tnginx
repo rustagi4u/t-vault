@@ -30,7 +30,8 @@
 . /etc/init.d/functions.sh
 
 # Source networking configuration.
-. /etc/network
+#. /etc/network
+touch ./etc/network
 
 # Check that networking is up.
 [ "$NETWORKING" = "no" ] && exit 0
