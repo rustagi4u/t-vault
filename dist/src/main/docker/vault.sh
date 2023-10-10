@@ -554,9 +554,10 @@ ln -sf $VHOME/web/bin/tnginx /etc/init.d/tnginx
 ln -sf $VHOME/api/bin/tvaultapi.jar /etc/init.d/tvaultapi
 
 echo "Starting api service ... "
+set -x
 systemctl enable tvaultapi.service
 service tvaultapi start
-
+set +x
 ################################################################################
 # End API start
 ###############################################################################
