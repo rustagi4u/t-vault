@@ -31,7 +31,7 @@
 
 # Source networking configuration.
 #. /etc/network
-touch ./etc/network
+echo "NETWORKING=yes" >/etc/network
 
 # Check that networking is up.
 [ "$NETWORKING" = "no" ] && exit 0
