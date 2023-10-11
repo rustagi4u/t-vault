@@ -1,0 +1,23 @@
+#!/sbin/openrc-run
+
+PIDFILE=/var/run/tvaultapi.pid
+
+start() {
+  ebegin "Starting TVault API"
+
+  start-stop-daemon \
+      --start \
+      --pidfile ${PIDFILE} \
+      --make-pidfile \
+      --background \
+      --exec java -- -jar /opt/tvault/api/bin/tvaultapi.jar
+  eend $?
+}
+
+stop() {
+  ebegin "Stopping TVault API"
+  start-stop-daemon \
+      --stop \
+      --pidfile ${PIDFILE}
+  eend $?
+}
